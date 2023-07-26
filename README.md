@@ -8,7 +8,7 @@
 
    1. Create python environment
       ```sh
-       python -m venv venv
+      python -m venv venv
       ```
    2. Activate the environment
       ```sh
@@ -16,7 +16,7 @@
       ```
    3. Install dependence
       ```sh
-       npm install
+      npm install
       ```
    4. Install dependencies
       ```sh
@@ -24,16 +24,14 @@
       ```
    5. Run the application
       ```sh
-       python app.py or flask run --port=8000
+      python app.py or flask run --port=8000
       ```
    6. Connect with database
       ```sh
-       app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user_name:Password@localhost/db_name'
+      app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://user_name:Password@localhost/db_name'
       ```
    7. To run migrataions
       ```sh
-       pip install Flask-Migrate
-       flask db init
-       flask db migrate -m "initial migration"
-       flask db upgrade
+      pip install Flask-Migrate
+      flask db upgrade
       ```
