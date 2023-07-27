@@ -5,15 +5,22 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     </head>
-    <body class="bg-gray-100">
-        <h1 class="text-2xl text-center font-bold mb-4 mt-10">Admin Panel</h1>
-        <div class="flex justify-between px-10">
-            <button class="bg-blue-500 hover:bg-blue-300 text-white  font-bold py-2 px-4 rounded" onclick="redirectToChartPage()">
-                Go to Chart Page
-            </button>
+    <body>
+        <div class="bg-gray-700 w-screen px-10 py-4 flex justify-between text-white">
+            <div>Admin Panel</div>
+            <div>
+                <a href="#">Logout</a>
+            </div>
         </div>
-        <div class="px-10">
-            {% block content %} {% endblock %}
+        <div class="flex">
+            <div class="bg-gray-200 w-64 flex flex-col pt-10 h-screen">
+                <a href="#" class="px-10 py-4 cursor-pointer hover:bg-gray-300">Users</a>
+                <a href="#" class="px-10 py-4 cursor-pointer hover:bg-gray-300">Posts</a>
+                <a href="#" class="px-10 py-4 cursor-pointer hover:bg-gray-300">Reports</a>
+            </div>
+            <div class="p-10 w-full">
+                {% block content %} {% endblock %}
+            </div>
         </div>
         <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     </body>
