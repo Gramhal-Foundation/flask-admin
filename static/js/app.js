@@ -3,12 +3,12 @@ function redirectToChartPage() {
 }
 
 function openModal() {
-  var modal = document.getElementById("myModal");
+  var modal = document.getElementById("createUserModal");
   modal.classList.remove("hidden");
 }
 
 function closeModal() {
-  var modal = document.getElementById("myModal");
+  var modal = document.getElementById("createUserModal");
   modal.classList.add("hidden");
 }
 
