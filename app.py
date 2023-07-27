@@ -10,7 +10,7 @@ from wtforms.validators import DataRequired, EqualTo
 app = Flask(__name__)
 
 # Change 'your_secret_key' to a strong and unique secret key
-app.secret_key = 'your_secret_key'
+app.secret_key = 'randomsecret'
 
 # PostgreSQL database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres@localhost/testing'
@@ -18,9 +18,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-
-# User model
-
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -38,39 +35,32 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Registration Form using Flask-WTF
-
-
 class RegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
-    confirm_password = PasswordField('Confirm Password', validators=[
-                                     DataRequired(), EqualTo('password', message='Passwords must match')])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match')])
     submit = SubmitField('Register')
-
-# Login Form using Flask-WTF
-
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Login')
 
-# Routes for login, logout, dashboard, and registration
-
-
-@app.route('/')
+@app.route('/user')
+# @app.route('/user/<int:page>')
 @login_required
-def index():
-    return render_template('index.html', username=current_user.username)
-
+def user(page=1):
+    per_page = 5
+    users_pagination = User.query.order_by(User.id).paginate(page=page, per_page=per_page, error_out=False)
+    title = 'Flask App with Jinja2'
+    name = 'Admin Panel'
+    return render_template('user.html', title=title, name=name, users_pagination=users_pagination)
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('login'))
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -83,7 +73,7 @@ def login():
 
         if user and user.password == password:
             login_user(user)
-            return redirect(url_for('index'))
+            return redirect(url_for('user'))
         else:
             flash('Invalid credentials. Please try again.', 'error')
 
@@ -111,7 +101,6 @@ def register():
         return redirect(url_for('login'))
 
     return render_template('register.html', form=form)
-
 
 if __name__ == '__main__':
     app.run(debug=True)

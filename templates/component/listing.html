@@ -23,7 +23,7 @@
             {% for user in users_pagination.items %}
             <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                 <td class="px-6 py-4">
-                    {{ user.name }}
+                    {{ user.username }}
                 </td>
                 <td class="px-6 py-4">
                     {{ user.last_name }}
@@ -37,11 +37,10 @@
                     </form>
                 </td>
                 <td class="px-6 py-4">
-                    <a href="{{  url_for('update_form', user_id=user.id) }}" class="font-bold py-2 px-4 rounded">
+                    <a href="#" class="font-bold py-2 px-4 rounded">
                         <i class="fas fa-edit"></i>
                     </a>
                 </td>
-                
             </tr>
             {% endfor %}
         </tbody>
