@@ -1,0 +1,92 @@
+{% extends 'app.html' %}
+
+{% block title %}
+    Users
+{% endblock %}
+
+{% block content %}
+    <div class="flex">
+        <button class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded" onclick="openModal()">
+        Create User
+        </button>
+    </div>
+
+    <div id="createUserModal" class="hidden">
+        <div  class=" modal z-10 fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div class="modal-content bg-white w-1/2 rounded-lg p-8">
+                <span class="z-10 flex justify-end  mr-4 text-gray-500 cursor-pointer" onclick="closeModal()">&times;</span>
+                <form id="myForm" action="/submit" method="post">
+                    <input type="text" name="name" placeholder="Enter your name" class="block w-full mt-4 p-2 border rounded-lg">
+                    <input type="text" name="last_name" placeholder="Enter your last name" class="block w-full mt-4 p-2 border rounded-lg">
+                    <input type="text" name="city" placeholder="Enter your city" class="block w-full mt-4 p-2 border rounded-lg">
+                    <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4">
+                        Submit
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="relative overflow-x-auto my-10">
+        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                    <th scope="col" class="px-6 py-3">Name</th>
+                    <th scope="col" class="px-6 py-3">Email</th>
+                    <th scope="col" class="px-6 py-3">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users_pagination.items %}
+                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                        <td class="px-6 py-4">
+                            {{ user.username }}
+                        </td>
+                        <td class="px-6 py-4">
+                            {{ user.last_name }}
+                        </td>
+                        <td class="px-6 py-4 flex items-center">
+                            <div>
+                                <a href="#" class="font-bold py-2 px-4 rounded">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                            <div>
+                                <form action="/delete/{{ user.id }}" method="post">
+                                    <button type="submit"> <i class="fas fa-trash-alt text-red-500"></i></button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="mt-4 flex items-end">
+        {% if users_pagination.has_prev %}
+        <a href="{{ url_for('index', page=users_pagination.prev_num) }}"
+            class="px-3 py-1 rounded {% if users_pagination.prev_num == users_pagination.page %}bg-blue-500 text-white{% endif %}">
+            {{ 'Prev' }}
+        </a>
+        {% endif %}
+
+        {% for num in users_pagination.iter_pages() %}
+            {% if num %}
+                {% if num != users_pagination.page %}
+                    <a href="{{ url_for('index', page=num) }}"
+                        class="px-3 py-1 rounded bg-gray-500 text-white">{{ num }}</a>
+                {% else %}
+                    <span class="px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
+                {% endif %}
+            {% else %}
+                ...
+            {% endif %}
+        {% endfor %}
+
+        {% if users_pagination.has_next %}
+        <a href="{{ url_for('index', page=users_pagination.next_num) }}"
+            class="px-3 py-1 rounded {% if users_pagination.next_num == users_pagination.page %}bg-blue-500 text-white{% endif %}">{{ 'Next' }}</a>
+        {% endif %}
+    </div>
+
+{% endblock %}

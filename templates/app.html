@@ -1,54 +1,27 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>{{ title }}</title>
+        <title>{% block title %} {% endblock %} - Gramhal</title>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     </head>
-<body class="bg-gray-100">
-    <h1 class="text-2xl text-center font-bold mb-4 mt-10">Admin panel Demo</h1>
-    <div class="flex justify-between pl-10 pr-10">
-        <div class="">
-            <button class="bg-blue-500 hover:bg-blue-300 text-white  font-bold py-2 px-4 rounded" onclick="redirectToChartPage()">
-                Go to Chart Page
-            </button>
+    <body>
+        <nav class="bg-gray-700 w-screen px-10 py-4 flex justify-between text-white">
+            <div>Admin Panel</div>
+            <div>
+                <a href="#">Logout</a>
+            </div>
+        </nav>
+        <div class="flex">
+            <sidebar class="bg-gray-200 w-64 flex flex-col pt-10 h-screen">
+                <a href="#" class="px-10 py-4 cursor-pointer hover:bg-gray-300">Users</a>
+                <a href="#" class="px-10 py-4 cursor-pointer hover:bg-gray-300">Posts</a>
+                <a href="#" class="px-10 py-4 cursor-pointer hover:bg-gray-300">Reports</a>
+            </sidebar>
+            <div class="p-10 w-full">
+                {% block content %} {% endblock %}
+            </div>
         </div>
-        <div class="">
-            <button class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded" onclick="openModal()">
-              <i class="fa fa-plus text-white" aria-hidden="true" > </i> Create Users
-            </button>
-        </div>
-    </div>
-    
-    {% include 'component/form.html' %}
-
-    {% include 'component/listing.html' %}
-
-   
-    <div class="mt-4 ml-10 mr-10 flax items-end">
-        {% if users_pagination.has_prev %}
-        <a href="{{ url_for('index', page=users_pagination.prev_num) }}"
-            class="px-3 py-1 rounded {% if users_pagination.prev_num == users_pagination.page %}bg-blue-500 text-white{% endif %}">{{ 'Prev' }}</a>
-        {% endif %}
-        
-        {% for num in users_pagination.iter_pages() %}
-            {% if num %}
-                {% if num != users_pagination.page %}
-                    <a href="{{ url_for('index', page=num) }}"
-                        class="px-3 py-1 rounded bg-gray-500 text-white">{{ num }}</a>
-                {% else %}
-                    <span class="px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
-                {% endif %}
-            {% else %}
-                ...
-            {% endif %}
-        {% endfor %}
-
-        {% if users_pagination.has_next %}
-        <a href="{{ url_for('index', page=users_pagination.next_num) }}"
-            class="px-3 py-1 rounded {% if users_pagination.next_num == users_pagination.page %}bg-blue-500 text-white{% endif %}">{{ 'Next' }}</a>
-        {% endif %}
-    </div>
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-</body>
+        <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    </body>
 </html>
