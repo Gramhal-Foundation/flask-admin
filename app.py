@@ -47,7 +47,7 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Login')
 
 @app.route('/user')
-# @app.route('/user/<int:page>')
+@app.route('/user/<int:page>')
 @login_required
 def user(page=1):
     per_page = 5
