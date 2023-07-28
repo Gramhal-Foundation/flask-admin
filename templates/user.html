@@ -9,9 +9,14 @@
         <button class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded" onclick="openModal()">
         Create User
         </button>
-        <a href="/upload" class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded">
-            Bulk Upload
-        </a>
+        <div>
+            <a href="/download" class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded">
+                Download CSV
+            </a>
+            <a href="/upload" class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded ml-2">
+                Bulk Upload
+            </a>
+        </div>
     </div>
 
     <div id="createUserModal" class="hidden">
@@ -34,8 +39,9 @@
         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
-                    <th scope="col" class="px-6 py-3">Email</th>
                     <th scope="col" class="px-6 py-3">Name</th>
+                    <th scope="col" class="px-6 py-3">Email</th>
+                    <th scope="col" class="px-6 py-3">Phone</th>
                     <th scope="col" class="px-6 py-3">Actions</th>
                 </tr>
             </thead>
@@ -43,10 +49,13 @@
                 {% for user in users_pagination.items %}
                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                         <td class="px-6 py-4">
+                            {{ user.name }}
+                        </td>
+                        <td class="px-6 py-4">
                             {{ user.email }}
                         </td>
                         <td class="px-6 py-4">
-                            {{ user.name }}
+                            {{ user.phone }}
                         </td>
                         <td class="px-6 py-4 flex items-center">
                             <div>

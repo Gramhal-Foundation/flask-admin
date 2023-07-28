@@ -1,5 +1,5 @@
 # app.py
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -7,6 +7,8 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, EqualTo
 import pandas as pd
+import csv
+import io
 
 app = Flask(__name__)
 
@@ -23,6 +25,8 @@ migrate = Migrate(app, db)
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(80), unique=True, nullable=False)
+    name = db.Column(db.String(80), nullable=True)
+    phone = db.Column(db.String(80), nullable=True)
     password = db.Column(db.String(80), nullable=False)
     role = db.Column(db.String(20), nullable=False, default='user')
 
@@ -37,7 +41,9 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 class RegistrationForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired()])
+    phone = StringField('Phone', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match')])
     submit = SubmitField('Register')
@@ -85,7 +91,9 @@ def login():
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
+        name = form.name.data
         email = form.email.data
+        phone = form.phone.data
         password = form.password.data
 
         # Check if the email is already taken
@@ -94,7 +102,7 @@ def register():
             return redirect(url_for('register'))
 
         # Create a new user and add to the database
-        new_user = User(email=email, password=password)
+        new_user = User(email=email, password=password, name=name, phone=phone)
         db.session.add(new_user)
         db.session.commit()
 
@@ -120,14 +128,16 @@ def upload_file():
 
 @app.route("/download", methods=['GET'])
 def download_file():
-    return 'hello'
-    # return excel.make_response_from_array([[1, 2], [3, 4]], "csv")
-
-@app.route("/export", methods=['GET'])
-def export_records():
-    return 'hello1123'
-    # return excel.make_response_from_array([[1, 2], [3, 4]], "csv",
-    #                                       file_name="export_data")
+    users = User.query.all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    line = ['Email', 'Name', 'Phone']
+    writer.writerow(line)
+    for user in users:
+        line = [user.email, user.name, user.phone]
+        writer.writerow(line)
+    output.seek(0)
+    return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=users.csv"})
 
 if __name__ == '__main__':
     app.run(debug=True)
