@@ -1,11 +1,12 @@
 # app.py
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, EqualTo
+import pandas as pd
 
 app = Flask(__name__)
 
@@ -21,7 +22,7 @@ migrate = Migrate(app, db)
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
     role = db.Column(db.String(20), nullable=False, default='user')
 
@@ -36,13 +37,13 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 class RegistrationForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password', message='Passwords must match')])
     submit = SubmitField('Register')
 
 class LoginForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Login')
 
@@ -66,10 +67,10 @@ def logout():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        username = form.username.data
+        email = form.email.data
         password = form.password.data
 
-        user = User.query.filter_by(username=username).first()
+        user = User.query.filter_by(email=email).first()
 
         if user and user.password == password:
             login_user(user)
@@ -84,16 +85,16 @@ def login():
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
-        username = form.username.data
+        email = form.email.data
         password = form.password.data
 
-        # Check if the username is already taken
-        if User.query.filter_by(username=username).first():
-            flash('Username already exists. Please choose a different one.', 'error')
+        # Check if the email is already taken
+        if User.query.filter_by(email=email).first():
+            flash('Email already exists. Please choose a different one.', 'error')
             return redirect(url_for('register'))
 
         # Create a new user and add to the database
-        new_user = User(username=username, password=password)
+        new_user = User(email=email, password=password)
         db.session.add(new_user)
         db.session.commit()
 
@@ -101,6 +102,32 @@ def register():
         return redirect(url_for('login'))
 
     return render_template('register.html', form=form)
+
+@app.route("/upload", methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        uploaded_file = request.files['file']
+        # uploaded_file.save() # save to s3
+        col_names = ['Name', 'Phone', 'Email']
+        csvData = pd.read_csv(uploaded_file, usecols=col_names)
+        for i,row in csvData.iterrows():
+            new_user = User(email=row['Email'], password='gramhal')
+            db.session.add(new_user)
+            db.session.commit()
+        flash('All users uploaded!')
+        return redirect(url_for('user'))
+    return render_template('upload.html')
+
+@app.route("/download", methods=['GET'])
+def download_file():
+    return 'hello'
+    # return excel.make_response_from_array([[1, 2], [3, 4]], "csv")
+
+@app.route("/export", methods=['GET'])
+def export_records():
+    return 'hello1123'
+    # return excel.make_response_from_array([[1, 2], [3, 4]], "csv",
+    #                                       file_name="export_data")
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,0 +1,17 @@
+{% extends 'app.html' %}
+
+{% block title %}
+  Upload
+{% endblock %}
+
+{% block content %}
+  <h1 class="text-2xl">Bulk Upload CSV</h1>
+  <form action="/upload" method=post enctype=multipart/form-data>
+    <div class="mt-4">
+      <input type=file name=file>
+    </div>
+    <button class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded mt-4" type="submit">
+      Upload CSV
+    </button>
+  </form>
+{% endblock %}
