@@ -119,7 +119,7 @@ def upload_file():
         col_names = ['Name', 'Phone', 'Email']
         csvData = pd.read_csv(uploaded_file, usecols=col_names)
         for i,row in csvData.iterrows():
-            new_user = User(email=row['Email'], password='gramhal')
+            new_user = User(email=row['Email'], name=row['Name'], phone=row['Phone'], password='gramhal')
             db.session.add(new_user)
             db.session.commit()
         flash('All users uploaded!')
