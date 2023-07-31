@@ -9,6 +9,12 @@ from wtforms.validators import DataRequired, EqualTo
 import pandas as pd
 import csv
 import io
+import boto3, botocore
+from werkzeug.utils import secure_filename
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -16,11 +22,24 @@ app = Flask(__name__)
 app.secret_key = 'randomsecret'
 
 # PostgreSQL database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres@localhost/testing'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS')
+
+# AWS S3 configurations
+app.config['S3_BUCKET'] = os.getenv('S3_BUCKET')
+app.config['S3_KEY'] = os.getenv('S3_KEY')
+app.config['S3_SECRET'] = os.getenv('S3_SECRET')
+app.config['S3_REGION'] = os.getenv('S3_REGION')
+app.config['S3_LOCATION'] = 'https://' + os.getenv('S3_BUCKET') + '.s3.' + os.getenv('S3_REGION') + '.amazonaws.com/'
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+s3 = boto3.client(
+   "s3",
+   aws_access_key_id=app.config['S3_KEY'],
+   aws_secret_access_key=app.config['S3_SECRET']
+)
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -111,17 +130,43 @@ def register():
 
     return render_template('register.html', form=form)
 
+def upload_file_to_s3(file, bucket_name, acl="public-read"):
+    """
+    Docs: http://boto3.readthedocs.io/en/latest/guide/s3.html
+    """
+    try:
+        s3.upload_fileobj(
+            file,
+            bucket_name,
+            file.filename,
+            ExtraArgs={
+                "ACL": acl,
+                "ContentType": file.content_type    #Set appropriate content type as per the file
+            }
+        )
+    except Exception as e:
+        print("Something Happened: ", e)
+        return e
+    return "{}{}".format(app.config["S3_LOCATION"], file.filename)
+
 @app.route("/upload", methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
         uploaded_file = request.files['file']
-        # uploaded_file.save() # save to s3
         col_names = ['Name', 'Phone', 'Email']
         csvData = pd.read_csv(uploaded_file, usecols=col_names)
+
         for i,row in csvData.iterrows():
             new_user = User(email=row['Email'], name=row['Name'], phone=row['Phone'], password='gramhal')
             db.session.add(new_user)
             db.session.commit()
+
+        if uploaded_file:
+            uploaded_file.filename = secure_filename(uploaded_file.filename)
+            print('before upload_file_to_s3...', uploaded_file)
+            output = upload_file_to_s3(uploaded_file, app.config["S3_BUCKET"])
+            print('output...', output)
+
         flash('All users uploaded!')
         return redirect(url_for('user'))
     return render_template('upload.html')
