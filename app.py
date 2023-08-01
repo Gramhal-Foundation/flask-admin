@@ -97,6 +97,39 @@ def user_create():
 
     return redirect(url_for('user_list'))
 
+@app.route('/user/<int:user_id>/edit', methods=['GET', 'POST'])
+@login_required
+def user_edit(user_id):
+    user = User.query.get(user_id)
+
+    if not user:
+        return redirect(url_for('user_list'))
+
+    if request.method == 'GET':
+        return render_template('user/edit.html', user=user)
+
+    name = request.form.get('name')
+    email = request.form.get('email')
+    phone = request.form.get('phone')
+    password = request.form.get('password')
+
+    print('email...', email)
+    print('user.email...', user.email)
+    if email != user.email:
+        user.email = email
+
+    if password:
+        user.password = password
+
+    user.name = name
+    user.phone = phone
+
+    # new_user = User.query.update(name=name, email=email, phone=phone, password=password)
+    # db.session.add(new_user)
+    db.session.commit()
+
+    return redirect(url_for('user_list'))
+
 @app.route('/user/delete/<int:user_id>', methods=['POST'])
 @login_required
 def user_delete(user_id):
