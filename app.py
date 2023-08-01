@@ -75,12 +75,37 @@ class LoginForm(FlaskForm):
 @app.route('/user')
 @app.route('/user/<int:page>')
 @login_required
-def user(page=1):
+def user_list(page=1):
     per_page = 5
     users_pagination = User.query.order_by(User.id).paginate(page=page, per_page=per_page, error_out=False)
-    title = 'Flask App with Jinja2'
-    name = 'Admin Panel'
-    return render_template('user.html', title=title, name=name, users_pagination=users_pagination)
+    return render_template('user.html', users_pagination=users_pagination)
+
+@app.route('/user/create', methods=['GET', 'POST'])
+@login_required
+def user_create():
+    if request.method == 'GET':
+        return render_template('user/create.html')
+
+    name = request.form.get('name')
+    email = request.form.get('email')
+    phone = request.form.get('phone')
+    password = request.form.get('password')
+
+    new_user = User(name=name, email=email, phone=phone, password=password)
+    db.session.add(new_user)
+    db.session.commit()
+
+    return redirect(url_for('user_list'))
+
+@app.route('/user/delete/<int:user_id>', methods=['POST'])
+@login_required
+def user_delete(user_id):
+    user = User.query.get(user_id)
+    if user:
+        db.session.delete(user)
+        db.session.commit()
+
+    return redirect(url_for('user_list'))
 
 @app.route('/logout')
 @login_required
