@@ -1,0 +1,28 @@
+{% extends 'app.html' %}
+
+{% block title %}
+    Users
+{% endblock %}
+
+{% block content %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.3.0/Chart.js"></script>
+
+    <div class="flex justify-between text-3xl mb-4">
+        Reports
+    </div>
+    <div class="flex flex-wrap">
+        <div class="w-1/2">
+            <div class="mx-2 border">
+                <canvas id="myChart"></canvas>
+            </div>
+        </div>
+        <div class="w-1/2">
+            <div class="mx-2 border">
+                <canvas id="myBarChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+{% endblock %}

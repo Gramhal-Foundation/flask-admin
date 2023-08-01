@@ -163,7 +163,6 @@ def login():
 
     return render_template('login.html', form=form)
 
-
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
@@ -208,6 +207,7 @@ def upload_file_to_s3(file, bucket_name, acl="public-read"):
     return "{}{}".format(app.config["S3_LOCATION"], file.filename)
 
 @app.route("/upload", methods=['GET', 'POST'])
+@login_required
 def upload_file():
     if request.method == 'POST':
         uploaded_file = request.files['file']
@@ -230,6 +230,7 @@ def upload_file():
     return render_template('upload.html')
 
 @app.route("/download", methods=['GET'])
+@login_required
 def download_file():
     users = User.query.all()
     output = io.StringIO()
@@ -241,6 +242,11 @@ def download_file():
         writer.writerow(line)
     output.seek(0)
     return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=users.csv"})
+
+@app.route('/reports')
+@login_required
+def reports():
+    return render_template('reports.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
