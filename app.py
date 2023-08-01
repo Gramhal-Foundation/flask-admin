@@ -78,7 +78,7 @@ def user_list():
     per_page = 5
     page = request.args.get("page", default=1, type=int)
     users_pagination = User.query.order_by(User.id).paginate(page=page, per_page=per_page, error_out=False)
-    return render_template('user.html', users_pagination=users_pagination)
+    return render_template('user/list.html', users_pagination=users_pagination)
 
 @app.route('/user/create', methods=['GET', 'POST'])
 @login_required
