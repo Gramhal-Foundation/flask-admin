@@ -73,10 +73,10 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Login')
 
 @app.route('/user')
-@app.route('/user/<int:page>')
 @login_required
-def user_list(page=1):
+def user_list():
     per_page = 5
+    page = request.args.get("page", default=1, type=int)
     users_pagination = User.query.order_by(User.id).paginate(page=page, per_page=per_page, error_out=False)
     return render_template('user.html', users_pagination=users_pagination)
 

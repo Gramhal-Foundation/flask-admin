@@ -76,19 +76,19 @@
     </div>
     <div class="mt-4 flex items-end">
         {% if users_pagination.has_prev %}
-        <a href="{{ url_for('index', page=users_pagination.prev_num) }}"
-            class="px-3 py-1 rounded {% if users_pagination.prev_num == users_pagination.page %}bg-blue-500 text-white{% endif %}">
-            {{ 'Prev' }}
-        </a>
+            <a href="{{ url_for('user_list', page=users_pagination.prev_num) }}"
+                class="mx-1 px-3 py-1 rounded border text-blue-500">
+                {{ 'Prev' }}
+            </a>
         {% endif %}
 
         {% for num in users_pagination.iter_pages() %}
             {% if num %}
                 {% if num != users_pagination.page %}
-                    <a href="{{ url_for('index', page=num) }}"
-                        class="px-3 py-1 rounded bg-gray-500 text-white">{{ num }}</a>
+                    <a href="{{ url_for('user_list', page=num) }}"
+                        class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
                 {% else %}
-                    <span class="px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
+                    <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
                 {% endif %}
             {% else %}
                 ...
@@ -96,8 +96,10 @@
         {% endfor %}
 
         {% if users_pagination.has_next %}
-        <a href="{{ url_for('index', page=users_pagination.next_num) }}"
-            class="px-3 py-1 rounded {% if users_pagination.next_num == users_pagination.page %}bg-blue-500 text-white{% endif %}">{{ 'Next' }}</a>
+            <a href="{{ url_for('user_list', page=users_pagination.next_num) }}"
+            class="mx-1 px-3 py-1 rounded border text-blue-500">
+                {{ 'Next' }}
+            </a>
         {% endif %}
     </div>
 
