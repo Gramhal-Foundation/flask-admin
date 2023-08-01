@@ -6,12 +6,9 @@ env/
 *.env
 
 *.db
-
 config.ini
-
 node_modules/
 
-
-
+# macos
 .DS_Store
 
