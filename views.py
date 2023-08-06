@@ -27,7 +27,7 @@ def logout():
 @admin.route('/dashboard')
 @login_required
 def dashboard():
-    return 'hello this is dashboard'
+    return render_template('reports.html')
 
 @admin.route('/login', methods=['GET', 'POST'])
 def login():
