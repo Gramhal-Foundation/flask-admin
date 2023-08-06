@@ -16,26 +16,32 @@ class LoginForm(FlaskForm):
 @admin.route('/')
 @login_required
 def default():
-    return 'hello there admin'
+    return redirect(url_for('.dashboard'))
 
-@admin.route('/reports')
+@admin.route('/logout')
 @login_required
-def reports():
-    return 'hello there admin reporting page is here....'
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+@admin.route('/dashboard')
+@login_required
+def dashboard():
+    return 'hello this is dashboard'
 
 @admin.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
-    # if form.validate_on_submit():
-    #     email = form.email.data
-    #     password = form.password.data
+    if form.validate_on_submit():
+        email = form.email.data
+        password = form.password.data
 
-    #     user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=email).first()
 
-    #     if user and user.password == password:
-    #         login_user(user)
-    #         return redirect(url_for('user'))
-    #     else:
-    #         flash('Invalid credentials. Please try again.', 'error')
+        if user and user.password == password:
+            login_user(user)
+            return redirect(url_for('.dashboard'))
+        else:
+            flash('Invalid credentials. Please try again.', 'error')
 
     return render_template('login.html', form=form)

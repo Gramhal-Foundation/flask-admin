@@ -140,52 +140,6 @@ def user_delete(user_id):
 
     return redirect(url_for('user_list'))
 
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('login'))
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        email = form.email.data
-        password = form.password.data
-
-        user = User.query.filter_by(email=email).first()
-
-        if user and user.password == password:
-            login_user(user)
-            return redirect(url_for('user'))
-        else:
-            flash('Invalid credentials. Please try again.', 'error')
-
-    return render_template('login.html', form=form)
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    form = RegistrationForm()
-    if form.validate_on_submit():
-        name = form.name.data
-        email = form.email.data
-        phone = form.phone.data
-        password = form.password.data
-
-        # Check if the email is already taken
-        if User.query.filter_by(email=email).first():
-            flash('Email already exists. Please choose a different one.', 'error')
-            return redirect(url_for('register'))
-
-        # Create a new user and add to the database
-        new_user = User(email=email, password=password, name=name, phone=phone)
-        db.session.add(new_user)
-        db.session.commit()
-
-        flash('Registration successful. Please log in.', 'success')
-        return redirect(url_for('login'))
-
-    return render_template('register.html', form=form)
 
 def upload_file_to_s3(file, bucket_name, acl="public-read"):
     """
