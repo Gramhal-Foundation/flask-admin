@@ -1,13 +1,13 @@
 {% extends 'app.html' %}
 
 {% block title %}
-    Users
+    {{ resource.capitalize() }}
 {% endblock %}
 
 {% block content %}
     <div class="flex justify-between">
         <a href="/user/create" class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded">
-        Create User
+        Create {{ resource.capitalize() }}
         </a>
         <div>
             <a href="/download" class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded">
@@ -23,32 +23,28 @@
         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
-                    <th scope="col" class="px-6 py-3">Name</th>
-                    <th scope="col" class="px-6 py-3">Email</th>
-                    <th scope="col" class="px-6 py-3">Phone</th>
+                    {% for item in list_display %}
+                        <th scope="col" class="px-6 py-3">{{ item }}</th>
+                    {% endfor %}
                     <th scope="col" class="px-6 py-3">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% for user in users_pagination.items %}
+                {% for resource in pagination.items %}
                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                        <td class="px-6 py-4">
-                            {{ user.name }}
-                        </td>
-                        <td class="px-6 py-4">
-                            {{ user.email }}
-                        </td>
-                        <td class="px-6 py-4">
-                            {{ user.phone }}
-                        </td>
+                        {% for item in list_display %}
+                            <td class="px-6 py-4">
+                                {{ resource[item] }}
+                            </td>
+                        {% endfor %}
                         <td class="px-6 py-4 flex items-center">
                             <div>
-                                <a href="/user/{{ user.id }}/edit" class="font-bold py-2 px-4 rounded">
+                                <a href="/{{resource}}/{{ resource.id }}/edit" class="font-bold py-2 px-4 rounded">
                                     <i class="fas fa-edit"></i>
                                 </a>
                             </div>
                             <div>
-                                <form action="/user/delete/{{ user.id }}" method="POST">
+                                <form action="/{{resource}}/delete/{{ resource.id }}" method="POST">
                                     <button type="submit"> <i class="fas fa-trash-alt text-red-500"></i></button>
                                 </form>
                             </div>
@@ -59,17 +55,17 @@
         </table>
     </div>
     <div class="mt-4 flex items-end">
-        {% if users_pagination.has_prev %}
-            <a href="{{ url_for('user_list', page=users_pagination.prev_num) }}"
+        {% if pagination.has_prev %}
+            <a href="{{ url_for('.resource', resource=resource, page=pagination.prev_num) }}"
                 class="mx-1 px-3 py-1 rounded border text-blue-500">
                 {{ 'Prev' }}
             </a>
         {% endif %}
 
-        {% for num in users_pagination.iter_pages() %}
+        {% for num in pagination.iter_pages() %}
             {% if num %}
-                {% if num != users_pagination.page %}
-                    <a href="{{ url_for('user_list', page=num) }}"
+                {% if num != pagination.page %}
+                    <a href="{{ url_for('.resource', resource=resource, page=num) }}"
                         class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
                 {% else %}
                     <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
@@ -79,8 +75,8 @@
             {% endif %}
         {% endfor %}
 
-        {% if users_pagination.has_next %}
-            <a href="{{ url_for('user_list', page=users_pagination.next_num) }}"
+        {% if pagination.has_next %}
+            <a href="{{ url_for('.resource', resource=resource, page=pagination.next_num) }}"
             class="mx-1 px-3 py-1 rounded border text-blue-500">
                 {{ 'Next' }}
             </a>

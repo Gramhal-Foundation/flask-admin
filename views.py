@@ -4,6 +4,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, EqualTo
 from . import admin
+from admin_views import *
 
 # fix this hardcoded line
 from models.user import User
@@ -47,3 +48,14 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('.login'))
+
+@admin.route('/resource/<string:resource>')
+@login_required
+def resource(resource):
+    resource_class = globals()[resource.capitalize() + "Admin"]
+    model = resource_class.model
+    per_page = 5
+    page = request.args.get("page", default=1, type=int)
+    pagination = model.query.paginate(page=page, per_page=per_page, error_out=False)
+    list_display = resource_class.list_display
+    return render_template('user/list.html', pagination=pagination, resource=resource, list_display=list_display)
