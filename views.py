@@ -4,7 +4,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, EqualTo
 from . import admin
-from admin_views import *
+from admin_view import *
 
 # fix this hardcoded line
 from models.user import User
