@@ -14,9 +14,9 @@
         </nav>
         <div class="flex">
             <sidebar class="bg-gray-200 w-64 flex flex-col pt-10 h-screen">
+                <a href="{{ url_for('.dashboard') }}" class="px-10 py-4 cursor-pointer hover:bg-gray-300">Dashboard</a>
                 <a href="/user" class="px-10 py-4 cursor-pointer hover:bg-gray-300">Users</a>
                 <a href="#" class="px-10 py-4 cursor-pointer hover:bg-gray-300">Roles</a>
-                <a href="/reports" class="px-10 py-4 cursor-pointer hover:bg-gray-300">Reports</a>
             </sidebar>
             <div class="p-10 w-full">
                 {% block content %} {% endblock %}

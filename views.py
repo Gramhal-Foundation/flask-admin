@@ -18,16 +18,10 @@ class LoginForm(FlaskForm):
 def index():
     return redirect(url_for('.dashboard'))
 
-@admin.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('.login'))
-
 @admin.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('reports.html')
+    return render_template('dashboard.html')
 
 @admin.route('/login', methods=['GET', 'POST'])
 def login():
@@ -47,3 +41,9 @@ def login():
             flash('Invalid credentials. Please try again.', 'error')
 
     return render_template('login.html', form=form)
+
+@admin.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('.login'))
