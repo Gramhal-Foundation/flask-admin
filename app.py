@@ -57,7 +57,7 @@ login_manager.login_view = 'login'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return User.query.get(user_id)
 
 class RegistrationForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired()])
@@ -113,8 +113,6 @@ def user_edit(user_id):
     phone = request.form.get('phone')
     password = request.form.get('password')
 
-    print('email...', email)
-    print('user.email...', user.email)
     if email != user.email:
         user.email = email
 

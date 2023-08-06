@@ -15,7 +15,7 @@ class LoginForm(FlaskForm):
 
 @admin.route('/')
 @login_required
-def default():
+def index():
     return redirect(url_for('.dashboard'))
 
 @admin.route('/logout')
@@ -33,10 +33,12 @@ def dashboard():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
+        # email/username/phone & password to be picked from app config
+        # to understand the primary field names and avoid conflicts
         email = form.email.data
         password = form.password.data
 
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(phone_number=email).first()
 
         if user and user.password == password:
             login_user(user)
