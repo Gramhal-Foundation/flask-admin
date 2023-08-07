@@ -1,10 +1,34 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, Response
+from flask import Flask, render_template as real_render_template, request, redirect, url_for, flash, Response
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, EqualTo
 from . import admin
 from admin_view import *
+import ast
+
+def get_class_names(file_path):
+    with open(file_path, 'r') as file:
+        file_content = file.read()
+
+    class_names = []
+
+    # Parse the Python code into an abstract syntax tree (AST)
+    tree = ast.parse(file_content)
+
+    # Traverse the AST and extract class names
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef):
+            class_names.append(node.name)
+
+    return class_names
+
+def render_template(*args, **kwargs):
+    class_names = get_class_names('admin_view.py')
+    class_names.remove('FlaskAdmin')
+    resource_types = [globals()[x].model.__name__.lower() for x in class_names]
+    print('resource_types...', resource_types)
+    return real_render_template(*args, **kwargs, resource_types=resource_types)
 
 # [TODO]: dependency on main repo
 from db import db
