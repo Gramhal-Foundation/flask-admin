@@ -44,7 +44,7 @@
                                 </a>
                             </div>
                             <div>
-                                <form action="/resource/{{resource_type}}/{{ resource._id }}/delete" method="POST">
+                                <form action={{ url_for('.resource_delete', resource_type=resource_type, resource_id=resource._id)}} method="POST">
                                     <button type="submit"> <i class="fas fa-trash-alt text-red-500"></i></button>
                                 </form>
                             </div>

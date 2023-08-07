@@ -117,3 +117,16 @@ def resource_edit(resource_type, resource_id):
     db.session.commit()
 
     return redirect(url_for('.resource_list', resource_type=resource_type))
+
+@admin.route('/resource/<string:resource_type>/<string:resource_id>/delete', methods=['POST'])
+@login_required
+def resource_delete(resource_type, resource_id):
+    resource_class = globals()[resource_type.capitalize() + "Admin"]
+    model = resource_class.model
+    resource = model.query.get(resource_id)
+
+    if resource:
+        db.session.delete(resource)
+        db.session.commit()
+
+    return redirect(url_for('.resource_list', resource_type=resource_type))
