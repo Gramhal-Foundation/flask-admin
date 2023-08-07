@@ -58,4 +58,4 @@ def resource(resource):
     page = request.args.get("page", default=1, type=int)
     pagination = model.query.paginate(page=page, per_page=per_page, error_out=False)
     list_display = resource_class.list_display
-    return render_template('user/list.html', pagination=pagination, resource=resource, list_display=list_display)
+    return render_template('resource/list.html', pagination=pagination, resource=resource, list_display=list_display)
