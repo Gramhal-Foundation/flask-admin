@@ -6,7 +6,10 @@ from wtforms.validators import DataRequired, EqualTo
 from . import admin
 from admin_view import *
 
-# fix this hardcoded line
+# [TODO]: dependency on main repo
+from db import db
+
+# [TODO]: fix this hardcoded line
 from models.user import User
 
 class LoginForm(FlaskForm):
@@ -53,38 +56,40 @@ def logout():
 @login_required
 def resource_list(resource_type):
     resource_class = globals()[resource_type.capitalize() + "Admin"]
+    model = resource_class.model
     per_page = 5
     page = request.args.get("page", default=1, type=int)
-    pagination = resource_class.model.query.paginate(page=page, per_page=per_page, error_out=False)
+    primary_key_column = model.__table__.primary_key.columns.keys()[0]
+    pagination = model.query.order_by(primary_key_column).paginate(page=page, per_page=per_page, error_out=False)
     list_display = resource_class.list_display
     return render_template('resource/list.html', pagination=pagination, resource_type=resource_type, list_display=list_display)
 
-@admin.route('/resource/<string:resource_type>/<string:resource_id>/edit')
+@admin.route('/resource/<string:resource_type>/<string:resource_id>/edit', methods=['GET', 'POST'])
 @login_required
 def resource_edit(resource_type, resource_id):
     resource_class = globals()[resource_type.capitalize() + "Admin"]
-    resource = resource_class.model.query.get(resource_id)
+    model = resource_class.model
+    resource = model.query.get(resource_id)
 
     if not resource:
         return redirect(url_for('.resource_list'))
 
+    all_columns = model.__table__.columns.keys()
+    primary_key_columns = model.__table__.primary_key.columns.keys()
+    ignore_columns = ['created_at', 'updated_at'] + primary_key_columns
+
+    editable_columns = []
+    for column in all_columns:
+        if column not in ignore_columns:
+            editable_columns.append(column)
+
     if request.method == 'GET':
-        return render_template('resource/edit.html', resource_type=resource_type, resource=resource)
+        return render_template('resource/edit.html', resource_type=resource_type, resource=resource, editable_columns=editable_columns)
 
-    # name = request.form.get('name')
-    # email = request.form.get('email')
-    # phone = request.form.get('phone')
-    # password = request.form.get('password')
+    for column in editable_columns:
+        # [TODO]: add data validation
+        setattr(resource, column, request.form.get(column))
 
-    # if email != user.email:
-    #     user.email = email
+    db.session.commit()
 
-    # if password:
-    #     user.password = password
-
-    # user.name = name
-    # user.phone = phone
-
-    # # db.session.commit()
-
-    return redirect(url_for('.resource_list', resource=resource))
+    return redirect(url_for('.resource_list', resource_type=resource_type))

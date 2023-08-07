@@ -8,32 +8,16 @@
     <div class="flex justify-between text-3xl mb-4">
       Edit {{ resource_type.capitalize() }}
     </div>
-    <form action={{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource_id) }} method="POST">
+    <form action={{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource._id) }} method="POST">
       <div class="flex flex-wrap">
+        {% for column in editable_columns %}
         <div class="w-1/2 mb-4">
           <div class="flex flex-col mr-3">
-            <label for="name">Name</label>
-            <input type="text" name="name" id="name" class="py-2 px-3 border rounded" value="{{ resource.name }}" />
+            <label for={{ column }}>{{ column.capitalize() }}</label>
+            <input type="text" name={{ column }} id={{ column }} class="py-2 px-3 border rounded" value="{{ resource[column] }}" />
           </div>
         </div>
-        <div class="w-1/2 mb-4">
-          <div class="flex flex-col ml-3">
-            <label for="email">Email</label>
-            <input type="email" name="email" id="email" class="py-2 px-3 border rounded" value="{{ resource.email }}" />
-          </div>
-        </div>
-        <div class="w-1/2 mb-4">
-          <div class="flex flex-col mr-3">
-            <label for="password">Password</label>
-            <input type="password" name="password" id="password" class="py-2 px-3 border rounded" />
-          </div>
-        </div>
-        <div class="w-1/2 mb-4">
-          <div class="flex flex-col ml-3">
-            <label for="phone">Phone</label>
-            <input type="tel" name="phone" id="phone" class="py-2 px-3 border rounded" value="{{ resource.phone }}" />
-          </div>
-        </div>
+        {% endfor %}
       </div>
       <div class="flex">
         <button type="submit" class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded">
