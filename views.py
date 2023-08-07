@@ -49,13 +49,42 @@ def logout():
     logout_user()
     return redirect(url_for('.login'))
 
-@admin.route('/resource/<string:resource>')
+@admin.route('/resource/<string:resource_type>')
 @login_required
-def resource(resource):
-    resource_class = globals()[resource.capitalize() + "Admin"]
-    model = resource_class.model
+def resource_list(resource_type):
+    resource_class = globals()[resource_type.capitalize() + "Admin"]
     per_page = 5
     page = request.args.get("page", default=1, type=int)
-    pagination = model.query.paginate(page=page, per_page=per_page, error_out=False)
+    pagination = resource_class.model.query.paginate(page=page, per_page=per_page, error_out=False)
     list_display = resource_class.list_display
-    return render_template('resource/list.html', pagination=pagination, resource=resource, list_display=list_display)
+    return render_template('resource/list.html', pagination=pagination, resource_type=resource_type, list_display=list_display)
+
+@admin.route('/resource/<string:resource_type>/<string:resource_id>/edit')
+@login_required
+def resource_edit(resource_type, resource_id):
+    resource_class = globals()[resource_type.capitalize() + "Admin"]
+    resource = resource_class.model.query.get(resource_id)
+
+    if not resource:
+        return redirect(url_for('.resource_list'))
+
+    if request.method == 'GET':
+        return render_template('resource/edit.html', resource_type=resource_type, resource=resource)
+
+    # name = request.form.get('name')
+    # email = request.form.get('email')
+    # phone = request.form.get('phone')
+    # password = request.form.get('password')
+
+    # if email != user.email:
+    #     user.email = email
+
+    # if password:
+    #     user.password = password
+
+    # user.name = name
+    # user.phone = phone
+
+    # # db.session.commit()
+
+    return redirect(url_for('.resource_list', resource=resource))

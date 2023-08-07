@@ -1,25 +1,25 @@
 {% extends 'app.html' %}
 
 {% block title %}
-    Users
+    {{ resource_type.capitalize() }}
 {% endblock %}
 
 {% block content %}
     <div class="flex justify-between text-3xl mb-4">
-      Edit User
+      Edit {{ resource_type.capitalize() }}
     </div>
-    <form action="/user/{{ user.id }}/edit" method="POST">
+    <form action={{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource_id) }} method="POST">
       <div class="flex flex-wrap">
         <div class="w-1/2 mb-4">
           <div class="flex flex-col mr-3">
             <label for="name">Name</label>
-            <input type="text" name="name" id="name" class="py-2 px-3 border rounded" value="{{ user.name }}" />
+            <input type="text" name="name" id="name" class="py-2 px-3 border rounded" value="{{ resource.name }}" />
           </div>
         </div>
         <div class="w-1/2 mb-4">
           <div class="flex flex-col ml-3">
             <label for="email">Email</label>
-            <input type="email" name="email" id="email" class="py-2 px-3 border rounded" value="{{ user.email }}" />
+            <input type="email" name="email" id="email" class="py-2 px-3 border rounded" value="{{ resource.email }}" />
           </div>
         </div>
         <div class="w-1/2 mb-4">
@@ -31,7 +31,7 @@
         <div class="w-1/2 mb-4">
           <div class="flex flex-col ml-3">
             <label for="phone">Phone</label>
-            <input type="tel" name="phone" id="phone" class="py-2 px-3 border rounded" value="{{ user.phone }}" />
+            <input type="tel" name="phone" id="phone" class="py-2 px-3 border rounded" value="{{ resource.phone }}" />
           </div>
         </div>
       </div>
