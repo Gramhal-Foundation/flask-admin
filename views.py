@@ -13,6 +13,10 @@ from app import app
 def admin_format_datetime(s):
     return datetime.strftime(s, '%Y-%m-%dT%H:%M')
 
+@app.template_filter('format_label')
+def format_label(value):
+    return value.replace("_", " ")
+
 def get_class_names(file_path):
     with open(file_path, 'r') as file:
         file_content = file.read()
