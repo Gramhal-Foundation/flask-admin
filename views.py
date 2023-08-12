@@ -8,6 +8,8 @@ from admin_view import *
 import ast
 from datetime import datetime
 from app import app
+import csv
+import io
 
 @app.template_filter('admin_format_datetime')
 def admin_format_datetime(s):
@@ -196,3 +198,23 @@ def resource_delete(resource_type, resource_id):
         db.session.commit()
 
     return redirect(url_for('.resource_list', resource_type=resource_type))
+
+@admin.route("/resource/<string:resource_type>/download", methods=['GET'])
+@login_required
+def resource_download(resource_type):
+    resource_class = globals()[resource_type.capitalize() + "Admin"]
+    model = resource_class.model
+    resources = model.query.all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    downloadable_attributes = model.__table__.columns.keys()
+
+    writer.writerow(downloadable_attributes) # csv header
+    for resource in resources:
+        line = []
+        for attribute in downloadable_attributes:
+            line.append(getattr(resource, attribute))
+        writer.writerow(line)
+    output.seek(0)
+    return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=" + resource_type + ".csv"})
