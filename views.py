@@ -98,6 +98,49 @@ def resource_list(resource_type):
     list_display = resource_class.list_display
     return render_template('resource/list.html', pagination=pagination, resource_type=resource_type, list_display=list_display)
 
+@admin.route('/resource/<string:resource_type>/create', methods=['GET', 'POST'])
+@login_required
+def resource_create(resource_type):
+    resource_class = globals()[resource_type.capitalize() + "Admin"]
+    model = resource_class.model
+
+    primary_key_columns = model.__table__.primary_key.columns.keys()
+    ignore_columns = ['created_at', 'updated_at'] + primary_key_columns
+    ignore_columns = ['category_ids', 'sorted_at'] + ignore_columns
+
+    model_attributes = []
+    for column in model.__table__.columns:
+        model_attributes.append({
+            'name': str(column.name),
+            'type': str(column.type)
+        })
+
+    editable_attributes = []
+    for attribute in model_attributes:
+        if attribute['name'] not in ignore_columns:
+            editable_attributes.append(attribute)
+
+    if request.method == 'GET':
+        return render_template('resource/create.html', resource_type=resource_type, editable_attributes=editable_attributes)
+
+    attributes_to_save = {}
+    for attribute in editable_attributes:
+        attribute_value = request.form.get(attribute['name'])
+        if attribute['type'] == 'VARCHAR' or attribute['type'] == 'TEXT' or attribute['type'] == 'JSON':
+            attribute_value = attribute_value if attribute_value else None
+        elif attribute['type'] == 'INTEGER':
+            attribute_value = attribute_value if attribute_value else None
+        elif attribute['type'] == 'BOOLEAN':
+            attribute_value = bool(attribute_value == 'True')
+        attributes_to_save[attribute['name']] = attribute_value
+
+
+    new_resource = model(**attributes_to_save)
+    db.session.add(new_resource)
+    db.session.commit()
+
+    return redirect(url_for('.resource_list', resource_type=resource_type))
+
 @admin.route('/resource/<string:resource_type>/<string:resource_id>/edit', methods=['GET', 'POST'])
 @login_required
 def resource_edit(resource_type, resource_id):
