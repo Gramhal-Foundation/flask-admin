@@ -6,6 +6,12 @@ from wtforms.validators import DataRequired, EqualTo
 from . import admin
 from admin_view import *
 import ast
+from datetime import datetime
+from app import app
+
+@app.template_filter('admin_format_datetime')
+def admin_format_datetime(s):
+    return datetime.strftime(s, '%Y-%m-%dT%H:%M')
 
 def get_class_names(file_path):
     with open(file_path, 'r') as file:
@@ -98,21 +104,34 @@ def resource_edit(resource_type, resource_id):
     if not resource:
         return redirect(url_for('.resource_list'))
 
-    all_columns = model.__table__.columns.keys()
     primary_key_columns = model.__table__.primary_key.columns.keys()
     ignore_columns = ['created_at', 'updated_at'] + primary_key_columns
+    ignore_columns = ['category_ids', 'sorted_at'] + ignore_columns
 
-    editable_columns = []
-    for column in all_columns:
-        if column not in ignore_columns:
-            editable_columns.append(column)
+    model_attributes = []
+    for column in model.__table__.columns:
+        model_attributes.append({
+            'name': str(column.name),
+            'type': str(column.type)
+        })
+
+    editable_attributes = []
+    for attribute in model_attributes:
+        if attribute['name'] not in ignore_columns:
+            editable_attributes.append(attribute)
 
     if request.method == 'GET':
-        return render_template('resource/edit.html', resource_type=resource_type, resource=resource, editable_columns=editable_columns)
+        return render_template('resource/edit.html', resource_type=resource_type, resource=resource, editable_attributes=editable_attributes)
 
-    for column in editable_columns:
-        # [TODO]: add data validation
-        setattr(resource, column, request.form.get(column))
+    for attribute in editable_attributes:
+        attribute_value = request.form.get(attribute['name'])
+        if attribute['type'] == 'VARCHAR' or attribute['type'] == 'TEXT' or attribute['type'] == 'JSON':
+            attribute_value = attribute_value if attribute_value else None
+        elif attribute['type'] == 'INTEGER':
+            attribute_value = attribute_value if attribute_value else None
+        elif attribute['type'] == 'BOOLEAN':
+            attribute_value = bool(attribute_value == 'True')
+        setattr(resource, attribute['name'], attribute_value)
 
     db.session.commit()
 

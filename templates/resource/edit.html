@@ -10,11 +10,24 @@
     </div>
     <form action={{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource._id) }} method="POST">
       <div class="flex flex-wrap">
-        {% for column in editable_columns %}
+        {% for attribute in editable_attributes %}
         <div class="w-1/2 mb-4">
           <div class="flex flex-col mr-3">
-            <label for={{ column }}>{{ column.capitalize() }}</label>
-            <input type="text" name={{ column }} id={{ column }} class="py-2 px-3 border rounded" value="{{ resource[column] }}" />
+            <label for={{ attribute.name }}>{{ attribute.name.capitalize() }}</label>
+            {% if attribute.type == 'VARCHAR' %}
+              <input type="text" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border rounded" {% if resource[attribute.name] %} value="{{ resource[attribute.name] }}" {% endif %} />
+            {% elif attribute.type == 'INTEGER' %}
+              <input type="number" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border rounded" {% if resource[attribute.name] %} value="{{ resource[attribute.name] }}" {% endif %} />
+            {% elif attribute.type == 'BOOLEAN' %}
+              <select name={{ attribute.name }} class="py-2.5 px-3 border rounded">
+                <option value="True" {% if resource[attribute.name] == True %} selected="selected "{% endif %}>True</option>
+                <option value="False" {% if resource[attribute.name] == False %} selected="selected "{% endif %}>False</option>
+              </select>
+            {% elif attribute.type == 'TEXT' or attribute.type == 'JSON' %}
+              <textarea class="py-2 px-3 border rounded" rows="5" name="{{ attribute.name }}" id="{{ attribute.name }}">{% if resource[attribute.name] %}{{ resource[attribute.name] }}{% endif %}</textarea>
+            {% elif attribute.type == 'DATETIME' %}
+              <input type="datetime-local" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border rounded" {% if resource[attribute.name] %} value="{{ resource[attribute.name] | admin_format_datetime }}" {% endif %} />
+            {% endif %}
           </div>
         </div>
         {% endfor %}
