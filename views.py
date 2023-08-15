@@ -1,8 +1,8 @@
-from flask import Flask, render_template as real_render_template, request, redirect, url_for, flash, Response
-from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from flask import render_template as real_render_template, request, redirect, url_for, flash, Response
+from flask_login import login_user, login_required, logout_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import DataRequired, EqualTo
+from wtforms.validators import DataRequired
 from . import admin
 from admin_view import *
 import ast
@@ -13,6 +13,12 @@ import io
 import boto3
 import pandas as pd
 from werkzeug.utils import secure_filename
+
+# [TODO]: dependency on main repo
+from db import db
+
+# [TODO]: fix this hardcoded line
+from models.user import User
 
 def upload_file_to_s3(file, bucket_name = '', acl="public-read"):
     """
@@ -98,12 +104,6 @@ def render_template(*args, **kwargs):
         template_attributes['permissions'][resource_type] = resource_permissions
 
     return real_render_template(*args, **kwargs, **template_attributes)
-
-# [TODO]: dependency on main repo
-from db import db
-
-# [TODO]: fix this hardcoded line
-from models.user import User
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired()])
