@@ -10,6 +10,34 @@ from datetime import datetime
 from app import app
 import csv
 import io
+import boto3
+import pandas as pd
+from werkzeug.utils import secure_filename
+
+s3 = boto3.client(
+   "s3",
+   aws_access_key_id=app.config['S3_KEY'],
+   aws_secret_access_key=app.config['S3_SECRET']
+)
+
+def upload_file_to_s3(file, bucket_name, acl="public-read"):
+    """
+    Docs: http://boto3.readthedocs.io/en/latest/guide/s3.html
+    """
+    try:
+        s3.upload_fileobj(
+            file,
+            bucket_name,
+            file.filename,
+            ExtraArgs={
+                "ACL": acl,
+                "ContentType": file.content_type    #Set appropriate content type as per the file
+            }
+        )
+    except Exception as e:
+        print("Something Happened: ", e)
+        return e
+    return "{}{}".format(app.config["S3_LOCATION"], file.filename)
 
 @app.template_filter('admin_format_datetime')
 def admin_format_datetime(s):
@@ -133,9 +161,10 @@ def resource_create(resource_type):
         elif attribute['type'] == 'INTEGER':
             attribute_value = attribute_value if attribute_value else None
         elif attribute['type'] == 'BOOLEAN':
-            attribute_value = bool(attribute_value == 'True')
+            if not isinstance(attribute_value, bool):
+                attribute_value = attribute_value.lower() == 'true'
+            attribute_value = bool(attribute_value)
         attributes_to_save[attribute['name']] = attribute_value
-
 
     new_resource = model(**attributes_to_save)
     db.session.add(new_resource)
@@ -179,7 +208,9 @@ def resource_edit(resource_type, resource_id):
         elif attribute['type'] == 'INTEGER':
             attribute_value = attribute_value if attribute_value else None
         elif attribute['type'] == 'BOOLEAN':
-            attribute_value = bool(attribute_value == 'True')
+            if not isinstance(attribute_value, bool):
+                attribute_value = attribute_value.lower() == 'true'
+            attribute_value = bool(attribute_value)
         setattr(resource, attribute['name'], attribute_value)
 
     db.session.commit()
@@ -224,22 +255,57 @@ def resource_download(resource_type):
 def resource_upload(resource_type):
     resource_class = globals()[resource_type.capitalize() + "Admin"]
     model = resource_class.model
+    primary_key_columns = model.__table__.primary_key.columns.keys()
+    ignore_columns = ['created_at', 'updated_at'] + primary_key_columns
+    ignore_columns = ['category_ids', 'sorted_at'] + ignore_columns
+
+    model_attributes = []
+    for column in model.__table__.columns:
+        model_attributes.append({
+            'name': str(column.name),
+            'type': str(column.type)
+        })
+
+    uploadable_attributes = []
+    for attribute in model_attributes:
+        if attribute['name'] not in ignore_columns:
+            uploadable_attributes.append(attribute)
+
+    print('uploadable_attributes....', uploadable_attributes)
+
+    print('request.method....', request.method)
     if request.method == 'POST':
         uploaded_file = request.files['file']
-        col_names = ['Name', 'Phone', 'Email']
+        col_names = [attribute['name'] for attribute in uploadable_attributes]
+        print('col_names....', col_names)
         csvData = pd.read_csv(uploaded_file, usecols=col_names)
-
+        print('csvData....', csvData)
         for i,row in csvData.iterrows():
-            new_user = User(email=row['Email'], name=row['Name'], phone=row['Phone'], password='gramhal')
-            db.session.add(new_user)
+            attributes_to_save = {}
+            for attribute in uploadable_attributes:
+                attribute_value = row[attribute['name']]
+                print('attribute[name]....', attribute['name'])
+                print('attribute[type]....', attribute['type'])
+                print('attribute_value....', attribute_value)
+                if pd.isna(attribute_value):
+                    attribute_value = None
+                if attribute['type'] == 'VARCHAR' or attribute['type'] == 'TEXT' or attribute['type'] == 'JSON':
+                    attribute_value = attribute_value if attribute_value else None
+                elif attribute['type'] == 'INTEGER':
+                    attribute_value = attribute_value if attribute_value else None
+                elif attribute['type'] == 'BOOLEAN':
+                    if not isinstance(attribute_value, bool):
+                        attribute_value = attribute_value.lower() == 'true'
+                    attribute_value = bool(attribute_value)
+                attributes_to_save[attribute['name']] = attribute_value
+            new_resource = model(**attributes_to_save)
+            db.session.add(new_resource)
             db.session.commit()
 
         if uploaded_file:
             uploaded_file.filename = secure_filename(uploaded_file.filename)
-            print('before upload_file_to_s3...', uploaded_file)
-            output = upload_file_to_s3(uploaded_file, app.config["S3_BUCKET"])
-            print('output...', output)
+            upload_file_to_s3(uploaded_file, app.config["S3_BUCKET"])
 
-        flash('All users uploaded!')
-        return redirect(url_for('user'))
-    return render_template('upload.html', resource_type=resource_type)
+        flash('All ' + resource_type.capitalize() + ' uploaded!')
+        return redirect(url_for('.resource_list', resource_type=resource_type))
+    return render_template('resource/upload.html', resource_type=resource_type)

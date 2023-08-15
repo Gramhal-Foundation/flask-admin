@@ -6,7 +6,7 @@
 
 {% block content %}
   <h1 class="text-2xl">Bulk Upload {{ resource_type.capitalize() }}</h1>
-  <form action="/upload" method=post enctype=multipart/form-data>
+  <form action={{ url_for('.resource_upload', resource_type=resource_type) }} method=post enctype=multipart/form-data>
     <div class="mt-4">
       <input type=file name=file>
     </div>
