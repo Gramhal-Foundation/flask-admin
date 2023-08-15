@@ -218,3 +218,28 @@ def resource_download(resource_type):
         writer.writerow(line)
     output.seek(0)
     return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=" + resource_type + ".csv"})
+
+@admin.route("/resource/<string:resource_type>/upload", methods=['GET', 'POST'])
+@login_required
+def resource_upload(resource_type):
+    resource_class = globals()[resource_type.capitalize() + "Admin"]
+    model = resource_class.model
+    if request.method == 'POST':
+        uploaded_file = request.files['file']
+        col_names = ['Name', 'Phone', 'Email']
+        csvData = pd.read_csv(uploaded_file, usecols=col_names)
+
+        for i,row in csvData.iterrows():
+            new_user = User(email=row['Email'], name=row['Name'], phone=row['Phone'], password='gramhal')
+            db.session.add(new_user)
+            db.session.commit()
+
+        if uploaded_file:
+            uploaded_file.filename = secure_filename(uploaded_file.filename)
+            print('before upload_file_to_s3...', uploaded_file)
+            output = upload_file_to_s3(uploaded_file, app.config["S3_BUCKET"])
+            print('output...', output)
+
+        flash('All users uploaded!')
+        return redirect(url_for('user'))
+    return render_template('upload.html', resource_type=resource_type)

@@ -10,10 +10,10 @@
         Create {{ resource_type.capitalize() }}
         </a>
         <div>
-            <a href={{ url_for('.resource_download', resource_type=resource_type)}} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded">
+            <a href={{ url_for('.resource_download', resource_type=resource_type) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded">
                 Download CSV
             </a>
-            <a href="/upload" class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded ml-2">
+            <a href={{ url_for('.resource_upload', resource_type=resource_type) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded ml-2">
                 Bulk Upload
             </a>
         </div>
