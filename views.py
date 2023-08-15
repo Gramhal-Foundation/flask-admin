@@ -44,9 +44,15 @@ def upload_file_to_s3(file, bucket_name = '', acl="public-read"):
         print("Something Happened: ", e)
         return e
 
+@app.template_filter('admin_label_plural')
+def admin_label_plural(label):
+    import inflect
+    p = inflect.engine()
+    return p.plural_noun(label)
+
 @app.template_filter('admin_format_datetime')
-def admin_format_datetime(s):
-    return datetime.strftime(s, '%Y-%m-%dT%H:%M')
+def admin_format_datetime(value):
+    return datetime.strftime(value, '%Y-%m-%dT%H:%M')
 
 @app.template_filter('format_label')
 def format_label(value):
@@ -83,7 +89,9 @@ def render_template(*args, **kwargs):
             "create": False,
             "read": True,
             "update": False,
-            "delete": False
+            "delete": False,
+            "export": False,
+            "import": False,
         }
         if hasattr(resource_obj, 'permissions'):
             resource_permissions = resource_obj.permissions
@@ -269,7 +277,7 @@ def resource_download(resource_type):
             line.append(getattr(resource, attribute))
         writer.writerow(line)
     output.seek(0)
-    return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=" + resource_type + ".csv"})
+    return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=" + admin_label_plural(resource_type) + ".csv"})
 
 @admin.route("/resource/<string:resource_type>/download-sample", methods=['GET'])
 @login_required
@@ -289,7 +297,7 @@ def resource_download_sample(resource_type):
     writer.writerow([]) # print a blank second row
 
     output.seek(0)
-    return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=" + resource_type + "-sample.csv"})
+    return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=" + admin_label_plural(resource_type) + "-sample.csv"})
 
 @admin.route("/resource/<string:resource_type>/upload", methods=['GET', 'POST'])
 @login_required
