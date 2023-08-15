@@ -72,7 +72,6 @@ def render_template(*args, **kwargs):
     class_names = get_class_names('admin_view.py')
     class_names.remove('FlaskAdmin')
     resource_types = [globals()[x].model.__name__.lower() for x in class_names]
-    print('resource_types...', resource_types)
     return real_render_template(*args, **kwargs, resource_types=resource_types)
 
 # [TODO]: dependency on main repo
