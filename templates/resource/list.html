@@ -24,7 +24,7 @@
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
                     {% for item in list_display %}
-                        <th scope="col" class="px-6 py-3">{{ item }}</th>
+                        <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
                     {% endfor %}
                     <th scope="col" class="px-6 py-3">Actions</th>
                 </tr>
@@ -39,7 +39,7 @@
                         {% endfor %}
                         <td class="px-6 py-4 flex items-center">
                             <div>
-                                <a href={{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource._id) }} class="font-bold py-2 px-4 rounded text-black">
+                                <a href={{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource._id) }} class="font-bold py-2 pr-4 rounded text-black">
                                     <i class="fas fa-edit"></i>
                                 </a>
                             </div>
