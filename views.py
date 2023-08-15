@@ -255,6 +255,26 @@ def resource_download(resource_type):
     output.seek(0)
     return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=" + resource_type + ".csv"})
 
+@admin.route("/resource/<string:resource_type>/download-sample", methods=['GET'])
+@login_required
+def resource_download_sample(resource_type):
+    resource_class = globals()[resource_type.capitalize() + "Admin"]
+    model = resource_class.model
+    output = io.StringIO()
+    writer = csv.writer(output)
+    primary_key_columns = model.__table__.primary_key.columns.keys()
+    ignore_columns = ['created_at', 'updated_at'] + primary_key_columns
+    ignore_columns = ['category_ids', 'sorted_at'] + ignore_columns
+    uploadable_attributes = []
+    for column in model.__table__.columns.keys():
+        if column not in ignore_columns:
+            uploadable_attributes.append(column)
+    writer.writerow(uploadable_attributes) # csv header
+    writer.writerow([]) # print a blank second row
+
+    output.seek(0)
+    return Response(output, mimetype="text/csv", headers={"Content-Disposition":"attachment;filename=" + resource_type + "-sample.csv"})
+
 @admin.route("/resource/<string:resource_type>/upload", methods=['GET', 'POST'])
 @login_required
 def resource_upload(resource_type):
@@ -276,22 +296,14 @@ def resource_upload(resource_type):
         if attribute['name'] not in ignore_columns:
             uploadable_attributes.append(attribute)
 
-    print('uploadable_attributes....', uploadable_attributes)
-
-    print('request.method....', request.method)
     if request.method == 'POST':
         uploaded_file = request.files['file']
         col_names = [attribute['name'] for attribute in uploadable_attributes]
-        print('col_names....', col_names)
         csvData = pd.read_csv(uploaded_file, usecols=col_names)
-        print('csvData....', csvData)
         for i,row in csvData.iterrows():
             attributes_to_save = {}
             for attribute in uploadable_attributes:
                 attribute_value = row[attribute['name']]
-                print('attribute[name]....', attribute['name'])
-                print('attribute[type]....', attribute['type'])
-                print('attribute_value....', attribute_value)
                 if pd.isna(attribute_value):
                     attribute_value = None
                 if attribute['type'] == 'VARCHAR' or attribute['type'] == 'TEXT' or attribute['type'] == 'JSON':
