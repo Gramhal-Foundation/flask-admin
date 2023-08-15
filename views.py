@@ -72,7 +72,24 @@ def render_template(*args, **kwargs):
     class_names = get_class_names('admin_view.py')
     class_names.remove('FlaskAdmin')
     resource_types = [globals()[x].model.__name__.lower() for x in class_names]
-    return real_render_template(*args, **kwargs, resource_types=resource_types)
+    template_attributes = {
+        'resource_types': resource_types
+    }
+    template_attributes['permissions'] = {}
+    for resource_type in resource_types:
+        resource_class = globals()[resource_type.capitalize() + "Admin"]
+        resource_obj = resource_class()
+        resource_permissions = { # default permissions
+            "create": False,
+            "read": True,
+            "update": False,
+            "delete": False
+        }
+        if hasattr(resource_obj, 'permissions'):
+            resource_permissions = resource_obj.permissions
+        template_attributes['permissions'][resource_type] = resource_permissions
+
+    return real_render_template(*args, **kwargs, **template_attributes)
 
 # [TODO]: dependency on main repo
 from db import db

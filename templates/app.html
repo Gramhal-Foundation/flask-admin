@@ -16,7 +16,9 @@
             <sidebar class="bg-gray-200 w-64 flex flex-col pt-10 h-screen">
                 <a href="{{ url_for('.dashboard') }}" class="px-10 py-4 cursor-pointer hover:bg-gray-300">Dashboard</a>
                 {% for resource_type in resource_types %}
-                    <a href={{ url_for('.resource_list', resource_type=resource_type) }} class="px-10 py-4 cursor-pointer hover:bg-gray-300">{{ resource_type.capitalize() }}</a>
+                    {% if permissions.get(resource_type).get('read') %}
+                        <a href={{ url_for('.resource_list', resource_type=resource_type) }} class="px-10 py-4 cursor-pointer hover:bg-gray-300">{{ resource_type.capitalize() }}</a>
+                    {% endif %}
                 {% endfor %}
             </sidebar>
             <div class="p-10 w-full">
