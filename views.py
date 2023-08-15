@@ -14,16 +14,21 @@ import boto3
 import pandas as pd
 from werkzeug.utils import secure_filename
 
-s3 = boto3.client(
-   "s3",
-   aws_access_key_id=app.config['S3_KEY'],
-   aws_secret_access_key=app.config['S3_SECRET']
-)
-
-def upload_file_to_s3(file, bucket_name, acl="public-read"):
+def upload_file_to_s3(file, bucket_name = '', acl="public-read"):
     """
     Docs: http://boto3.readthedocs.io/en/latest/guide/s3.html
     """
+    if not app.config['S3_KEY']:
+        return None
+
+    if not bucket_name:
+        bucket_name = app.config["S3_BUCKET"]
+
+    s3 = boto3.client(
+        "s3",
+        aws_access_key_id=app.config['S3_KEY'],
+        aws_secret_access_key=app.config['S3_SECRET']
+    )
     try:
         s3.upload_fileobj(
             file,
@@ -31,13 +36,13 @@ def upload_file_to_s3(file, bucket_name, acl="public-read"):
             file.filename,
             ExtraArgs={
                 "ACL": acl,
-                "ContentType": file.content_type    #Set appropriate content type as per the file
+                "ContentType": file.content_type
             }
         )
+        return "{}{}".format(app.config["S3_LOCATION"], file.filename)
     except Exception as e:
         print("Something Happened: ", e)
         return e
-    return "{}{}".format(app.config["S3_LOCATION"], file.filename)
 
 @app.template_filter('admin_format_datetime')
 def admin_format_datetime(s):
@@ -304,7 +309,7 @@ def resource_upload(resource_type):
 
         if uploaded_file:
             uploaded_file.filename = secure_filename(uploaded_file.filename)
-            upload_file_to_s3(uploaded_file, app.config["S3_BUCKET"])
+            upload_file_to_s3(uploaded_file)
 
         flash('All ' + resource_type.capitalize() + ' uploaded!')
         return redirect(url_for('.resource_list', resource_type=resource_type))
