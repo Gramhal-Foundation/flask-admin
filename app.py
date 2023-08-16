@@ -54,15 +54,22 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = os.getenv(
 )
 
 # AWS S3 configurations
-app.config["S3_BUCKET"] = os.getenv("S3_BUCKET")
+s3_bucket = os.getenv("S3_BUCKET")
+s3_region = os.getenv("S3_REGION")
+if s3_bucket is None or s3_region is None:
+    raise ValueError(
+        "S3_BUCKET and S3_REGION environment variables must be set"
+    )
+
+app.config["S3_BUCKET"] = s3_bucket
 app.config["S3_KEY"] = os.getenv("S3_KEY")
 app.config["S3_SECRET"] = os.getenv("S3_SECRET")
-app.config["S3_REGION"] = os.getenv("S3_REGION")
+app.config["S3_REGION"] = s3_region
 app.config["S3_LOCATION"] = (
     "https://"
-    + os.getenv("S3_BUCKET")
+    + s3_bucket
     + ".s3."
-    + os.getenv("S3_REGION")
+    + s3_region
     + ".amazonaws.com/"
 )
 
