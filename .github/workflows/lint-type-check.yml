@@ -23,8 +23,8 @@ jobs:
       - name: Lint with Flake8
         run: flake8 . --exclude=migrations
 
-      - name: Type Check with mypy
-        run: mypy . --exclude=migrations
-
       - name: Static Code Analysis with pylint
         run: pylint . --exclude=migrations
+
+      - name: Type Check with mypy
+        run: mypy . --exclude=migrations
