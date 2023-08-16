@@ -43,6 +43,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+db = SQLAlchemy(app)
 
 # Change 'your_secret_key' to a strong and unique secret key
 app.secret_key = "randomsecret"
@@ -73,7 +74,6 @@ app.config["S3_LOCATION"] = (
     + ".amazonaws.com/"
 )
 
-db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 s3 = boto3.client(
