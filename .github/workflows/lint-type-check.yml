@@ -24,5 +24,7 @@ jobs:
         run: flake8 .
 
       - name: Type Check with mypy
-        run: |
-          mypy .
+        run: mypy .
+
+      - name: Static Code Analysis with pylint
+        run: pylint .
