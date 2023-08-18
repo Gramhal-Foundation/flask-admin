@@ -30,8 +30,12 @@ jobs:
       - name: Generate stubs for packages
         run: |
           for package in ${{ steps.read_requirements.outputs.packages }}; do
-            stubgen "$package" -o . --exclude __main__.py
+            stubgen "$package" -o .
           done
+
+      - name: Remove __main__.py stubs
+        run: |
+          find . -name "__main__.pyi" -delete
 
       - name: Lint and Static Code Analysis with Flake8
         run: flake8 . --exclude=migrations
