@@ -20,7 +20,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install Flask flake8 mypy
-          mypy --install-types .
 
       - name: Lint and Static Code Analysis with Flake8
         run: flake8 . --exclude=migrations
