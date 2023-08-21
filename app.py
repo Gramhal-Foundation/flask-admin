@@ -39,14 +39,11 @@ from wtforms.validators import DataRequired, EqualTo
 import pandas as pd
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
-from sqlalchemy.ext.declarative import DeclarativeMeta
 
 load_dotenv()
 
 app = Flask(__name__)
 db = SQLAlchemy(app)
-
-BaseModel: DeclarativeMeta = db.Model
 
 # Change 'your_secret_key' to a strong and unique secret key
 app.secret_key = "randomsecret"
@@ -86,7 +83,7 @@ s3 = boto3.client(
 )
 
 
-class User(UserMixin, BaseModel):
+class User(UserMixin):
     """
     Represents a user in the application.
 
