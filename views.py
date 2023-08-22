@@ -70,6 +70,10 @@ def admin_label_singular(label):
 def admin_format_datetime(value):
     return datetime.strftime(value, '%Y-%m-%dT%H:%M')
 
+@app.template_filter('admin_format_date')
+def admin_format_date(value):
+    return datetime.strftime(value, '%Y-%m-%d')
+
 @app.template_filter('format_label')
 def format_label(value):
     return value.replace("_", " ")

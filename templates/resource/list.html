@@ -50,14 +50,14 @@
                             <td class="px-6 py-4 flex items-center">
                                 {% if permissions.get(resource_type).get('update'): %}
                                     <div>
-                                        <a href={{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource._id) }} class="font-bold py-2 pr-4 rounded text-black">
+                                        <a href={{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource.id) }} class="font-bold py-2 pr-4 rounded text-black">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                     </div>
                                 {% endif %}
                                 {% if permissions.get(resource_type).get('delete'): %}
                                     <div>
-                                        <form action={{ url_for('.resource_delete', resource_type=resource_type, resource_id=resource._id)}} method="POST" onsubmit="return confirm('Do you really want to delete this {{ resource_type }}?');">
+                                        <form action={{ url_for('.resource_delete', resource_type=resource_type, resource_id=resource.id)}} method="POST" onsubmit="return confirm('Do you really want to delete this {{ resource_type }}?');">
                                             <button type="submit"> <i class="fas fa-trash-alt text-red-500"></i></button>
                                         </form>
                                     </div>

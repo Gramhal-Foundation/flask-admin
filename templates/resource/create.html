@@ -1,12 +1,12 @@
 {% extends 'app.html' %}
 
 {% block title %}
-    Create {{ resource_type.capitalize() }}
+    Create {{ resource_type | admin_label_singular }}
 {% endblock %}
 
 {% block content %}
     <div class="flex justify-between text-3xl mb-4">
-      Create {{ resource_type.capitalize() }}
+      Create {{ resource_type | admin_label_singular }}
     </div>
     <form action={{ url_for('.resource_create', resource_type=resource_type) }} method="POST">
       <div class="flex flex-wrap">
@@ -27,6 +27,8 @@
               <textarea class="py-2 px-3 border border-gray-300 rounded" rows="5" name="{{ attribute.name }}" id="{{ attribute.name }}"></textarea>
             {% elif attribute.type == 'DATETIME' %}
               <input type="datetime-local" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border border-gray-300 rounded" />
+            {% elif attribute.type == 'DATE' %}
+              <input type="date" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border border-gray-300 rounded" />
             {% endif %}
           </div>
         </div>
