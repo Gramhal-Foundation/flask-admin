@@ -13,6 +13,7 @@ import io
 import boto3
 import pandas as pd
 from werkzeug.utils import secure_filename
+import string
 
 # [TODO]: dependency on main repo
 from db import db
@@ -54,7 +55,16 @@ def upload_file_to_s3(file, bucket_name = '', acl="public-read"):
 def admin_label_plural(label):
     import inflect
     p = inflect.engine()
-    return p.plural_noun(label)
+    formatted_label = label.replace("-", " ")
+    formatted_label = p.plural_noun(formatted_label)
+    formatted_label = string.capwords(formatted_label)
+    return formatted_label
+
+@app.template_filter('admin_label_singular')
+def admin_label_singular(label):
+    formatted_label = label.replace("-", " ")
+    formatted_label = string.capwords(formatted_label)
+    return formatted_label
 
 @app.template_filter('admin_format_datetime')
 def admin_format_datetime(value):
@@ -65,7 +75,12 @@ def format_label(value):
     return value.replace("_", " ")
 
 def get_resource_class(resource_type):
-    return globals()[resource_type + "Admin"]
+    class_names = get_class_names('admin_view.py')
+    class_names.remove('FlaskAdmin')
+    for x in class_names:
+        if globals()[x].name == resource_type:
+            return globals()[x]
+    return None
 
 def get_class_names(file_path):
     with open(file_path, 'r') as file:
@@ -86,7 +101,7 @@ def get_class_names(file_path):
 def render_template(*args, **kwargs):
     class_names = get_class_names('admin_view.py')
     class_names.remove('FlaskAdmin')
-    resource_types = [globals()[x].model.__name__ for x in class_names]
+    resource_types = [globals()[x].name for x in class_names]
     template_attributes = {
         'resource_types': resource_types
     }

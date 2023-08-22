@@ -1,15 +1,15 @@
 {% extends 'app.html' %}
 
 {% block title %}
-    {{ (resource_type | admin_label_plural).capitalize() }}
+    {{ resource_type | admin_label_plural }}
 {% endblock %}
 
 {% block content %}
-    <div class="text-3xl mb-4">Manage {{ (resource_type | admin_label_plural).capitalize() }}</div>
+    <div class="text-3xl mb-4">Manage {{ resource_type | admin_label_plural }}</div>
     <div class="flex justify-between">
         {% if permissions.get(resource_type).get('create'): %}
             <a href={{ url_for('.resource_create', resource_type=resource_type) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded">
-                Create {{ resource_type.capitalize() }}
+                Create {{ resource_type | admin_label_singular }}
             </a>
         {% endif %}
         <div>
