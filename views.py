@@ -18,7 +18,7 @@ from werkzeug.utils import secure_filename
 from db import db
 
 # [TODO]: fix this hardcoded line
-from models.user import User
+from models.user import UserModel as User
 
 def upload_file_to_s3(file, bucket_name = '', acl="public-read"):
     """
@@ -64,6 +64,9 @@ def admin_format_datetime(value):
 def format_label(value):
     return value.replace("_", " ")
 
+def get_resource_class(resource_type):
+    return globals()[resource_type + "Admin"]
+
 def get_class_names(file_path):
     with open(file_path, 'r') as file:
         file_content = file.read()
@@ -83,13 +86,13 @@ def get_class_names(file_path):
 def render_template(*args, **kwargs):
     class_names = get_class_names('admin_view.py')
     class_names.remove('FlaskAdmin')
-    resource_types = [globals()[x].model.__name__.lower() for x in class_names]
+    resource_types = [globals()[x].model.__name__ for x in class_names]
     template_attributes = {
         'resource_types': resource_types
     }
     template_attributes['permissions'] = {}
     for resource_type in resource_types:
-        resource_class = globals()[resource_type.capitalize() + "Admin"]
+        resource_class = get_resource_class(resource_type)
         resource_obj = resource_class()
         resource_permissions = { # default permissions
             "create": False,
@@ -106,7 +109,7 @@ def render_template(*args, **kwargs):
     return real_render_template(*args, **kwargs, **template_attributes)
 
 class LoginForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired()])
+    phone = StringField('Phone', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     submit = SubmitField('Login')
 
@@ -124,12 +127,12 @@ def dashboard():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        # email/username/phone & password to be picked from app config
+        # username/phone & password to be picked from app config
         # to understand the primary field names and avoid conflicts
-        email = form.email.data
+        phone = form.phone.data
         password = form.password.data
 
-        user = User.query.filter_by(phone_number=email).first()
+        user = User.query.filter_by(mobile_number=phone).first()
 
         if user and user.password == password:
             login_user(user)
@@ -148,7 +151,7 @@ def logout():
 @admin.route('/resource/<string:resource_type>')
 @login_required
 def resource_list(resource_type):
-    resource_class = globals()[resource_type.capitalize() + "Admin"]
+    resource_class = get_resource_class(resource_type)
     model = resource_class.model
     per_page = 5
     page = request.args.get("page", default=1, type=int)
@@ -160,7 +163,7 @@ def resource_list(resource_type):
 @admin.route('/resource/<string:resource_type>/create', methods=['GET', 'POST'])
 @login_required
 def resource_create(resource_type):
-    resource_class = globals()[resource_type.capitalize() + "Admin"]
+    resource_class = get_resource_class(resource_type)
     model = resource_class.model
 
     primary_key_columns = model.__table__.primary_key.columns.keys()
@@ -204,7 +207,7 @@ def resource_create(resource_type):
 @admin.route('/resource/<string:resource_type>/<string:resource_id>/edit', methods=['GET', 'POST'])
 @login_required
 def resource_edit(resource_type, resource_id):
-    resource_class = globals()[resource_type.capitalize() + "Admin"]
+    resource_class = get_resource_class(resource_type)
     model = resource_class.model
     resource = model.query.get(resource_id)
 
@@ -249,7 +252,7 @@ def resource_edit(resource_type, resource_id):
 @admin.route('/resource/<string:resource_type>/<string:resource_id>/delete', methods=['POST'])
 @login_required
 def resource_delete(resource_type, resource_id):
-    resource_class = globals()[resource_type.capitalize() + "Admin"]
+    resource_class = get_resource_class(resource_type)
     model = resource_class.model
     resource = model.query.get(resource_id)
 
@@ -262,7 +265,7 @@ def resource_delete(resource_type, resource_id):
 @admin.route("/resource/<string:resource_type>/download", methods=['GET'])
 @login_required
 def resource_download(resource_type):
-    resource_class = globals()[resource_type.capitalize() + "Admin"]
+    resource_class = get_resource_class(resource_type)
     model = resource_class.model
     resources = model.query.all()
     output = io.StringIO()
@@ -282,7 +285,7 @@ def resource_download(resource_type):
 @admin.route("/resource/<string:resource_type>/download-sample", methods=['GET'])
 @login_required
 def resource_download_sample(resource_type):
-    resource_class = globals()[resource_type.capitalize() + "Admin"]
+    resource_class = get_resource_class(resource_type)
     model = resource_class.model
     output = io.StringIO()
     writer = csv.writer(output)
@@ -302,7 +305,7 @@ def resource_download_sample(resource_type):
 @admin.route("/resource/<string:resource_type>/upload", methods=['GET', 'POST'])
 @login_required
 def resource_upload(resource_type):
-    resource_class = globals()[resource_type.capitalize() + "Admin"]
+    resource_class = get_resource_class(resource_type)
     model = resource_class.model
     primary_key_columns = model.__table__.primary_key.columns.keys()
     ignore_columns = ['created_at', 'updated_at'] + primary_key_columns
