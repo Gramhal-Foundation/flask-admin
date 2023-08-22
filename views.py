@@ -133,7 +133,9 @@ def get_editable_attributes(resource_type):
 
     primary_key_columns = model.__table__.primary_key.columns.keys()
     ignore_columns = ['created_at', 'updated_at'] + primary_key_columns
-    ignore_columns = ['category_ids', 'sorted_at'] + ignore_columns
+    if hasattr(resource_class, 'protected_attributes'):
+        ignore_columns = resource_class.protected_attributes + ignore_columns
+
 
     model_attributes = []
     for column in model.__table__.columns:
