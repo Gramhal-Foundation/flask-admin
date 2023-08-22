@@ -9,19 +9,21 @@
         <nav class="bg-gray-700 w-screen px-10 py-4 flex justify-between text-white">
             <div class="text-lg">Admin Portal</div>
             <div>
-                <a href="{{ url_for('logout') }}">Logout</a>
+                <a href="{{ url_for('.logout') }}">Logout</a>
             </div>
         </nav>
         <div class="flex">
             <sidebar class="bg-gray-200 w-64 flex flex-col pt-10 h-screen">
-                <a href="/user" class="px-10 py-4 cursor-pointer hover:bg-gray-300">Users</a>
-                <a href="#" class="px-10 py-4 cursor-pointer hover:bg-gray-300">Roles</a>
-                <a href="/reports" class="px-10 py-4 cursor-pointer hover:bg-gray-300">Reports</a>
+                <a href="{{ url_for('.dashboard') }}" class="px-10 py-4 cursor-pointer hover:bg-gray-300">Dashboard</a>
+                {% for resource_type in resource_types %}
+                    {% if permissions.get(resource_type).get('read') %}
+                        <a href={{ url_for('.resource_list', resource_type=resource_type) }} class="px-10 py-4 cursor-pointer hover:bg-gray-300">{{ (resource_type | admin_label_plural).capitalize() }}</a>
+                    {% endif %}
+                {% endfor %}
             </sidebar>
             <div class="p-10 w-full">
                 {% block content %} {% endblock %}
             </div>
         </div>
-        <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     </body>
 </html>
