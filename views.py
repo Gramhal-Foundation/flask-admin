@@ -127,6 +127,43 @@ def render_template(*args, **kwargs):
 
     return real_render_template(*args, **kwargs, **template_attributes)
 
+def get_editable_attributes(resource_type):
+    resource_class = get_resource_class(resource_type)
+    model = resource_class.model
+
+    primary_key_columns = model.__table__.primary_key.columns.keys()
+    ignore_columns = ['created_at', 'updated_at'] + primary_key_columns
+    ignore_columns = ['category_ids', 'sorted_at'] + ignore_columns
+
+    model_attributes = []
+    for column in model.__table__.columns:
+        model_attributes.append({
+            'name': str(column.name),
+            'type': str(column.type)
+        })
+
+    editable_attributes = []
+    for attribute in model_attributes:
+        if attribute['name'] not in ignore_columns:
+            editable_attributes.append(attribute)
+
+    return editable_attributes
+
+def get_resource_class(resource_type):
+    return globals()[resource_type.capitalize() + "Admin"]
+
+def validate_resource_attribute(resource_type, attribute, initial_value):
+    attribute_value = None
+    if attribute['type'] == 'VARCHAR' or attribute['type'] == 'TEXT' or attribute['type'] == 'JSON':
+        attribute_value = initial_value if initial_value else None
+    elif attribute['type'] == 'INTEGER':
+        attribute_value = initial_value if initial_value else None
+    elif attribute['type'] == 'BOOLEAN':
+        if not isinstance(initial_value, bool):
+            attribute_value = initial_value.lower() == 'true'
+        attribute_value = bool(initial_value)
+
+    return attribute_value
 class LoginForm(FlaskForm):
     phone = StringField('Phone', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
@@ -184,22 +221,7 @@ def resource_list(resource_type):
 def resource_create(resource_type):
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
-
-    primary_key_columns = model.__table__.primary_key.columns.keys()
-    ignore_columns = ['created_at', 'updated_at'] + primary_key_columns
-    ignore_columns = ['category_ids', 'sorted_at'] + ignore_columns
-
-    model_attributes = []
-    for column in model.__table__.columns:
-        model_attributes.append({
-            'name': str(column.name),
-            'type': str(column.type)
-        })
-
-    editable_attributes = []
-    for attribute in model_attributes:
-        if attribute['name'] not in ignore_columns:
-            editable_attributes.append(attribute)
+    editable_attributes = get_editable_attributes(resource_type)
 
     if request.method == 'GET':
         return render_template('resource/create.html', resource_type=resource_type, editable_attributes=editable_attributes)
@@ -207,15 +229,8 @@ def resource_create(resource_type):
     attributes_to_save = {}
     for attribute in editable_attributes:
         attribute_value = request.form.get(attribute['name'])
-        if attribute['type'] == 'VARCHAR' or attribute['type'] == 'TEXT' or attribute['type'] == 'JSON':
-            attribute_value = attribute_value if attribute_value else None
-        elif attribute['type'] == 'INTEGER':
-            attribute_value = attribute_value if attribute_value else None
-        elif attribute['type'] == 'BOOLEAN':
-            if not isinstance(attribute_value, bool):
-                attribute_value = attribute_value.lower() == 'true'
-            attribute_value = bool(attribute_value)
-        attributes_to_save[attribute['name']] = attribute_value
+        validated_attribute_value = validate_resource_attribute(resource_type, attribute, attribute_value)
+        attributes_to_save[attribute['name']] = validated_attribute_value
 
     new_resource = model(**attributes_to_save)
     db.session.add(new_resource)
@@ -233,36 +248,15 @@ def resource_edit(resource_type, resource_id):
     if not resource:
         return redirect(url_for('.resource_list'))
 
-    primary_key_columns = model.__table__.primary_key.columns.keys()
-    ignore_columns = ['created_at', 'updated_at'] + primary_key_columns
-    ignore_columns = ['category_ids', 'sorted_at'] + ignore_columns
-
-    model_attributes = []
-    for column in model.__table__.columns:
-        model_attributes.append({
-            'name': str(column.name),
-            'type': str(column.type)
-        })
-
-    editable_attributes = []
-    for attribute in model_attributes:
-        if attribute['name'] not in ignore_columns:
-            editable_attributes.append(attribute)
+    editable_attributes = get_editable_attributes(resource_type)
 
     if request.method == 'GET':
         return render_template('resource/edit.html', resource_type=resource_type, resource=resource, editable_attributes=editable_attributes)
 
     for attribute in editable_attributes:
         attribute_value = request.form.get(attribute['name'])
-        if attribute['type'] == 'VARCHAR' or attribute['type'] == 'TEXT' or attribute['type'] == 'JSON':
-            attribute_value = attribute_value if attribute_value else None
-        elif attribute['type'] == 'INTEGER':
-            attribute_value = attribute_value if attribute_value else None
-        elif attribute['type'] == 'BOOLEAN':
-            if not isinstance(attribute_value, bool):
-                attribute_value = attribute_value.lower() == 'true'
-            attribute_value = bool(attribute_value)
-        setattr(resource, attribute['name'], attribute_value)
+        validated_attribute_value = validate_resource_attribute(resource_type, attribute, attribute_value)
+        setattr(resource, attribute['name'], validated_attribute_value)
 
     db.session.commit()
 
@@ -304,18 +298,12 @@ def resource_download(resource_type):
 @admin.route("/resource/<string:resource_type>/download-sample", methods=['GET'])
 @login_required
 def resource_download_sample(resource_type):
-    resource_class = get_resource_class(resource_type)
-    model = resource_class.model
     output = io.StringIO()
     writer = csv.writer(output)
-    primary_key_columns = model.__table__.primary_key.columns.keys()
-    ignore_columns = ['created_at', 'updated_at'] + primary_key_columns
-    ignore_columns = ['category_ids', 'sorted_at'] + ignore_columns
-    uploadable_attributes = []
-    for column in model.__table__.columns.keys():
-        if column not in ignore_columns:
-            uploadable_attributes.append(column)
-    writer.writerow(uploadable_attributes) # csv header
+
+    uploadable_attributes = get_editable_attributes(resource_type)
+    col_names = [attribute['name'] for attribute in uploadable_attributes]
+    writer.writerow(col_names) # csv header
     writer.writerow([]) # print a blank second row
 
     output.seek(0)
@@ -326,21 +314,8 @@ def resource_download_sample(resource_type):
 def resource_upload(resource_type):
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
-    primary_key_columns = model.__table__.primary_key.columns.keys()
-    ignore_columns = ['created_at', 'updated_at'] + primary_key_columns
-    ignore_columns = ['category_ids', 'sorted_at'] + ignore_columns
 
-    model_attributes = []
-    for column in model.__table__.columns:
-        model_attributes.append({
-            'name': str(column.name),
-            'type': str(column.type)
-        })
-
-    uploadable_attributes = []
-    for attribute in model_attributes:
-        if attribute['name'] not in ignore_columns:
-            uploadable_attributes.append(attribute)
+    uploadable_attributes = get_editable_attributes(resource_type)
 
     if request.method == 'POST':
         uploaded_file = request.files['file']
