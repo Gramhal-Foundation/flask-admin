@@ -149,9 +149,6 @@ def get_editable_attributes(resource_type):
 
     return editable_attributes
 
-def get_resource_class(resource_type):
-    return globals()[resource_type.capitalize() + "Admin"]
-
 def validate_resource_attribute(resource_type, attribute, initial_value):
     attribute_value = None
     if attribute['type'] == 'VARCHAR' or attribute['type'] == 'TEXT' or attribute['type'] == 'JSON':
