@@ -67,15 +67,11 @@ from flask_login import login_user, login_required, logout_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired
+from app import app
+from db import db
+from models.user import User
 from . import admin
 from admin_view import *
-from app import app
-
-# [TODO]: dependency on main repo
-from db import db
-
-# [TODO]: fix this hardcoded line
-from models.user import User
 
 
 def upload_file_to_s3(file, bucket_name="", acl="public-read"):
