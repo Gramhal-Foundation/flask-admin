@@ -54,6 +54,7 @@ import io
 from datetime import datetime
 import boto3
 import pandas as pd
+import inflect
 from werkzeug.utils import secure_filename
 from flask import (
     render_template as real_render_template,
@@ -71,7 +72,6 @@ from app import app
 from db import db
 from models.user import User
 from . import admin
-from admin_view import *
 
 
 def upload_file_to_s3(file, bucket_name="", acl="public-read"):
@@ -113,7 +113,6 @@ def admin_label_plural(label):
     Returns:
         str: The plural form of the input label.
     """
-    import inflect
 
     p = inflect.engine()
     return p.plural_noun(label)
@@ -698,11 +697,9 @@ def resource_upload(resource_type):
                 attribute_value = row[attribute["name"]]
                 if pd.isna(attribute_value):
                     attribute_value = None
-                if (
-                    attribute["type"] == "VARCHAR"
-                    or attribute["type"] == "TEXT"
-                    or attribute["type"] == "JSON"
-                ):
+                if (attribute["type"] == "VARCHAR" or
+                    attribute["type"] == "TEXT" or
+                        attribute["type"] == "JSON"):
                     attribute_value = attribute_value if attribute_value else None
                 elif attribute["type"] == "INTEGER":
                     attribute_value = attribute_value if attribute_value else None
