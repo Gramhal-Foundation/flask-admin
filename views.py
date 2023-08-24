@@ -52,25 +52,23 @@ import ast
 import csv
 import io
 from datetime import datetime
+
 import boto3
-import pandas as pd
 import inflect
-from werkzeug.utils import secure_filename
-from flask import (
-    render_template as real_render_template,
-    request,
-    redirect,
-    url_for,
-    flash,
-    Response,
-)
-from flask_login import login_user, login_required, logout_user
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
-from wtforms.validators import DataRequired
+import pandas as pd
+from admin_view import *
 from app import app
 from db import db
+from flask import Response, flash, redirect
+from flask import render_template as real_render_template
+from flask import request, url_for
+from flask_login import login_required, login_user, logout_user
+from flask_wtf import FlaskForm
 from models.user import User
+from werkzeug.utils import secure_filename
+from wtforms import PasswordField, StringField, SubmitField
+from wtforms.validators import DataRequired
+
 from . import admin
 
 
@@ -215,9 +213,9 @@ def render_template(*args, **kwargs):
         }
         if hasattr(resource_obj, "permissions"):
             resource_permissions = resource_obj.permissions
-        template_attributes["permissions"][resource_type] = (
-            resource_permissions
-            )
+        template_attributes["permissions"][
+            resource_type
+        ] = resource_permissions
 
     return real_render_template(*args, **kwargs, **template_attributes)
 
@@ -400,10 +398,12 @@ def resource_create(resource_type):
 
     model_attributes = []
     for column in model.__table__.columns:
-        model_attributes.append({
-            "name": str(column.name),
-            "type": str(column.type)
-        })
+        model_attributes.append(
+            {
+                "name": str(column.name),
+                "type": str(column.type),
+            }
+        )
 
     editable_attributes = []
     for attribute in model_attributes:
@@ -483,10 +483,12 @@ def resource_edit(resource_type, resource_id):
 
     model_attributes = []
     for column in model.__table__.columns:
-        model_attributes.append({
-            "name": str(column.name),
-            "type": str(column.type)
-        })
+        model_attributes.append(
+            {
+                "name": str(column.name),
+                "type": str(column.type),
+            }
+        )
 
     editable_attributes = []
     for attribute in model_attributes:
@@ -677,10 +679,12 @@ def resource_upload(resource_type):
 
     model_attributes = []
     for column in model.__table__.columns:
-        model_attributes.append({
-            "name": str(column.name),
-            "type": str(column.type)
-        })
+        model_attributes.append(
+            {
+                "name": str(column.name),
+                "type": str(column.type),
+            }
+        )
 
     uploadable_attributes = []
     for attribute in model_attributes:
