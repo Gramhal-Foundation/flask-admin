@@ -697,12 +697,10 @@ def resource_upload(resource_type):
                 attribute_value = row[attribute["name"]]
                 if pd.isna(attribute_value):
                     attribute_value = None
-                if (attribute["type"] == "VARCHAR" or
-                    attribute["type"] == "TEXT" or
-                        attribute["type"] == "JSON"):
-                    attribute_value = attribute_value if attribute_value else None
+                if (attribute["type"]) in ["VARCHAR", "TEXT", "JSON"]:
+                    attribute_value = attribute_value or None
                 elif attribute["type"] == "INTEGER":
-                    attribute_value = attribute_value if attribute_value else None
+                    attribute_value = attribute_value or None
                 elif attribute["type"] == "BOOLEAN":
                     if not isinstance(attribute_value, bool):
                         attribute_value = attribute_value.lower() == "true"
