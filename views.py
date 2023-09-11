@@ -18,8 +18,10 @@ import string
 # [TODO]: dependency on main repo
 from db import db
 
-# [TODO]: fix this hardcoded line
-from models.user import UserModel as User
+from admin_view import admin_configs
+
+def get_user_model_config():
+    return admin_configs['user']
 
 def upload_file_to_s3(file, bucket_name = '', acl="public-read"):
     """
@@ -203,10 +205,13 @@ def login():
         # to understand the primary field names and avoid conflicts
         phone = form.phone.data
         password = form.password.data
+        user_model_config = get_user_model_config()
+        user_model = user_model_config['model']
+        identifier = user_model_config['identifier']
+        secret = user_model_config['secret']
+        user = user_model.query.filter(getattr(user_model, identifier)==phone).first()
 
-        user = User.query.filter_by(mobile_number=phone).first()
-
-        if user and user.password == password:
+        if user and getattr(user, secret) == password:
             login_user(user)
             return redirect(url_for('.dashboard'))
         else:
