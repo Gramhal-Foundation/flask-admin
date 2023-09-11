@@ -102,6 +102,13 @@ def get_class_names(file_path):
 
     return class_names
 
+def get_resource_pk(resource_type):
+    resource_class = get_resource_class(resource_type)
+    resource_obj = resource_class()
+    if hasattr(resource_obj, 'pk'):
+        return resource_obj.pk
+    return 'id'
+
 def render_template(*args, **kwargs):
     class_names = get_class_names('admin_view.py')
     class_names.remove('FlaskAdmin')
@@ -124,6 +131,16 @@ def render_template(*args, **kwargs):
         if hasattr(resource_obj, 'permissions'):
             resource_permissions = resource_obj.permissions
         template_attributes['permissions'][resource_type] = resource_permissions
+
+    if 'resource_type' in kwargs:
+        original_pk = get_resource_pk(kwargs['resource_type'])
+
+        if 'pagination' in kwargs:
+            for index, item in enumerate(kwargs['pagination'].items):
+                setattr(kwargs['pagination'].items[index], 'pk', getattr(item, original_pk))
+
+        if 'resource' in kwargs:
+            setattr(kwargs['resource'], 'pk', getattr(kwargs['resource'], original_pk))
 
     return real_render_template(*args, **kwargs, **template_attributes)
 

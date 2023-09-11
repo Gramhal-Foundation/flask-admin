@@ -8,7 +8,7 @@
     <div class="flex justify-between text-3xl mb-4">
       Edit {{ resource_type | admin_label_singular }}
     </div>
-    <form action={{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource.id) }} method="POST">
+    <form action={{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource.pk) }} method="POST">
       <div class="flex flex-wrap">
         {% for attribute in editable_attributes %}
         <div class="w-1/2 mb-4">
