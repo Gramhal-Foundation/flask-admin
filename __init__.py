@@ -20,8 +20,8 @@ Module Structure:
 """
 from flask import Blueprint
 
-from . import views
-
 admin = Blueprint(
     "admin", __name__, template_folder="templates", static_folder="static"
 )
+
+from . import views  # type: ignore # noqa
