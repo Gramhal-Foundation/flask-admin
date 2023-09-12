@@ -76,8 +76,10 @@ from wtforms.validators import DataRequired
 
 from . import admin
 
+
 def get_user_model_config():
     return admin_configs['user']
+
 
 def upload_file_to_s3(file, bucket_name="", acl="public-read"):
     """
@@ -125,15 +127,19 @@ def admin_label_plural(label):
     formatted_label = string.capwords(formatted_label)
     return formatted_label
 
+
 @app.template_filter('admin_label_singular')
 def admin_label_singular(label):
     formatted_label = label.replace("-", " ")
     formatted_label = string.capwords(formatted_label)
     return formatted_label
 
+
 @app.template_filter("admin_format_date")
 def admin_format_date(value):
     return datetime.strftime(value, "%Y-%m-%d")
+
+
 @app.template_filter("admin_format_datetime")
 def admin_format_datetime(value):
     """
@@ -163,6 +169,7 @@ def format_label(value):
 
     return value.replace("_", " ")
 
+
 def get_resource_class(resource_type):
     class_names = get_class_names('admin_view.py')
     class_names.remove('FlaskAdmin')
@@ -170,6 +177,7 @@ def get_resource_class(resource_type):
         if globals()[x].name == resource_type:
             return globals()[x]
     return None
+
 
 def get_class_names(file_path):
     """
@@ -200,6 +208,7 @@ def get_class_names(file_path):
             class_names.append(node.name)
 
     return class_names
+
 
 def get_resource_pk(resource_type):
     resource_class = get_resource_class(resource_type)
@@ -235,7 +244,7 @@ def render_template(*args, **kwargs):
     for resource_type in resource_types:
         resource_class = get_resource_class(resource_type)
         resource_obj = resource_class()
-        resource_permissions = { # default permissions
+        resource_permissions = {  # default permissions
             "create": False,
             "read": True,
             "update": False,
@@ -261,6 +270,7 @@ def render_template(*args, **kwargs):
 
     return real_render_template(*args, **kwargs, **template_attributes)
 
+
 def get_editable_attributes(resource_type):
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
@@ -269,7 +279,6 @@ def get_editable_attributes(resource_type):
     ignore_columns = ['created_at', 'updated_at'] + primary_key_columns
     if hasattr(resource_class, 'protected_attributes'):
         ignore_columns = resource_class.protected_attributes + ignore_columns
-
 
     model_attributes = []
     for column in model.__table__.columns:
@@ -285,6 +294,7 @@ def get_editable_attributes(resource_type):
 
     return editable_attributes
 
+
 def validate_resource_attribute(resource_type, attribute, initial_value):
     attribute_value = None
     if 'VARCHAR' in attribute['type'] or attribute['type'] == 'TEXT' or attribute['type'] == 'JSON':
@@ -297,6 +307,8 @@ def validate_resource_attribute(resource_type, attribute, initial_value):
         attribute_value = bool(initial_value)
 
     return attribute_value
+
+
 class LoginForm(FlaskForm):
     """
     Form class for user login.
@@ -330,6 +342,7 @@ def index():
         to the dashboard route.
     """
     return redirect(url_for(".dashboard"))
+
 
 @admin.route("/dashboard")
 @login_required
@@ -377,7 +390,7 @@ def login():
         user_model = user_model_config['model']
         identifier = user_model_config['identifier']
         secret = user_model_config['secret']
-        user = user_model.query.filter(getattr(user_model, identifier)==phone).first()
+        user = user_model.query.filter(getattr(user_model, identifier) == phone).first()
 
         if user and getattr(user, secret) == password:
             login_user(user)
@@ -610,7 +623,7 @@ def resource_download(resource_type):
 
     downloadable_attributes = model.__table__.columns.keys()
 
-    writer.writerow(downloadable_attributes) # csv header
+    writer.writerow(downloadable_attributes)  # csv header
     for resource in resources:
         line = []
         for attribute in downloadable_attributes:
@@ -657,8 +670,8 @@ def resource_download_sample(resource_type):
     writer = csv.writer(output)
     uploadable_attributes = get_editable_attributes(resource_type)
     col_names = [attribute['name'] for attribute in uploadable_attributes]
-    writer.writerow(col_names) # csv header
-    writer.writerow([]) # print a blank second row
+    writer.writerow(col_names)  # csv header
+    writer.writerow([])  # print a blank second row
 
     output.seek(0)
     return Response(
