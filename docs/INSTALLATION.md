@@ -8,8 +8,8 @@
 ### Installation Steps
 1. Clone this repository
    ```sh
-   https://github.com/Gramhal-Foundation/flask-admin
-   cd flask-admin/
+   https://github.com/Gramhal-Foundation/flask_admin
+   cd flask_admin/
    ```
 2. Create python environment
    ```sh
