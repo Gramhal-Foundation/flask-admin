@@ -357,7 +357,7 @@ def dashboard():
     Returns:
         str: The rendered dashboard template.
     """
-    return render_template("admin/dashboard.html")
+    return render_template("dashboard.html")
 
 
 @admin.route("/login", methods=["GET", "POST"])
@@ -398,7 +398,7 @@ def login():
         else:
             flash("Invalid credentials. Please try again.", "error")
 
-    return render_template("admin/login.html", form=form)
+    return render_template("login.html", form=form)
 
 
 @admin.route("/logout")
@@ -447,7 +447,7 @@ def resource_list(resource_type):
     )
     list_display = resource_class.list_display
     return render_template(
-        "admin/resource/list.html",
+        "resource/list.html",
         pagination=pagination,
         resource_type=resource_type,
         list_display=list_display,
@@ -487,7 +487,7 @@ def resource_create(resource_type):
 
     if request.method == "GET":
         return render_template(
-            "admin/resource/create.html",
+            "resource/create.html",
             resource_type=resource_type,
             editable_attributes=editable_attributes,
         )
@@ -545,7 +545,7 @@ def resource_edit(resource_type, resource_id):
 
     if request.method == "GET":
         return render_template(
-            "admin/resource/edit.html",
+            "resource/edit.html",
             resource_type=resource_type,
             resource=resource,
             editable_attributes=editable_attributes,
@@ -737,4 +737,4 @@ def resource_upload(resource_type):
 
         flash("All " + resource_type.capitalize() + " uploaded!")
         return redirect(url_for(".resource_list", resource_type=resource_type))
-    return render_template("admin/resource/upload.html", resource_type=resource_type)
+    return render_template("resource/upload.html", resource_type=resource_type)
