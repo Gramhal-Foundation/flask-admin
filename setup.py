@@ -5,7 +5,7 @@ extras_require = {
 }
 
 install_requires = [
-    'Flask>=2.3',
+    'Flask>=2.1',
     'alembic',
     'inflect',
     'boto3',
