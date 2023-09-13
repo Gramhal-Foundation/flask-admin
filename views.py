@@ -436,7 +436,6 @@ def resource_create(resource_type):
                 else bool(attribute_value)
             )
         attributes_to_save[attribute["name"]] = attribute_value
-        print(attributes_to_save)
 
     new_resource = model(**attributes_to_save)
     db.session.add(new_resource)
