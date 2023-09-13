@@ -62,6 +62,7 @@ from db import db
 from flask import Response, flash, redirect
 from flask import render_template as real_render_template
 from flask import request, url_for
+from flask_bcrypt import Bcrypt
 from flask_login import login_required, login_user, logout_user
 from flask_wtf import FlaskForm
 from models.user import User
@@ -70,6 +71,8 @@ from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired
 
 from . import admin
+
+bcrypt = Bcrypt(app)
 
 
 def upload_file_to_s3(file, bucket_name="", acl="public-read"):
@@ -299,8 +302,9 @@ def login():
         password = form.password.data
 
         user = User.query.filter_by(phone_number=email).first()
+        hashed_password = get_hashed_password(password)
 
-        if user and user.password == password:
+        if user and bcrypt.check_password_hash(hashed_password, password):
             login_user(user)
             return redirect(url_for(".dashboard"))
         else:
@@ -418,21 +422,21 @@ def resource_create(resource_type):
         )
 
     attributes_to_save = {}
+
     for attribute in editable_attributes:
         attribute_value = request.form.get(attribute["name"])
-        if (
-            attribute["type"] == "VARCHAR"
-            or attribute["type"] == "TEXT"
-            or attribute["type"] == "JSON"
-        ):
-            attribute_value = attribute_value if attribute_value else None
-        elif attribute["type"] == "INTEGER":
+        if attribute["name"] == "password":
+            attribute_value = get_hashed_password(attribute_value)
+        elif attribute["type"] in ["VARCHAR", "TEXT", "JSON", "INTEGER"]:
             attribute_value = attribute_value if attribute_value else None
         elif attribute["type"] == "BOOLEAN":
-            if not isinstance(attribute_value, bool):
-                attribute_value = attribute_value.lower() == "true"
-            attribute_value = bool(attribute_value)
+            attribute_value = (
+                bool(attribute_value.lower() == "true")
+                if isinstance(attribute_value, str)
+                else bool(attribute_value)
+            )
         attributes_to_save[attribute["name"]] = attribute_value
+        print(attributes_to_save)
 
     new_resource = model(**attributes_to_save)
     db.session.add(new_resource)
@@ -505,7 +509,9 @@ def resource_edit(resource_type, resource_id):
 
     for attribute in editable_attributes:
         attribute_value = request.form.get(attribute["name"])
-        if (
+        if attribute["name"] == "password":
+            attribute_value = get_hashed_password(attribute_value)
+        elif (
             attribute["type"] == "VARCHAR"
             or attribute["type"] == "TEXT"
             or attribute["type"] == "JSON"
@@ -721,3 +727,22 @@ def resource_upload(resource_type):
         flash("All " + resource_type.capitalize() + " uploaded!")
         return redirect(url_for(".resource_list", resource_type=resource_type))
     return render_template("resource/upload.html", resource_type=resource_type)
+
+
+def get_hashed_password(password):
+    """
+    Hashes a password using Bcrypt.
+
+    Parameters:
+    - password (str): The password to be hashed.
+
+    Returns:
+    str: The hashed password encoded as a UTF-8 string.
+
+    Raises:
+    None
+
+    Example:
+    hashed_password = get_hashed_password('my_secure_password')
+    """
+    return bcrypt.generate_password_hash(password, 10).decode("utf-8")
