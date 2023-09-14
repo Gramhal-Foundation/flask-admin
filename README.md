@@ -10,4 +10,4 @@ To set up this project, visit the [installation steps](./docs/INSTALLATION.md).
 
 ### Contributing
 - [Coding Standards](./docs/CODING_STANDARDS.md)
-- [Managing model permissions](./docs/ADMIN_VIEW.md)
+- [Managing model permissions](./docs/ADMIN_VIEW.md#permissions)
