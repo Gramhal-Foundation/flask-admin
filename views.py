@@ -57,6 +57,7 @@ import boto3
 import inflect
 import pandas as pd
 import string
+from flask_bcrypt import Bcrypt
 
 # [TODO]: dependency on main repo
 from db import db
@@ -76,6 +77,7 @@ from wtforms.validators import DataRequired
 
 from . import admin
 
+bcrypt = Bcrypt(app)
 
 def get_user_model_config():
     return admin_configs['user']
@@ -392,7 +394,8 @@ def login():
         secret = user_model_config['secret']
         user = user_model.query.filter(getattr(user_model, identifier) == phone).first()
 
-        if user and getattr(user, secret) == password:
+        # if user and getattr(user, secret) == password:
+        if user and bcrypt.check_password_hash(getattr(user, secret), password):
             login_user(user)
             return redirect(url_for(".dashboard"))
         else:
@@ -497,6 +500,10 @@ def resource_create(resource_type):
         attribute_value = request.form.get(attribute["name"])
         validated_attribute_value = validate_resource_attribute(resource_type, attribute, attribute_value)
         attributes_to_save[attribute['name']] = validated_attribute_value
+
+        if attribute["name"] == "password":
+            hashed_password = bcrypt.generate_password_hash(attribute_value).decode('utf-8')
+            attributes_to_save[attribute['name']] = hashed_password
 
     new_resource = model(**attributes_to_save)
     db.session.add(new_resource)
