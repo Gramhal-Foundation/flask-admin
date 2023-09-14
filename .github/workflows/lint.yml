@@ -22,7 +22,7 @@ jobs:
           pip install Flask flake8 mypy
 
       - name: Lint and Static Code Analysis with Flake8
-        run: flake8 . --exclude=migrations
+        run: flake8 .
 
       - name: Type Check with mypy
-        run: mypy . --exclude=migrations
+        run: mypy .
