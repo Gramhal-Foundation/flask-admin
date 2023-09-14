@@ -1,6 +1,12 @@
-name: Code Quality Checks
+name: Coding Standards
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   lint-type-check:
