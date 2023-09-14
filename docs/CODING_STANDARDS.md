@@ -2,7 +2,6 @@
 We enforce best coding practices as recommended by community leaders. This projects uses the following tools to ensure best coding practices are being followed.
 - Flake8
 - Mypy
-- Pre-commit
 
 ### Flake8
 Flake8 is a Python linting tool that checks the codebase for errors, styling issues and complexity.
