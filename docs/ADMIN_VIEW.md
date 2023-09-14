@@ -1,6 +1,15 @@
 ## Setting up admin_view.py
 The `admin_view.py` is the configuration file for everything that appears in the admin view. You must configure this file properly in order to access the admin dashboard.
 
+Table of contents:
+  - [Admin Configs](#admin-configs)
+  - [ModelAdmin class](#modeladmin-class)
+  - [Basic setup](#basic-setup)
+  - [Permissions](#permissions)
+  - [Primary key](#primary-key)
+  - [Protected attributes](#protected-attributes)
+
+
 ### Admin Configs
 The `admin_configs` variable determines the user configurations for login & registration that the admin functionality needs to use.
 
@@ -20,7 +29,7 @@ admin_configs = {
 }
 ```
 
-### ModelAdmin classes
+### ModelAdmin class
 Each model you want to show in your admin portal must be defined in the `admin_view.py` file.
 
 Let's understand in detail through an example. But first, let's write down what exactly we are going to do:
@@ -30,7 +39,7 @@ Let's understand in detail through an example. But first, let's write down what 
 4. Editors can read & export the users but cannot do other operations.
 5. Other users roles should not access users list.
 
-#### Basic setup
+### Basic setup
 Lets consider only having the list of users in the admin dashboard without any restrictions on roles. This is how your class setup would look like:
 ```py
 class UserAdmin(FlaskAdmin):
@@ -49,7 +58,7 @@ Few things to notice here:
 
 Once this is done, you can navigate to the `/admin` route and should see "Users" in the sidebar. Once you click, you should see all the options.
 
-#### Permissions
+### Permissions
 To set up permissions, you must set up the permissions class property for your ModelAdmin class. Simply put, it will look like this.
 ```py
 class UserAdmin(FlaskAdmin):
@@ -114,7 +123,7 @@ class UserAdmin(FlaskAdmin):
 In this example, the function `get_user_permissions` returns the list of permissions based on the user role. You can extend the functionality for this function or create your own logic to calculate the user permissions based on your project structure.
 
 
-#### Primary key
+### Primary key
 By default, the `id` column is picked up as the primary key for every model. This is used to uniquely identify every entity for edit & delete actions.
 
 In case your model has a different name of the primary key, you can configure the admin class like this:
@@ -126,7 +135,7 @@ class UserAdmin(FlaskAdmin):
     pk = '_id'
 ```
 
-#### Protected attributes
+### Protected attributes
 For some models, there may be some attributes that you may want to be protected and not be editable via admin dashboard. For example, there can be a `last_active_date` for a user that you want only to be controlled by your login view.
 
 You can define these protected attributes as a class property as a list. These attributes will no longer appear in the admin dashboard.
