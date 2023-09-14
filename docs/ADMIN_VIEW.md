@@ -1,6 +1,15 @@
 ## Setting up admin_view.py
 The `admin_view.py` is the configuration file for everything that appears in the admin view. You must configure this file properly in order to access the admin dashboard.
 
+Table of contents:
+  - [Admin Configs](#admin-configs)
+  - [ModelAdmin class](#modeladmin-class)
+  - [Basic setup](#basic-setup)
+  - [Permissions](#permissions)
+  - [Primary key](#primary-key)
+  - [Protected attributes](#protected-attributes)
+
+
 ### Admin Configs
 The `admin_configs` variable determines the user configurations for login & registration that the admin functionality needs to use.
 
