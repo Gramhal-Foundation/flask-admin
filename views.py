@@ -51,24 +51,21 @@ Custom Template Filters:
 import ast
 import csv
 import io
+import string
 from datetime import datetime
 
 import boto3
 import inflect
 import pandas as pd
-import string
-from flask_bcrypt import Bcrypt
-
+from admin_view import *
+from admin_view import admin_configs
+from app import app
 # [TODO]: dependency on main repo
 from db import db
-
-from admin_view import admin_configs
-from admin_view import *
-
-from app import app
 from flask import Response, flash, redirect
 from flask import render_template as real_render_template
 from flask import request, url_for
+from flask_bcrypt import Bcrypt
 from flask_login import login_required, login_user, logout_user
 from flask_wtf import FlaskForm
 from werkzeug.utils import secure_filename
@@ -79,8 +76,9 @@ from . import admin
 
 bcrypt = Bcrypt(app)
 
+
 def get_user_model_config():
-    return admin_configs['user']
+    return admin_configs["user"]
 
 
 def upload_file_to_s3(file, bucket_name="", acl="public-read"):
@@ -130,7 +128,7 @@ def admin_label_plural(label):
     return formatted_label
 
 
-@app.template_filter('admin_label_singular')
+@app.template_filter("admin_label_singular")
 def admin_label_singular(label):
     formatted_label = label.replace("-", " ")
     formatted_label = string.capwords(formatted_label)
@@ -173,8 +171,8 @@ def format_label(value):
 
 
 def get_resource_class(resource_type):
-    class_names = get_class_names('admin_view.py')
-    class_names.remove('FlaskAdmin')
+    class_names = get_class_names("admin_view.py")
+    class_names.remove("FlaskAdmin")
     for x in class_names:
         if globals()[x].name == resource_type:
             return globals()[x]
@@ -215,9 +213,9 @@ def get_class_names(file_path):
 def get_resource_pk(resource_type):
     resource_class = get_resource_class(resource_type)
     resource_obj = resource_class()
-    if hasattr(resource_obj, 'pk'):
+    if hasattr(resource_obj, "pk"):
         return resource_obj.pk
-    return 'id'
+    return "id"
 
 
 def render_template(*args, **kwargs):
@@ -260,15 +258,23 @@ def render_template(*args, **kwargs):
             resource_type
         ] = resource_permissions
 
-    if 'resource_type' in kwargs:
-        original_pk = get_resource_pk(kwargs['resource_type'])
+    if "resource_type" in kwargs:
+        original_pk = get_resource_pk(kwargs["resource_type"])
 
-        if 'pagination' in kwargs:
-            for index, item in enumerate(kwargs['pagination'].items):
-                setattr(kwargs['pagination'].items[index], 'pk', getattr(item, original_pk))
+        if "pagination" in kwargs:
+            for index, item in enumerate(kwargs["pagination"].items):
+                setattr(
+                    kwargs["pagination"].items[index],
+                    "pk",
+                    getattr(item, original_pk),
+                )
 
-        if 'resource' in kwargs:
-            setattr(kwargs['resource'], 'pk', getattr(kwargs['resource'], original_pk))
+        if "resource" in kwargs:
+            setattr(
+                kwargs["resource"],
+                "pk",
+                getattr(kwargs["resource"], original_pk),
+            )
 
     return real_render_template(*args, **kwargs, **template_attributes)
 
@@ -278,20 +284,19 @@ def get_editable_attributes(resource_type):
     model = resource_class.model
 
     primary_key_columns = model.__table__.primary_key.columns.keys()
-    ignore_columns = ['created_at', 'updated_at'] + primary_key_columns
-    if hasattr(resource_class, 'protected_attributes'):
+    ignore_columns = ["created_at", "updated_at"] + primary_key_columns
+    if hasattr(resource_class, "protected_attributes"):
         ignore_columns = resource_class.protected_attributes + ignore_columns
 
     model_attributes = []
     for column in model.__table__.columns:
-        model_attributes.append({
-            'name': str(column.name),
-            'type': str(column.type)
-        })
+        model_attributes.append(
+            {"name": str(column.name), "type": str(column.type)}
+        )
 
     editable_attributes = []
     for attribute in model_attributes:
-        if attribute['name'] not in ignore_columns:
+        if attribute["name"] not in ignore_columns:
             editable_attributes.append(attribute)
 
     return editable_attributes
@@ -299,13 +304,17 @@ def get_editable_attributes(resource_type):
 
 def validate_resource_attribute(resource_type, attribute, initial_value):
     attribute_value = None
-    if 'VARCHAR' in attribute['type'] or attribute['type'] == 'TEXT' or attribute['type'] == 'JSON':
+    if (
+        "VARCHAR" in attribute["type"]
+        or attribute["type"] == "TEXT"
+        or attribute["type"] == "JSON"
+    ):
         attribute_value = initial_value if initial_value else None
-    elif attribute['type'] == 'INTEGER':
+    elif attribute["type"] == "INTEGER":
         attribute_value = initial_value if initial_value else None
-    elif attribute['type'] == 'BOOLEAN':
+    elif attribute["type"] == "BOOLEAN":
         if not isinstance(initial_value, bool):
-            attribute_value = initial_value.lower() == 'true'
+            attribute_value = initial_value.lower() == "true"
         attribute_value = bool(initial_value)
 
     return attribute_value
@@ -389,13 +398,17 @@ def login():
         phone = form.phone.data
         password = form.password.data
         user_model_config = get_user_model_config()
-        user_model = user_model_config['model']
-        identifier = user_model_config['identifier']
-        secret = user_model_config['secret']
-        user = user_model.query.filter(getattr(user_model, identifier) == phone).first()
+        user_model = user_model_config["model"]
+        identifier = user_model_config["identifier"]
+        secret = user_model_config["secret"]
+        user = user_model.query.filter(
+            getattr(user_model, identifier) == phone
+        ).first()
 
         # if user and getattr(user, secret) == password:
-        if user and bcrypt.check_password_hash(getattr(user, secret), password):
+        if user and bcrypt.check_password_hash(
+            getattr(user, secret), password
+        ):
             login_user(user)
             return redirect(url_for(".dashboard"))
         else:
@@ -498,12 +511,16 @@ def resource_create(resource_type):
     attributes_to_save = {}
     for attribute in editable_attributes:
         attribute_value = request.form.get(attribute["name"])
-        validated_attribute_value = validate_resource_attribute(resource_type, attribute, attribute_value)
-        attributes_to_save[attribute['name']] = validated_attribute_value
+        validated_attribute_value = validate_resource_attribute(
+            resource_type, attribute, attribute_value
+        )
+        attributes_to_save[attribute["name"]] = validated_attribute_value
 
         if attribute["name"] == "password":
-            hashed_password = bcrypt.generate_password_hash(attribute_value).decode('utf-8')
-            attributes_to_save[attribute['name']] = hashed_password
+            hashed_password = bcrypt.generate_password_hash(
+                attribute_value
+            ).decode("utf-8")
+            attributes_to_save[attribute["name"]] = hashed_password
 
     new_resource = model(**attributes_to_save)
     db.session.add(new_resource)
@@ -560,10 +577,18 @@ def resource_edit(resource_type, resource_id):
 
     for attribute in editable_attributes:
         attribute_value = request.form.get(attribute["name"])
-        print('attribute_value....', attribute_value)
-        validated_attribute_value = validate_resource_attribute(resource_type, attribute, attribute_value)
-        print('validated_attribute_value....', validated_attribute_value)
+        # print('attribute_value....', attribute_value)
+        validated_attribute_value = validate_resource_attribute(
+            resource_type, attribute, attribute_value
+        )
+        # print('validated_attribute_value....', validated_attribute_value)
         setattr(resource, attribute["name"], validated_attribute_value)
+
+    if attribute["name"] == "password":
+        hashed_password = bcrypt.generate_password_hash(
+            attribute_value
+        ).decode("utf-8")
+        setattr(resource, attribute["name"], hashed_password)
 
     db.session.commit()
 
@@ -676,7 +701,7 @@ def resource_download_sample(resource_type):
     output = io.StringIO()
     writer = csv.writer(output)
     uploadable_attributes = get_editable_attributes(resource_type)
-    col_names = [attribute['name'] for attribute in uploadable_attributes]
+    col_names = [attribute["name"] for attribute in uploadable_attributes]
     writer.writerow(col_names)  # csv header
     writer.writerow([])  # print a blank second row
 
