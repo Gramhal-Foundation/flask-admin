@@ -6,37 +6,27 @@
 
 
 ### Installation Steps
-1. Clone this repository
+1. You can simply install the package via pip. Run the following command:
    ```sh
-   https://github.com/Gramhal-Foundation/flask-admin
-   cd flask-admin/
+   pip install git+https://github.com/Gramhal-Foundation/flask_admin.git
    ```
-2. Create python environment
-   ```sh
-   python -m venv venv
-   ```
-3. Activate the environment
-   ```sh
-   source venv/bin/activate
-   ```
-4. Install dependence
-   ```sh
-   npm install
-   ```
-5. Install dependencies
-   ```sh
-   pip install -r requirements.txt
-   ```
-6. Create `.env` and update environment variables
-   ```sh
-   cp .env.example .env
-   ```
-7. Run migrations
-   ```sh
-   flask db upgrade
-   ```
-8. Run the application
-      ```sh
-      python app.py or flask run --port=8000
-      ```
+2. Add the following code to your main repo `app.py`. It should look like this:
+   ```py
+   # register login manager
+   from flask_login import LoginManager
+   app.secret_key = 'your-random-secret'
+   login_manager = LoginManager(app)
+   login_manager.login_view = 'admin.login'
+   @login_manager.user_loader
+   def load_user(user_id):
+      return UserModel.query.get(user_id)
 
+   # register admin blueprint
+   from admin import admin
+   app.register_blueprint(admin, url_prefix='/admin')
+
+   if __name__ == '__main__':
+      # your existing code
+   ```
+3. Create a new file `admin_view.py`. To reference what needs to be inside this file, you can look at the [sample admin_view.py](../examples/admin_view.py). Complete documentation of the structure of `admin_view.py` is mentioned [here](./ADMIN_VIEW.md).
+4. Run your app. If your app runs on port 8000, you can access the admin login page via `http://localhost:8000/admin`.

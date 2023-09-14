@@ -1,0 +1,43 @@
+{% extends 'app.html' %}
+
+{% block title %}
+    Edit {{ resource_type | admin_label_singular }}
+{% endblock %}
+
+{% block content %}
+    <div class="flex justify-between text-3xl mb-4">
+      Edit {{ resource_type | admin_label_singular }}
+    </div>
+    <form action={{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource.pk) }} method="POST">
+      <div class="flex flex-wrap">
+        {% for attribute in editable_attributes %}
+        <div class="w-1/2 mb-4">
+          <div class="flex flex-col mr-3">
+            <label for={{ attribute.name }} class="uppercase text-gray-500 text-xs mb-1">{{ attribute.name | format_label }}</label>
+            {% if 'VARCHAR' in attribute.type %}
+              <input type="text" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border border-gray-300 rounded" {% if resource[attribute.name] %} value="{{ resource[attribute.name] }}" {% endif %} />
+            {% elif attribute.type == 'INTEGER' %}
+              <input type="number" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border border-gray-300 rounded" {% if resource[attribute.name] %} value="{{ resource[attribute.name] }}" {% endif %} />
+            {% elif attribute.type == 'BOOLEAN' %}
+              <select name={{ attribute.name }} class="py-2.5 px-3 border border-gray-300 rounded">
+                <option value="True" {% if resource[attribute.name] == True %} selected="selected "{% endif %}>True</option>
+                <option value="False" {% if resource[attribute.name] == False %} selected="selected "{% endif %}>False</option>
+              </select>
+            {% elif attribute.type == 'TEXT' or attribute.type == 'JSON' %}
+              <textarea class="py-2 px-3 border border-gray-300 rounded" rows="5" name="{{ attribute.name }}" id="{{ attribute.name }}">{% if resource[attribute.name] %}{{ resource[attribute.name] }}{% endif %}</textarea>
+            {% elif attribute.type == 'DATETIME' %}
+              <input type="datetime-local" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border border-gray-300 rounded" {% if resource[attribute.name] %} value="{{ resource[attribute.name] | admin_format_datetime }}" {% endif %} />
+            {% elif attribute.type == 'DATE' %}
+              <input type="date" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border border-gray-300 rounded" {% if resource[attribute.name] %} value="{{ resource[attribute.name] | admin_format_date }}" {% endif %} />
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="flex">
+        <button type="submit" class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded">
+          Update
+        </button>
+      </div>
+    </form>
+{% endblock %}
