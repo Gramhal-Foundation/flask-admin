@@ -3,17 +3,19 @@ from models import User, Post, Category, Organization
 
 admin_configs = {
     'user': {
-        'model': User, # the user model, should be imported above
-        'identifier': 'mobile', # column name from user table
-        'secret': 'password' # column name from user table
+        'model': User,  # the user model, should be imported above
+        'identifier': 'mobile',  # column name from user table
+        'secret': 'password'  # column name from user table
     }
 }
+
 
 def get_user_roles():
     # current_user is an instance of the User model
     if not hasattr(current_user, 'roles'):
         return None
     return current_user.roles
+
 
 def get_user_permissions(resource_model):
     user_roles = get_user_roles()
@@ -42,9 +44,11 @@ def get_user_permissions(resource_model):
 
     return user_permissions
 
+
 class FlaskAdmin():
     def __init__(self):
         super().__init__()
+
 
 class UserAdmin(FlaskAdmin):
     model = User
@@ -56,6 +60,7 @@ class UserAdmin(FlaskAdmin):
         super().__init__()
         self.permissions = get_user_permissions(self.model)
 
+
 class PostAdmin(FlaskAdmin):
     model = Post
     name = 'post'
@@ -65,6 +70,7 @@ class PostAdmin(FlaskAdmin):
     def __init__(self):
         super().__init__()
         self.permissions = get_user_permissions(self.model)
+
 
 class CategoryAdmin(FlaskAdmin):
     model = Category
