@@ -28,6 +28,5 @@
    if __name__ == '__main__':
       # your existing code
    ```
-3. Create a new file `admin_view.py`. To reference what needs to be inside this file, you can look at [this example admin_view.py file](../examples/admin_view.py). Complete documentation of the structure of `admin_view.py` is mentioned here.
+3. Create a new file `admin_view.py`. To reference what needs to be inside this file, you can look at the [sample admin_view.py](../examples/admin_view.py). Complete documentation of the structure of `admin_view.py` is mentioned [here](./ADMIN_VIEW.md).
 4. Run your app. If your app runs on port 8000, you can access the admin login page via `http://localhost:8000/admin`.
-
