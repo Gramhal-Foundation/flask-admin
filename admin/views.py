@@ -516,7 +516,7 @@ def resource_create(resource_type):
         )
         attributes_to_save[attribute["name"]] = validated_attribute_value
 
-        if attribute["name"] == "password":
+        if attribute["name"] == admin_configs["user"]["secret"]:
             hashed_password = bcrypt.generate_password_hash(
                 attribute_value
             ).decode("utf-8")
@@ -584,7 +584,7 @@ def resource_edit(resource_type, resource_id):
         # print('validated_attribute_value....', validated_attribute_value)
         setattr(resource, attribute["name"], validated_attribute_value)
 
-    if attribute["name"] == "password":
+    if attribute["name"] == admin_configs["user"]["secret"]:
         hashed_password = bcrypt.generate_password_hash(
             attribute_value
         ).decode("utf-8")
