@@ -405,7 +405,6 @@ def login():
             getattr(user_model, identifier) == phone
         ).first()
 
-        # if user and getattr(user, secret) == password:
         if user and bcrypt.check_password_hash(
             getattr(user, secret), password
         ):
@@ -514,13 +513,14 @@ def resource_create(resource_type):
         validated_attribute_value = validate_resource_attribute(
             resource_type, attribute, attribute_value
         )
-        attributes_to_save[attribute["name"]] = validated_attribute_value
 
         if attribute["name"] == admin_configs["user"]["secret"]:
             hashed_password = bcrypt.generate_password_hash(
                 attribute_value
             ).decode("utf-8")
             attributes_to_save[attribute["name"]] = hashed_password
+        else:
+            attributes_to_save[attribute["name"]] = validated_attribute_value
 
     new_resource = model(**attributes_to_save)
     db.session.add(new_resource)
@@ -577,18 +577,17 @@ def resource_edit(resource_type, resource_id):
 
     for attribute in editable_attributes:
         attribute_value = request.form.get(attribute["name"])
-        # print('attribute_value....', attribute_value)
         validated_attribute_value = validate_resource_attribute(
             resource_type, attribute, attribute_value
         )
-        # print('validated_attribute_value....', validated_attribute_value)
-        setattr(resource, attribute["name"], validated_attribute_value)
 
-    if attribute["name"] == admin_configs["user"]["secret"]:
-        hashed_password = bcrypt.generate_password_hash(
-            attribute_value
-        ).decode("utf-8")
-        setattr(resource, attribute["name"], hashed_password)
+        if attribute["name"] == admin_configs["user"]["secret"]:
+            hashed_password = bcrypt.generate_password_hash(
+                validated_attribute_value
+            ).decode("utf-8")
+            setattr(resource, attribute["name"], hashed_password)
+        else:
+            setattr(resource, attribute["name"], validated_attribute_value)
 
     db.session.commit()
 
