@@ -509,7 +509,7 @@ def resource_create(resource_type):
 
     for attribute in editable_attributes:
         attribute_value = request.form.get(attribute["name"])
-        if attribute["name"] == "password":
+        if attribute["name"] == admin_configs["user"]["secret"]:
             attribute_value = get_hashed_password(attribute_value)
 
         validated_attribute_value = validate_resource_attribute(
@@ -572,7 +572,7 @@ def resource_edit(resource_type, resource_id):
 
     for attribute in editable_attributes:
         attribute_value = request.form.get(attribute["name"])
-        if attribute["name"] == "password":
+        if attribute["name"] == admin_configs["user"]["secret"]:
             attribute_value = get_hashed_password(attribute_value)
 
         validated_attribute_value = validate_resource_attribute(
