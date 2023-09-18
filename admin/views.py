@@ -568,6 +568,7 @@ def resource_edit(resource_type, resource_id):
             resource_type=resource_type,
             resource=resource,
             editable_attributes=editable_attributes,
+            admin_configs=admin_configs
         )
 
     for attribute in editable_attributes:
