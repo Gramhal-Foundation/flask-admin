@@ -51,13 +51,16 @@ Custom Template Filters:
 import ast
 import csv
 import io
+import string
 from datetime import datetime
 
 import boto3
 import inflect
 import pandas as pd
 from admin_view import *
+from admin_view import admin_configs
 from app import app
+# [TODO]: dependency on main repo
 from db import db
 from flask import Response, flash, redirect
 from flask import render_template as real_render_template
@@ -65,7 +68,6 @@ from flask import request, url_for
 from flask_bcrypt import Bcrypt
 from flask_login import login_required, login_user, logout_user
 from flask_wtf import FlaskForm
-from models.user import User
 from werkzeug.utils import secure_filename
 from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired
@@ -73,6 +75,10 @@ from wtforms.validators import DataRequired
 from . import admin
 
 bcrypt = Bcrypt(app)
+
+
+def get_user_model_config():
+    return admin_configs["user"]
 
 
 def upload_file_to_s3(file, bucket_name="", acl="public-read"):
@@ -116,7 +122,22 @@ def admin_label_plural(label):
     """
 
     p = inflect.engine()
-    return p.plural_noun(label)
+    formatted_label = label.replace("-", " ")
+    formatted_label = p.plural_noun(formatted_label)
+    formatted_label = string.capwords(formatted_label)
+    return formatted_label
+
+
+@app.template_filter("admin_label_singular")
+def admin_label_singular(label):
+    formatted_label = label.replace("-", " ")
+    formatted_label = string.capwords(formatted_label)
+    return formatted_label
+
+
+@app.template_filter("admin_format_date")
+def admin_format_date(value):
+    return datetime.strftime(value, "%Y-%m-%d")
 
 
 @app.template_filter("admin_format_datetime")
@@ -147,6 +168,15 @@ def format_label(value):
     """
 
     return value.replace("_", " ")
+
+
+def get_resource_class(resource_type):
+    class_names = get_class_names("admin_view.py")
+    class_names.remove("FlaskAdmin")
+    for x in class_names:
+        if globals()[x].name == resource_type:
+            return globals()[x]
+    return None
 
 
 def get_class_names(file_path):
@@ -180,6 +210,14 @@ def get_class_names(file_path):
     return class_names
 
 
+def get_resource_pk(resource_type):
+    resource_class = get_resource_class(resource_type)
+    resource_obj = resource_class()
+    if hasattr(resource_obj, "pk"):
+        return resource_obj.pk
+    return "id"
+
+
 def render_template(*args, **kwargs):
     """
     Custom template rendering function with extended attributes.
@@ -200,11 +238,11 @@ def render_template(*args, **kwargs):
 
     class_names = get_class_names("admin_view.py")
     class_names.remove("FlaskAdmin")
-    resource_types = [globals()[x].model.__name__.lower() for x in class_names]
+    resource_types = [globals()[x].name for x in class_names]
     template_attributes = {"resource_types": resource_types}
     template_attributes["permissions"] = {}
     for resource_type in resource_types:
-        resource_class = globals()[resource_type.capitalize() + "Admin"]
+        resource_class = get_resource_class(resource_type)
         resource_obj = resource_class()
         resource_permissions = {  # default permissions
             "create": False,
@@ -220,7 +258,66 @@ def render_template(*args, **kwargs):
             resource_type
         ] = resource_permissions
 
+    if "resource_type" in kwargs:
+        original_pk = get_resource_pk(kwargs["resource_type"])
+
+        if "pagination" in kwargs:
+            for index, item in enumerate(kwargs["pagination"].items):
+                setattr(
+                    kwargs["pagination"].items[index],
+                    "pk",
+                    getattr(item, original_pk),
+                )
+
+        if "resource" in kwargs:
+            setattr(
+                kwargs["resource"],
+                "pk",
+                getattr(kwargs["resource"], original_pk),
+            )
+
     return real_render_template(*args, **kwargs, **template_attributes)
+
+
+def get_editable_attributes(resource_type):
+    resource_class = get_resource_class(resource_type)
+    model = resource_class.model
+
+    primary_key_columns = model.__table__.primary_key.columns.keys()
+    ignore_columns = ["created_at", "updated_at"] + primary_key_columns
+    if hasattr(resource_class, "protected_attributes"):
+        ignore_columns = resource_class.protected_attributes + ignore_columns
+
+    model_attributes = []
+    for column in model.__table__.columns:
+        model_attributes.append(
+            {"name": str(column.name), "type": str(column.type)}
+        )
+
+    editable_attributes = []
+    for attribute in model_attributes:
+        if attribute["name"] not in ignore_columns:
+            editable_attributes.append(attribute)
+
+    return editable_attributes
+
+
+def validate_resource_attribute(resource_type, attribute, initial_value):
+    attribute_value = None
+    if (
+        "VARCHAR" in attribute["type"]
+        or attribute["type"] == "TEXT"
+        or attribute["type"] == "JSON"
+    ):
+        attribute_value = initial_value if initial_value else None
+    elif attribute["type"] == "INTEGER":
+        attribute_value = initial_value if initial_value else None
+    elif attribute["type"] == "BOOLEAN":
+        if not isinstance(initial_value, bool):
+            attribute_value = initial_value.lower() == "true"
+        attribute_value = bool(initial_value)
+
+    return attribute_value
 
 
 class LoginForm(FlaskForm):
@@ -237,7 +334,7 @@ class LoginForm(FlaskForm):
         submit (SubmitField): The field for submitting the login form.
     """
 
-    email = StringField("Email", validators=[DataRequired()])
+    phone = StringField("Phone", validators=[DataRequired()])
     password = PasswordField("Password", validators=[DataRequired()])
     submit = SubmitField("Login")
 
@@ -296,12 +393,16 @@ def login():
     """
     form = LoginForm()
     if form.validate_on_submit():
-        # email/username/phone & password to be picked from app config
+        # username/phone & password to be picked from app config
         # to understand the primary field names and avoid conflicts
-        email = form.email.data
+        phone = form.phone.data
         password = form.password.data
-
-        user = User.query.filter_by(phone_number=email).first()
+        user_model_config = get_user_model_config()
+        user_model = user_model_config["model"]
+        identifier = user_model_config["identifier"]
+        user = user_model.query.filter(
+            getattr(user_model, identifier) == phone
+        ).first()
         hashed_password = get_hashed_password(password)
 
         if user and bcrypt.check_password_hash(hashed_password, password):
@@ -349,7 +450,7 @@ def resource_list(resource_type):
         of resources, including the pagination controls and relevant
         information about the resource type and list display attributes.
     """
-    resource_class = globals()[resource_type.capitalize() + "Admin"]
+    resource_class = get_resource_class(resource_type)
     model = resource_class.model
     per_page = 5
     page = request.args.get("page", default=1, type=int)
@@ -393,26 +494,9 @@ def resource_create(resource_type):
         returns the rendered template with the create form.
         On a POST request, redirects to the resource list page.
     """
-    resource_class = globals()[resource_type.capitalize() + "Admin"]
+    resource_class = get_resource_class(resource_type)
     model = resource_class.model
-
-    primary_key_columns = model.__table__.primary_key.columns.keys()
-    ignore_columns = ["created_at", "updated_at"] + primary_key_columns
-    ignore_columns = ["category_ids", "sorted_at"] + ignore_columns
-
-    model_attributes = []
-    for column in model.__table__.columns:
-        model_attributes.append(
-            {
-                "name": str(column.name),
-                "type": str(column.type),
-            }
-        )
-
-    editable_attributes = []
-    for attribute in model_attributes:
-        if attribute["name"] not in ignore_columns:
-            editable_attributes.append(attribute)
+    editable_attributes = get_editable_attributes(resource_type)
 
     if request.method == "GET":
         return render_template(
@@ -427,15 +511,11 @@ def resource_create(resource_type):
         attribute_value = request.form.get(attribute["name"])
         if attribute["name"] == "password":
             attribute_value = get_hashed_password(attribute_value)
-        elif attribute["type"] in ["VARCHAR", "TEXT", "JSON", "INTEGER"]:
-            attribute_value = attribute_value if attribute_value else None
-        elif attribute["type"] == "BOOLEAN":
-            attribute_value = (
-                bool(attribute_value.lower() == "true")
-                if isinstance(attribute_value, str)
-                else bool(attribute_value)
-            )
-        attributes_to_save[attribute["name"]] = attribute_value
+
+        validated_attribute_value = validate_resource_attribute(
+            resource_type, attribute, attribute_value
+        )
+        attributes_to_save[attribute["name"]] = validated_attribute_value
 
     new_resource = model(**attributes_to_save)
     db.session.add(new_resource)
@@ -473,30 +553,14 @@ def resource_edit(resource_type, resource_id):
         On a POST request, redirects to the resource list page.
         If the resource does not exist, redirects to the resource list page.
     """
-    resource_class = globals()[resource_type.capitalize() + "Admin"]
+    resource_class = get_resource_class(resource_type)
     model = resource_class.model
     resource = model.query.get(resource_id)
 
     if not resource:
         return redirect(url_for(".resource_list"))
 
-    primary_key_columns = model.__table__.primary_key.columns.keys()
-    ignore_columns = ["created_at", "updated_at"] + primary_key_columns
-    ignore_columns = ["category_ids", "sorted_at"] + ignore_columns
-
-    model_attributes = []
-    for column in model.__table__.columns:
-        model_attributes.append(
-            {
-                "name": str(column.name),
-                "type": str(column.type),
-            }
-        )
-
-    editable_attributes = []
-    for attribute in model_attributes:
-        if attribute["name"] not in ignore_columns:
-            editable_attributes.append(attribute)
+    editable_attributes = get_editable_attributes(resource_type)
 
     if request.method == "GET":
         return render_template(
@@ -510,19 +574,11 @@ def resource_edit(resource_type, resource_id):
         attribute_value = request.form.get(attribute["name"])
         if attribute["name"] == "password":
             attribute_value = get_hashed_password(attribute_value)
-        elif (
-            attribute["type"] == "VARCHAR"
-            or attribute["type"] == "TEXT"
-            or attribute["type"] == "JSON"
-        ):
-            attribute_value = attribute_value if attribute_value else None
-        elif attribute["type"] == "INTEGER":
-            attribute_value = attribute_value if attribute_value else None
-        elif attribute["type"] == "BOOLEAN":
-            if not isinstance(attribute_value, bool):
-                attribute_value = attribute_value.lower() == "true"
-            attribute_value = bool(attribute_value)
-        setattr(resource, attribute["name"], attribute_value)
+
+        validated_attribute_value = validate_resource_attribute(
+            resource_type, attribute, attribute_value
+        )
+        setattr(resource, attribute["name"], validated_attribute_value)
 
     db.session.commit()
 
@@ -551,7 +607,7 @@ def resource_delete(resource_type, resource_id):
         werkzeug.wrappers.response.Response: A redirection response to
         the resource list page after successful deletion.
     """
-    resource_class = globals()[resource_type.capitalize() + "Admin"]
+    resource_class = get_resource_class(resource_type)
     model = resource_class.model
     resource = model.query.get(resource_id)
 
@@ -581,7 +637,7 @@ def resource_download(resource_type):
         werkzeug.wrappers.response.Response: A response containing the CSV
         file as an attachment with the appropriate headers for downloading.
     """
-    resource_class = globals()[resource_type.capitalize() + "Admin"]
+    resource_class = get_resource_class(resource_type)
     model = resource_class.model
     resources = model.query.all()
     output = io.StringIO()
@@ -632,18 +688,11 @@ def resource_download_sample(resource_type):
         file template as an attachment with the appropriate headers for
         downloading.
     """
-    resource_class = globals()[resource_type.capitalize() + "Admin"]
-    model = resource_class.model
     output = io.StringIO()
     writer = csv.writer(output)
-    primary_key_columns = model.__table__.primary_key.columns.keys()
-    ignore_columns = ["created_at", "updated_at"] + primary_key_columns
-    ignore_columns = ["category_ids", "sorted_at"] + ignore_columns
-    uploadable_attributes = []
-    for column in model.__table__.columns.keys():
-        if column not in ignore_columns:
-            uploadable_attributes.append(column)
-    writer.writerow(uploadable_attributes)  # csv header
+    uploadable_attributes = get_editable_attributes(resource_type)
+    col_names = [attribute["name"] for attribute in uploadable_attributes]
+    writer.writerow(col_names)  # csv header
     writer.writerow([])  # print a blank second row
 
     output.seek(0)
@@ -676,25 +725,10 @@ def resource_upload(resource_type):
         Redirects to the resource list page after processing.
         If a GET request is made, renders the upload form.
     """
-    resource_class = globals()[resource_type.capitalize() + "Admin"]
+    resource_class = get_resource_class(resource_type)
     model = resource_class.model
-    primary_key_columns = model.__table__.primary_key.columns.keys()
-    ignore_columns = ["created_at", "updated_at"] + primary_key_columns
-    ignore_columns = ["category_ids", "sorted_at"] + ignore_columns
 
-    model_attributes = []
-    for column in model.__table__.columns:
-        model_attributes.append(
-            {
-                "name": str(column.name),
-                "type": str(column.type),
-            }
-        )
-
-    uploadable_attributes = []
-    for attribute in model_attributes:
-        if attribute["name"] not in ignore_columns:
-            uploadable_attributes.append(attribute)
+    uploadable_attributes = get_editable_attributes(resource_type)
 
     if request.method == "POST":
         uploaded_file = request.files["file"]
