@@ -51,35 +51,32 @@ Custom Template Filters:
 import ast
 import csv
 import io
+import string
 from datetime import datetime
 
 import boto3
 import inflect
 import pandas as pd
-import string
-
+from admin_view import *
+from admin_view import admin_configs
+from app import app
 # [TODO]: dependency on main repo
 from db import db
-
-from admin_view import admin_configs
-from admin_view import *
-
-from app import app
 from flask import Response, flash, redirect
 from flask import render_template as real_render_template
 from flask import request, url_for
 from flask_login import login_required, login_user, logout_user
 from flask_wtf import FlaskForm
+from sqlalchemy import Date, Integer, String, inspect, or_, cast, func
 from werkzeug.utils import secure_filename
 from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired
-from sqlalchemy import inspect, Integer, String, Date, or_
 
 from . import admin
 
 
 def get_user_model_config():
-    return admin_configs['user']
+    return admin_configs["user"]
 
 
 def upload_file_to_s3(file, bucket_name="", acl="public-read"):
@@ -129,7 +126,7 @@ def admin_label_plural(label):
     return formatted_label
 
 
-@app.template_filter('admin_label_singular')
+@app.template_filter("admin_label_singular")
 def admin_label_singular(label):
     formatted_label = label.replace("-", " ")
     formatted_label = string.capwords(formatted_label)
@@ -172,8 +169,8 @@ def format_label(value):
 
 
 def get_resource_class(resource_type):
-    class_names = get_class_names('admin_view.py')
-    class_names.remove('FlaskAdmin')
+    class_names = get_class_names("admin_view.py")
+    class_names.remove("FlaskAdmin")
     for x in class_names:
         if globals()[x].name == resource_type:
             return globals()[x]
@@ -214,9 +211,9 @@ def get_class_names(file_path):
 def get_resource_pk(resource_type):
     resource_class = get_resource_class(resource_type)
     resource_obj = resource_class()
-    if hasattr(resource_obj, 'pk'):
+    if hasattr(resource_obj, "pk"):
         return resource_obj.pk
-    return 'id'
+    return "id"
 
 
 def render_template(*args, **kwargs):
@@ -259,15 +256,23 @@ def render_template(*args, **kwargs):
             resource_type
         ] = resource_permissions
 
-    if 'resource_type' in kwargs:
-        original_pk = get_resource_pk(kwargs['resource_type'])
+    if "resource_type" in kwargs:
+        original_pk = get_resource_pk(kwargs["resource_type"])
 
-        if 'pagination' in kwargs:
-            for index, item in enumerate(kwargs['pagination'].items):
-                setattr(kwargs['pagination'].items[index], 'pk', getattr(item, original_pk))
+        if "pagination" in kwargs:
+            for index, item in enumerate(kwargs["pagination"].items):
+                setattr(
+                    kwargs["pagination"].items[index],
+                    "pk",
+                    getattr(item, original_pk),
+                )
 
-        if 'resource' in kwargs:
-            setattr(kwargs['resource'], 'pk', getattr(kwargs['resource'], original_pk))
+        if "resource" in kwargs:
+            setattr(
+                kwargs["resource"],
+                "pk",
+                getattr(kwargs["resource"], original_pk),
+            )
 
     return real_render_template(*args, **kwargs, **template_attributes)
 
@@ -277,20 +282,19 @@ def get_editable_attributes(resource_type):
     model = resource_class.model
 
     primary_key_columns = model.__table__.primary_key.columns.keys()
-    ignore_columns = ['created_at', 'updated_at'] + primary_key_columns
-    if hasattr(resource_class, 'protected_attributes'):
+    ignore_columns = ["created_at", "updated_at"] + primary_key_columns
+    if hasattr(resource_class, "protected_attributes"):
         ignore_columns = resource_class.protected_attributes + ignore_columns
 
     model_attributes = []
     for column in model.__table__.columns:
-        model_attributes.append({
-            'name': str(column.name),
-            'type': str(column.type)
-        })
+        model_attributes.append(
+            {"name": str(column.name), "type": str(column.type)}
+        )
 
     editable_attributes = []
     for attribute in model_attributes:
-        if attribute['name'] not in ignore_columns:
+        if attribute["name"] not in ignore_columns:
             editable_attributes.append(attribute)
 
     return editable_attributes
@@ -298,13 +302,17 @@ def get_editable_attributes(resource_type):
 
 def validate_resource_attribute(resource_type, attribute, initial_value):
     attribute_value = None
-    if 'VARCHAR' in attribute['type'] or attribute['type'] == 'TEXT' or attribute['type'] == 'JSON':
+    if (
+        "VARCHAR" in attribute["type"]
+        or attribute["type"] == "TEXT"
+        or attribute["type"] == "JSON"
+    ):
         attribute_value = initial_value if initial_value else None
-    elif attribute['type'] == 'INTEGER':
+    elif attribute["type"] == "INTEGER":
         attribute_value = initial_value if initial_value else None
-    elif attribute['type'] == 'BOOLEAN':
+    elif attribute["type"] == "BOOLEAN":
         if not isinstance(initial_value, bool):
-            attribute_value = initial_value.lower() == 'true'
+            attribute_value = initial_value.lower() == "true"
         attribute_value = bool(initial_value)
 
     return attribute_value
@@ -388,10 +396,12 @@ def login():
         phone = form.phone.data
         password = form.password.data
         user_model_config = get_user_model_config()
-        user_model = user_model_config['model']
-        identifier = user_model_config['identifier']
-        secret = user_model_config['secret']
-        user = user_model.query.filter(getattr(user_model, identifier) == phone).first()
+        user_model = user_model_config["model"]
+        identifier = user_model_config["identifier"]
+        secret = user_model_config["secret"]
+        user = user_model.query.filter(
+            getattr(user_model, identifier) == phone
+        ).first()
 
         if user and getattr(user, secret) == password:
             login_user(user)
@@ -444,7 +454,7 @@ def resource_list(resource_type):
     page = request.args.get("page", default=1, type=int)
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
     pagination = model.query.order_by(primary_key_column).paginate(
-        page=page, per_page=per_page, error_out=False
+      page=page, per_page=per_page, error_out=False
     )
     list_display = resource_class.list_display
     return render_template(
@@ -454,8 +464,8 @@ def resource_list(resource_type):
         list_display=list_display,
     )
 
-@admin.route("/resource/<string:resource_type>/search", methods=["GET", "POST"])
 
+@admin.route("/resource/<string:resource_type>/search", methods=["GET", "POST"])
 @login_required
 def resource_search(resource_type):
     resource_class = get_resource_class(resource_type)
@@ -465,55 +475,43 @@ def resource_search(resource_type):
     per_page = 5
     page = request.args.get("page", default=1, type=int)
 
-    # Define the data types for columns you want to search
-    data_types_to_search = [String, Date, Integer]
-
-    # Get a list of columns with the specified data types
-    list_display = [column_name for column_name in resource_class.list_display
-    if isinstance(model.__table__.columns[column_name].type, tuple(data_types_to_search))]
-
-    if not list_display:
-        # Redirect to the resource list if there are no columns with the selected data types
-        return redirect(url_for("admin.resource_list", resource_type=resource_type))
-
-    # Create a list of conditions for the selected columns
-    conditions = []
-    print("conditions",conditions)
-    for column_name in list_display:
-        column = model.__table__.columns[column_name]
-        if isinstance(column.type, String):
-            conditions.append(column.ilike(f"%{search_query}%"))
-        elif isinstance(column.type, Date):
-            # You can add your own logic for date searching here
-            pass
-        elif isinstance(column.type, Integer):
-            try:
-                int_query = int(search_query)
-                conditions.append(column == int_query)
-            except ValueError:
-                # Handle the case where the search query is not an integer
-                pass
-
-    # Combine conditions with OR if there are multiple conditions
-    if len(conditions) > 1:
-        condition = or_(*conditions)
-    else:
-        condition = conditions[0]
-
-    # Perform pagination only if a search query is provided
-    if search_query:
-        search_results = model.query.filter(condition).paginate(page=page, per_page=per_page, error_out=False)
-    else:
-        search_results = None
-
     list_display = resource_class.list_display
     print("list_display", list_display)
 
-    if search_results:
-        return render_template("resource/list.html", resource_type=resource_type, list_display=list_display,pagination=search_results, search_query=search_query)
-    else:
-        return redirect(url_for("admin.resource_list", resource_type=resource_type))
+    search_results = None
 
+    # Check if a search query is provided
+    if search_query:
+        column_conditions = []
+
+        for column_name in list_display:
+            column = model.__table__.columns[column_name]
+            column_condition = None
+            print("Column Name:", column_name)
+            print("Column Condition:", column_condition)
+
+            if isinstance(column.type, String):
+                column_condition = column.like(f"%{search_query}%")
+            elif isinstance(column.type, Integer):
+                try:
+                    int_value = int(search_query)
+                    column_condition = cast(column, String).like(f"%{search_query}%") | (column == int_value)
+                except ValueError:
+                    # Handle the case where search_query cannot be converted to an integer
+                    pass
+                
+            column_conditions.append(column_condition)
+
+        # Combine all column conditions with the 'or_' operator
+        search_condition = or_(*column_conditions)
+        print("Search Condition:", search_condition)
+
+        # Perform the query to get all possible matching rows
+        search_results = model.query.filter(search_condition).paginate(page=page, per_page=per_page, error_out=False)
+        print("search_results", search_results)
+
+    # Return the search results to the UI
+    return render_template("resource/list.html",resource_type=resource_type,list_display=list_display,pagination=search_results,search_query=search_query,)
 
 @admin.route(
     "/resource/<string:resource_type>/create",
@@ -556,8 +554,10 @@ def resource_create(resource_type):
     attributes_to_save = {}
     for attribute in editable_attributes:
         attribute_value = request.form.get(attribute["name"])
-        validated_attribute_value = validate_resource_attribute(resource_type, attribute, attribute_value)
-        attributes_to_save[attribute['name']] = validated_attribute_value
+        validated_attribute_value = validate_resource_attribute(
+            resource_type, attribute, attribute_value
+        )
+        attributes_to_save[attribute["name"]] = validated_attribute_value
 
     new_resource = model(**attributes_to_save)
     db.session.add(new_resource)
@@ -614,9 +614,11 @@ def resource_edit(resource_type, resource_id):
 
     for attribute in editable_attributes:
         attribute_value = request.form.get(attribute["name"])
-        print('attribute_value....', attribute_value)
-        validated_attribute_value = validate_resource_attribute(resource_type, attribute, attribute_value)
-        print('validated_attribute_value....', validated_attribute_value)
+        print("attribute_value....", attribute_value)
+        validated_attribute_value = validate_resource_attribute(
+            resource_type, attribute, attribute_value
+        )
+        print("validated_attribute_value....", validated_attribute_value)
         setattr(resource, attribute["name"], validated_attribute_value)
 
     db.session.commit()
@@ -730,7 +732,7 @@ def resource_download_sample(resource_type):
     output = io.StringIO()
     writer = csv.writer(output)
     uploadable_attributes = get_editable_attributes(resource_type)
-    col_names = [attribute['name'] for attribute in uploadable_attributes]
+    col_names = [attribute["name"] for attribute in uploadable_attributes]
     writer.writerow(col_names)  # csv header
     writer.writerow([])  # print a blank second row
 
