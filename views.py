@@ -485,13 +485,9 @@ def resource_search(resource_type):
             or_conditions.append(cast(column, Text).like(f'%{search_query}%'))
 
         search_condition = or_(*or_conditions)
-
-         # Filter the data first
         filtered_data = model.query.filter(search_condition)
-
-        # Perform pagination on the filtered data
         results = filtered_data.paginate(page=page, per_page=per_page, error_out=False)
-        
+
     return render_template(
         "resource/list.html",
         resource_type=resource_type,
