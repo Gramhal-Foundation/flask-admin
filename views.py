@@ -73,6 +73,7 @@ from flask_wtf import FlaskForm
 from werkzeug.utils import secure_filename
 from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired
+from sqlalchemy import inspect, Integer, String, Date, or_
 
 from . import admin
 
@@ -452,6 +453,66 @@ def resource_list(resource_type):
         resource_type=resource_type,
         list_display=list_display,
     )
+
+@admin.route("/resource/<string:resource_type>/search", methods=["GET", "POST"])
+
+@login_required
+def resource_search(resource_type):
+    resource_class = get_resource_class(resource_type)
+    model = resource_class.model
+    search_query = request.form.get("search")
+    print("search_query", search_query)
+    per_page = 5
+    page = request.args.get("page", default=1, type=int)
+
+    # Define the data types for columns you want to search
+    data_types_to_search = [String, Date, Integer]
+
+    # Get a list of columns with the specified data types
+    list_display = [column_name for column_name in resource_class.list_display
+    if isinstance(model.__table__.columns[column_name].type, tuple(data_types_to_search))]
+
+    if not list_display:
+        # Redirect to the resource list if there are no columns with the selected data types
+        return redirect(url_for("admin.resource_list", resource_type=resource_type))
+
+    # Create a list of conditions for the selected columns
+    conditions = []
+    print("conditions",conditions)
+    for column_name in list_display:
+        column = model.__table__.columns[column_name]
+        if isinstance(column.type, String):
+            conditions.append(column.ilike(f"%{search_query}%"))
+        elif isinstance(column.type, Date):
+            # You can add your own logic for date searching here
+            pass
+        elif isinstance(column.type, Integer):
+            try:
+                int_query = int(search_query)
+                conditions.append(column == int_query)
+            except ValueError:
+                # Handle the case where the search query is not an integer
+                pass
+
+    # Combine conditions with OR if there are multiple conditions
+    if len(conditions) > 1:
+        condition = or_(*conditions)
+    else:
+        condition = conditions[0]
+
+    # Perform pagination only if a search query is provided
+    if search_query:
+        search_results = model.query.filter(condition).paginate(page=page, per_page=per_page, error_out=False)
+    else:
+        search_results = None
+
+    list_display = resource_class.list_display
+    print("list_display", list_display)
+
+    if search_results:
+        return render_template("resource/list.html", resource_type=resource_type, list_display=list_display,pagination=search_results, search_query=search_query)
+    else:
+        return redirect(url_for("admin.resource_list", resource_type=resource_type))
 
 
 @admin.route(

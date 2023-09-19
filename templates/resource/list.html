@@ -12,9 +12,15 @@
                 Create {{ resource_type | admin_label_singular }}
             </a>
         {% endif %}
-        <div>
+        <div class="flex">
+            {% if permissions.get(resource_type): %}
+                <form action={{ url_for('.resource_search', resource_type=resource_type) }} method="POST" >
+                    <input type="text" name="search" value="{{ search_query }}" placeholder="Search..." class="border-2 text-blue-500 border-blue-500 hover:border-blue-300 focus:border-blue-300 py-2 px-4 rounded" required>
+                    <a href={{ url_for('.resource_list', resource_type=resource_type) }} type="reset" class="text-red-600 border-2 border-blue-500 hover:border-blue-300 font-bold py-2 px-4 rounded"><i class="fas fa-times"></i></a>
+                </form>
+            {% endif %}
             {% if permissions.get(resource_type).get('export'): %}
-                <a href={{ url_for('.resource_download', resource_type=resource_type) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded">
+                <a href={{ url_for('.resource_download', resource_type=resource_type) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded ml-4">
                     Download CSV
                 </a>
             {% endif %}
