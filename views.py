@@ -67,7 +67,7 @@ from flask import render_template as real_render_template
 from flask import request, url_for
 from flask_login import login_required, login_user, logout_user
 from flask_wtf import FlaskForm
-from sqlalchemy import Date, Integer, String, inspect, or_, cast, func
+from sqlalchemy import cast, Text, or_
 from werkzeug.utils import secure_filename
 from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired
@@ -454,7 +454,7 @@ def resource_list(resource_type):
     page = request.args.get("page", default=1, type=int)
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
     pagination = model.query.order_by(primary_key_column).paginate(
-      page=page, per_page=per_page, error_out=False
+        page=page, per_page=per_page, error_out=False
     )
     list_display = resource_class.list_display
     return render_template(
@@ -465,53 +465,41 @@ def resource_list(resource_type):
     )
 
 
-@admin.route("/resource/<string:resource_type>/search", methods=["GET", "POST"])
+@admin.route(
+    "/resource/<string:resource_type>/search", methods=["GET", "POST"]
+)
 @login_required
 def resource_search(resource_type):
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
     search_query = request.form.get("search")
-    print("search_query", search_query)
     per_page = 5
     page = request.args.get("page", default=1, type=int)
 
     list_display = resource_class.list_display
-    print("list_display", list_display)
 
-    search_results = None
-
-    # Check if a search query is provided
     if search_query:
-        column_conditions = []
-
+        or_conditions = []
         for column_name in list_display:
             column = model.__table__.columns[column_name]
-            column_condition = None
-            print("Column Name:", column_name)
-            print("Column Condition:", column_condition)
+            or_conditions.append(cast(column, Text).like(f'%{search_query}%'))
 
-            if isinstance(column.type, String):
-                column_condition = column.like(f"%{search_query}%")
-            elif isinstance(column.type, Integer):
-                try:
-                    int_value = int(search_query)
-                    column_condition = cast(column, String).like(f"%{search_query}%") | (column == int_value)
-                except ValueError:
-                    # Handle the case where search_query cannot be converted to an integer
-                    pass
-                
-            column_conditions.append(column_condition)
+        search_condition = or_(*or_conditions)
 
-        # Combine all column conditions with the 'or_' operator
-        search_condition = or_(*column_conditions)
-        print("Search Condition:", search_condition)
+         # Filter the data first
+        filtered_data = model.query.filter(search_condition)
 
-        # Perform the query to get all possible matching rows
-        search_results = model.query.filter(search_condition).paginate(page=page, per_page=per_page, error_out=False)
-        print("search_results", search_results)
+        # Perform pagination on the filtered data
+        results = filtered_data.paginate(page=page, per_page=per_page, error_out=False)
+        
+    return render_template(
+        "resource/list.html",
+        resource_type=resource_type,
+        list_display=list_display,
+        pagination=results,
+        search_query=search_query,
+    )
 
-    # Return the search results to the UI
-    return render_template("resource/list.html",resource_type=resource_type,list_display=list_display,pagination=search_results,search_query=search_query,)
 
 @admin.route(
     "/resource/<string:resource_type>/create",
