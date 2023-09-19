@@ -319,6 +319,18 @@ def validate_resource_attribute(resource_type, attribute, initial_value):
 
     return attribute_value
 
+def hash_password(password):
+    """
+    Hash a password using bcrypt.
+
+    Args:
+        password (str): The password to hash.
+
+    Returns:
+        str: The hashed password as a string.
+    """
+    return bcrypt.generate_password_hash(password).decode("utf-8")
+
 
 class LoginForm(FlaskForm):
     """
@@ -515,9 +527,7 @@ def resource_create(resource_type):
         )
 
         if attribute["name"] == admin_configs["user"]["secret"]:
-            hashed_password = bcrypt.generate_password_hash(
-                attribute_value
-            ).decode("utf-8")
+            hashed_password = hash_password(validated_attribute_value)
             attributes_to_save[attribute["name"]] = hashed_password
         else:
             attributes_to_save[attribute["name"]] = validated_attribute_value
@@ -582,9 +592,7 @@ def resource_edit(resource_type, resource_id):
         )
 
         if attribute["name"] == admin_configs["user"]["secret"]:
-            hashed_password = bcrypt.generate_password_hash(
-                validated_attribute_value
-            ).decode("utf-8")
+            hashed_password = hash_password(validated_attribute_value)
             setattr(resource, attribute["name"], hashed_password)
         else:
             setattr(resource, attribute["name"], validated_attribute_value)
