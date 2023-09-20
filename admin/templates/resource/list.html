@@ -14,10 +14,12 @@
         {% endif %}
         <div class="flex">
             {% if permissions.get(resource_type): %}
-            <form action={{ url_for('.resource_search', resource_type=resource_type) }} method="GET">
+            <form action={{ url_for('.resource_list', resource_type=resource_type) }} method="GET">
                 <input type="text" name="search" id="search" value="{{ search_query }}" placeholder="Search..." class="border-2 text-blue-500 border-blue-500 hover:border-blue-300 focus:border-blue-300 py-2 px-4 rounded" required>
                     {% if search_query %}
-                        <a href={{ url_for('.resource_list', resource_type=resource_type) }} type="reset" class=" text-red-600 border-2 border-blue-500 hover:border-blue-300 font-bold py-2 px-4 rounded"><i class="fas fa-times"></i></a>
+                        <a href={{ url_for('.resource_list', resource_type=resource_type) }} type="reset" class=" text-red-600 border-2 border-blue-500 hover:border-blue-300 font-bold py-2 px-4 rounded"><i class="fas fa-close"></i></a>
+                    {% else %}
+                    <button class="border-2 border-blue-500 hover:border-blue-300 py-2 px-4 rounded" type="submit"><i class="fas fa-search"></i></button>
                     {% endif %}
             </form>
             {% endif %}
@@ -78,7 +80,7 @@
         </table>
     </div>
     {% if pagination.has_prev %}
-    <a href="{{ url_for(('.resource_search' if search_query else '.resource_list'), resource_type=resource_type, page=pagination.prev_num, search=search_query) }}"
+    <a href="{{ url_for('.resource_list', resource_type=resource_type, page=pagination.prev_num, search=search_query) }}"
         class="mx-1 px-3 py-1 rounded border text-blue-500">
         {{ 'Prev' }}
     </a>
@@ -87,7 +89,7 @@
     {% for num in pagination.iter_pages() %}
         {% if num %}
             {% if num != pagination.page %}
-                <a href="{{ url_for(('.resource_search' if search_query else '.resource_list'), resource_type=resource_type, page=num, search=search_query) }}"
+                <a href="{{ url_for('.resource_list', resource_type=resource_type, page=num, search=search_query) }}"
                     class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
             {% else %}
                 <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
@@ -98,7 +100,7 @@
     {% endfor %}
 
     {% if pagination.has_next %}
-        <a href="{{ url_for(('.resource_search' if search_query else '.resource_list'), resource_type=resource_type, page=pagination.next_num, search=search_query) }}"
+        <a href="{{ url_for('.resource_list', resource_type=resource_type, page=pagination.next_num, search=search_query) }}"
         class="mx-1 px-3 py-1 rounded border text-blue-500">
             {{ 'Next' }}
         </a>

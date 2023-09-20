@@ -429,7 +429,7 @@ def logout():
     return redirect(url_for(".login"))
 
 
-@admin.route("/resource/<string:resource_type>")
+@admin.route("/resource/<string:resource_type>", methods=["GET", "POST"])
 @login_required
 def resource_list(resource_type):
     """
@@ -452,29 +452,7 @@ def resource_list(resource_type):
     model = resource_class.model
     per_page = 5
     page = request.args.get("page", default=1, type=int)
-    primary_key_column = model.__table__.primary_key.columns.keys()[0]
-    pagination = model.query.order_by(primary_key_column).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
-    list_display = resource_class.list_display
-    return render_template(
-        "resource/list.html",
-        pagination=pagination,
-        resource_type=resource_type,
-        list_display=list_display,
-    )
-
-
-@admin.route(
-    "/resource/<string:resource_type>/search", methods=["GET", "POST"]
-)
-@login_required
-def resource_search(resource_type):
-    resource_class = get_resource_class(resource_type)
-    model = resource_class.model
-    search_query = request.args.get("search")
-    per_page = 5
-    page = request.args.get("page", default=1, type=int)
+    search_query = request.args.get("search", default="")
     list_display = resource_class.list_display
 
     if search_query:
@@ -482,17 +460,20 @@ def resource_search(resource_type):
         for column_name in list_display:
             column = model.__table__.columns[column_name]
             or_conditions.append(cast(column, Text).ilike(f'%{search_query}%'))
-
             search_condition = or_(*or_conditions)
             filtered_data = model.query.filter(search_condition)
             pagination = filtered_data.paginate(page=page, per_page=per_page, error_out=False)
-
+    else:
+        primary_key_column = model.__table__.primary_key.columns.keys()[0]
+        pagination = model.query.order_by(primary_key_column).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
     return render_template(
         "resource/list.html",
+        pagination=pagination,
         resource_type=resource_type,
         list_display=list_display,
-        pagination=pagination,
-        search_query=search_query,
+        search_query=search_query
     )
 
 
