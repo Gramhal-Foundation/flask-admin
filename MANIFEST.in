@@ -1,0 +1,2 @@
+recursive-include admin/static *
+recursive-include admin/templates *
