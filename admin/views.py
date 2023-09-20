@@ -472,27 +472,26 @@ def resource_list(resource_type):
 def resource_search(resource_type):
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
-    search_query = request.form.get("search")
+    search_query = request.args.get("search")
     per_page = 5
     page = request.args.get("page", default=1, type=int)
-
     list_display = resource_class.list_display
 
     if search_query:
         or_conditions = []
         for column_name in list_display:
             column = model.__table__.columns[column_name]
-            or_conditions.append(cast(column, Text).like(f'%{search_query}%'))
+            or_conditions.append(cast(column, Text).ilike(f'%{search_query}%'))
 
-        search_condition = or_(*or_conditions)
-        filtered_data = model.query.filter(search_condition)
-        results = filtered_data.paginate(page=page, per_page=per_page, error_out=False)
-
+            search_condition = or_(*or_conditions)
+            filtered_data = model.query.filter(search_condition)
+            pagination = filtered_data.paginate(page=page, per_page=per_page, error_out=False)
+            
     return render_template(
         "resource/list.html",
         resource_type=resource_type,
         list_display=list_display,
-        pagination=results,
+        pagination=pagination,
         search_query=search_query,
     )
 
