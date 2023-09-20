@@ -319,6 +319,7 @@ def validate_resource_attribute(resource_type, attribute, initial_value):
 
     return attribute_value
 
+
 def hash_password(password):
     """
     Hash a password using bcrypt.
