@@ -486,7 +486,7 @@ def resource_search(resource_type):
             search_condition = or_(*or_conditions)
             filtered_data = model.query.filter(search_condition)
             pagination = filtered_data.paginate(page=page, per_page=per_page, error_out=False)
-            
+
     return render_template(
         "resource/list.html",
         resource_type=resource_type,
