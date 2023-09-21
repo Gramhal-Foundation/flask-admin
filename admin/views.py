@@ -429,6 +429,27 @@ def logout():
     return redirect(url_for(".login"))
 
 
+def filter_resources(model, list_display, search_query, page, per_page):
+    if search_query:
+        or_conditions = []
+        for column_name in list_display:
+            column = model.__table__.columns.get(column_name)
+            if column is not None:
+                or_conditions.append(cast(column, Text).ilike(f'%{search_query}%'))
+        if or_conditions:
+            search_condition = or_(*or_conditions)
+            filtered_data = model.query.filter(search_condition)
+            pagination = filtered_data.paginate(page=page, per_page=per_page, error_out=False)
+        else:
+            pagination = model.query.paginate(page=page, per_page=per_page, error_out=False)
+    else:
+        primary_key_column = model.__table__.primary_key.columns.keys()[0]
+        pagination = model.query.order_by(primary_key_column).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+    return pagination
+
+
 @admin.route("/resource/<string:resource_type>", methods=["GET", "POST"])
 @login_required
 def resource_list(resource_type):
@@ -455,19 +476,8 @@ def resource_list(resource_type):
     search_query = request.args.get("search", default="")
     list_display = resource_class.list_display
 
-    if search_query:
-        or_conditions = []
-        for column_name in list_display:
-            column = model.__table__.columns[column_name]
-            or_conditions.append(cast(column, Text).ilike(f'%{search_query}%'))
-            search_condition = or_(*or_conditions)
-            filtered_data = model.query.filter(search_condition)
-            pagination = filtered_data.paginate(page=page, per_page=per_page, error_out=False)
-    else:
-        primary_key_column = model.__table__.primary_key.columns.keys()[0]
-        pagination = model.query.order_by(primary_key_column).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
+    pagination = filter_resources(model, list_display, search_query, page, per_page)
+
     return render_template(
         "resource/list.html",
         pagination=pagination,
@@ -644,13 +654,18 @@ def resource_download(resource_type):
     """
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
-    resources = model.query.all()
+    downloadable_attributes = model.__table__.columns.keys()
+    search_query = request.args.get("search", default="")
+    list_display = resource_class.list_display
+    pagination = filter_resources(model, list_display, search_query, 1, None)
+    resources = pagination.items
+
+    print("resources",resources)
+
     output = io.StringIO()
     writer = csv.writer(output)
 
-    downloadable_attributes = model.__table__.columns.keys()
-
-    writer.writerow(downloadable_attributes)  # csv header
+    writer.writerow(downloadable_attributes)  # CSV header
     for resource in resources:
         line = []
         for attribute in downloadable_attributes:
