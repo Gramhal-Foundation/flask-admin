@@ -660,8 +660,6 @@ def resource_download(resource_type):
     pagination = filter_resources(model, list_display, search_query, 1, None)
     resources = pagination.items
 
-    print("resources",resources)
-
     output = io.StringIO()
     writer = csv.writer(output)
 
