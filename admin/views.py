@@ -65,6 +65,7 @@ from db import db
 from flask import Response, flash, redirect
 from flask import render_template as real_render_template
 from flask import request, url_for
+from flask_bcrypt import Bcrypt
 from flask_login import login_required, login_user, logout_user
 from flask_wtf import FlaskForm
 from sqlalchemy import cast, Text, or_
@@ -73,6 +74,8 @@ from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired
 
 from . import admin
+
+bcrypt = Bcrypt(app)
 
 
 def get_user_model_config():
@@ -398,12 +401,12 @@ def login():
         user_model_config = get_user_model_config()
         user_model = user_model_config["model"]
         identifier = user_model_config["identifier"]
-        secret = user_model_config["secret"]
         user = user_model.query.filter(
             getattr(user_model, identifier) == phone
         ).first()
+        hashed_password = get_hashed_password(password)
 
-        if user and getattr(user, secret) == password:
+        if user and bcrypt.check_password_hash(hashed_password, password):
             login_user(user)
             return redirect(url_for(".dashboard"))
         else:
@@ -526,8 +529,12 @@ def resource_create(resource_type):
         )
 
     attributes_to_save = {}
+
     for attribute in editable_attributes:
         attribute_value = request.form.get(attribute["name"])
+        if attribute["name"] == admin_configs["user"]["secret"]:
+            attribute_value = get_hashed_password(attribute_value)
+
         validated_attribute_value = validate_resource_attribute(
             resource_type, attribute, attribute_value
         )
@@ -584,15 +591,17 @@ def resource_edit(resource_type, resource_id):
             resource_type=resource_type,
             resource=resource,
             editable_attributes=editable_attributes,
+            admin_configs=admin_configs
         )
 
     for attribute in editable_attributes:
         attribute_value = request.form.get(attribute["name"])
-        print("attribute_value....", attribute_value)
+        if attribute["name"] == admin_configs["user"]["secret"]:
+            attribute_value = get_hashed_password(attribute_value)
+
         validated_attribute_value = validate_resource_attribute(
             resource_type, attribute, attribute_value
         )
-        print("validated_attribute_value....", validated_attribute_value)
         setattr(resource, attribute["name"], validated_attribute_value)
 
     db.session.commit()
@@ -778,3 +787,22 @@ def resource_upload(resource_type):
         flash("All " + resource_type.capitalize() + " uploaded!")
         return redirect(url_for(".resource_list", resource_type=resource_type))
     return render_template("resource/upload.html", resource_type=resource_type)
+
+
+def get_hashed_password(password):
+    """
+    Hashes a password using Bcrypt.
+
+    Parameters:
+    - password (str): The password to be hashed.
+
+    Returns:
+    str: The hashed password encoded as a UTF-8 string.
+
+    Raises:
+    None
+
+    Example:
+    hashed_password = get_hashed_password('my_secure_password')
+    """
+    return bcrypt.generate_password_hash(password, 10).decode("utf-8")
