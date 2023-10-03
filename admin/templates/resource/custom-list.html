@@ -1,0 +1,35 @@
+{% extends 'app.html' %}
+
+{% block title %}
+    {{ resource_type | admin_label_plural }}
+{% endblock %}
+
+{% block content %}
+    <div class="text-3xl mb-4">Manage {{ resource_type | admin_label_plural }}</div>
+
+    {% for data_tuple in processed_data %}
+    <div style="display: flex; padding: 30px; border: 1px solid black; justify-content: space-between;">
+        <div style="display: flex; flex-direction: column; width: 30%; ">
+            {% for other_item in data_tuple[2] %}
+                <div>
+                    <h2>{{ other_item[0] | format_label }}: {{ other_item[1] }}</h2>
+                </div>
+            {% endfor %}
+        </div>
+        <div style="display: flex; flex-direction: column; width: 30%; ">
+            {% for image_url in data_tuple[0] %}
+                <div>
+                    <img src="{{ image_url }}" alt="">
+                </div>
+            {% endfor %}
+        </div>
+        <div style="display: flex; flex-direction: column; width: 30%; ">
+            {% for button_label in data_tuple[1] %}
+                <div>
+                    <button type="submit">{{ button_label }}</button>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endfor %}
+{% endblock %}

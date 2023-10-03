@@ -60,6 +60,7 @@ import pandas as pd
 from admin_view import *
 from admin_view import admin_configs
 from app import app
+
 # [TODO]: dependency on main repo
 from db import db
 from flask import Response, flash, redirect
@@ -254,9 +255,7 @@ def render_template(*args, **kwargs):
         }
         if hasattr(resource_obj, "permissions"):
             resource_permissions = resource_obj.permissions
-        template_attributes["permissions"][
-            resource_type
-        ] = resource_permissions
+        template_attributes["permissions"][resource_type] = resource_permissions
 
     if "resource_type" in kwargs:
         original_pk = get_resource_pk(kwargs["resource_type"])
@@ -290,9 +289,7 @@ def get_editable_attributes(resource_type):
 
     model_attributes = []
     for column in model.__table__.columns:
-        model_attributes.append(
-            {"name": str(column.name), "type": str(column.type)}
-        )
+        model_attributes.append({"name": str(column.name), "type": str(column.type)})
 
     editable_attributes = []
     for attribute in model_attributes:
@@ -400,9 +397,7 @@ def login():
         user_model_config = get_user_model_config()
         user_model = user_model_config["model"]
         identifier = user_model_config["identifier"]
-        user = user_model.query.filter(
-            getattr(user_model, identifier) == phone
-        ).first()
+        user = user_model.query.filter(getattr(user_model, identifier) == phone).first()
         hashed_password = get_hashed_password(password)
 
         if user and bcrypt.check_password_hash(hashed_password, password):
@@ -452,6 +447,7 @@ def resource_list(resource_type):
     """
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
+    is_custom_template = resource_class.is_custom_template
     per_page = 5
     page = request.args.get("page", default=1, type=int)
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
@@ -459,12 +455,22 @@ def resource_list(resource_type):
         page=page, per_page=per_page, error_out=False
     )
     list_display = resource_class.list_display
-    return render_template(
-        "resource/list.html",
-        pagination=pagination,
-        resource_type=resource_type,
-        list_display=list_display,
-    )
+    if is_custom_template:
+        processed_data = get_preprocess_data(pagination, list_display)
+        return render_template(
+            "resource/custom-list.html",
+            pagination=pagination,
+            resource_type=resource_type,
+            list_display=list_display,
+            processed_data=processed_data,
+        )
+    else:
+        return render_template(
+            "resource/list.html",
+            pagination=pagination,
+            resource_type=resource_type,
+            list_display=list_display,
+        )
 
 
 @admin.route(
@@ -568,7 +574,7 @@ def resource_edit(resource_type, resource_id):
             resource_type=resource_type,
             resource=resource,
             editable_attributes=editable_attributes,
-            admin_configs=admin_configs
+            admin_configs=admin_configs,
         )
 
     for attribute in editable_attributes:
@@ -780,3 +786,24 @@ def get_hashed_password(password):
     hashed_password = get_hashed_password('my_secure_password')
     """
     return bcrypt.generate_password_hash(password, 10).decode("utf-8")
+
+
+def get_preprocess_data(pagination, list_display):
+    processed_data = []
+
+    for resource in pagination.items:
+        image_data = []
+        button_data = []
+        other_data = []
+
+        for item in list_display:
+            if item == "receipt_image_url":
+                image_data.append(getattr(resource, item))
+            elif item == "is_approved":
+                button_data.extend(["Approve", "Reject", "Edit"])
+            else:
+                other_data.append((item, getattr(resource, item)))
+
+        processed_data.append((image_data, button_data, other_data))
+
+    return processed_data
