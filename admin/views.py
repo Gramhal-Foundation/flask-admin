@@ -63,7 +63,7 @@ from app import app
 
 # [TODO]: dependency on main repo
 from db import db
-from flask import Response, flash, redirect
+from flask import Response, flash, redirect, jsonify
 from flask import render_template as real_render_template
 from flask import request, url_for
 from flask_bcrypt import Bcrypt
@@ -289,7 +289,8 @@ def get_editable_attributes(resource_type):
 
     model_attributes = []
     for column in model.__table__.columns:
-        model_attributes.append({"name": str(column.name), "type": str(column.type)})
+        model_attributes.append(
+            {"name": str(column.name), "type": str(column.type)})
 
     editable_attributes = []
     for attribute in model_attributes:
@@ -397,7 +398,8 @@ def login():
         user_model_config = get_user_model_config()
         user_model = user_model_config["model"]
         identifier = user_model_config["identifier"]
-        user = user_model.query.filter(getattr(user_model, identifier) == phone).first()
+        user = user_model.query.filter(
+            getattr(user_model, identifier) == phone).first()
         hashed_password = get_hashed_password(password)
 
         if user and bcrypt.check_password_hash(hashed_password, password):
@@ -448,7 +450,7 @@ def resource_list(resource_type):
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
     is_custom_template = resource_class.is_custom_template
-    per_page = 5
+    per_page = 50
     page = request.args.get("page", default=1, type=int)
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
     pagination = model.query.order_by(primary_key_column).paginate(
@@ -800,10 +802,31 @@ def get_preprocess_data(pagination, list_display):
             if item == "receipt_image_url":
                 image_data.append(getattr(resource, item))
             elif item == "is_approved":
-                button_data.extend(["Approve", "Reject", "Edit"])
+                button_data.extend(
+                    [("Approve", resource.id), ("Reject", resource.id), ("Edit", resource.id)])
             else:
                 other_data.append((item, getattr(resource, item)))
 
         processed_data.append((image_data, button_data, other_data))
 
     return processed_data
+
+
+@admin.route('/update_approval_status', methods=['POST'])
+def update_approval_status():
+    try:
+        data = request.json
+        action = data.get('action')
+        receipt_id = data.get('receipt_id')
+
+        sale_receipt = SaleReceiptModel.query.get(receipt_id)
+        if action == 'approve':
+            sale_receipt.is_approved = True
+        elif action == 'reject':
+            sale_receipt.is_approved = False
+
+        db.session.commit()
+
+        return jsonify({'success': True, 'message': 'Approval status updated successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})

@@ -8,28 +8,106 @@
     <div class="text-3xl mb-4">Manage {{ resource_type | admin_label_plural }}</div>
 
     {% for data_tuple in processed_data %}
-    <div style="display: flex; padding: 30px; border: 1px solid black; justify-content: space-between;">
-        <div style="display: flex; flex-direction: column; width: 30%; ">
-            {% for other_item in data_tuple[2] %}
+    <div class="bg-gray-120 p-6 rounded-lg shadow-xl">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="flex flex-col border rounded-lg p-4">
+                <h2 class="text-xl font-semibold mb-2">Details</h2>
+                {% for other_item in data_tuple[2] %}
                 <div>
                     <h2>{{ other_item[0] | format_label }}: {{ other_item[1] }}</h2>
                 </div>
-            {% endfor %}
-        </div>
-        <div style="display: flex; flex-direction: column; width: 30%; ">
-            {% for image_url in data_tuple[0] %}
-                <div>
-                    <img src="{{ image_url }}" alt="">
-                </div>
-            {% endfor %}
-        </div>
-        <div style="display: flex; flex-direction: column; width: 30%; ">
-            {% for button_label in data_tuple[1] %}
-                <div>
-                    <button type="submit">{{ button_label }}</button>
-                </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
+            <div class="flex flex-col border rounded-lg p-1">
+                <h2 class="text-xl font-semibold mb-2">Images</h2>
+                {% for image_url in data_tuple[0] %}
+                    <div>
+                        <img src="{{ image_url }}" alt="" class="w-full mb-4 rounded-lg">
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="flex flex-col border rounded-lg p-4">
+                <h2 class="text-xl font-semibold mb-2">Actions</h2>
+                {% for button_label, receipt_id in data_tuple[1] %}
+                    <div>
+                        <button
+                            class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 my-2 rounded-lg"
+                            type="submit"
+                            onclick="handleButtonClick('{{ button_label }}', this.getAttribute('data-receipt-id'))"
+                            data-receipt-id="{{ receipt_id }}"
+                        >
+                            {{ button_label }}
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
         </div>
     </div>
 {% endfor %}
+<div class="mt-4 flex items-end">
+    {% if pagination.has_prev %}
+        <a href="{{ url_for('.resource_list', resource_type=resource_type, page=pagination.prev_num) }}"
+            class="mx-1 px-3 py-1 rounded border text-blue-500">
+            {{ 'Prev' }}
+        </a>
+    {% endif %}
+
+    {% for num in pagination.iter_pages() %}
+        {% if num %}
+            {% if num != pagination.page %}
+                <a href="{{ url_for('.resource_list', resource_type=resource_type, page=num) }}"
+                    class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
+            {% else %}
+                <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
+            {% endif %}
+        {% else %}
+            ...
+        {% endif %}
+    {% endfor %}
+
+    {% if pagination.has_next %}
+        <a href="{{ url_for('.resource_list', resource_type=resource_type, page=pagination.next_num) }}"
+        class="mx-1 px-3 py-1 rounded border text-blue-500">
+            {{ 'Next' }}
+        </a>
+    {% endif %}
+</div>
+
+<script>
+    function handleButtonClick(action, receipt_id) {
+        action = action.toLowerCase();
+        console.log('id', receipt_id);
+        var baseUrl = 'http://localhost:5000/admin/';
+
+        var route = 'update_approval_status';
+        var url = baseUrl + route;
+        var data = {
+            action: action,
+            receipt_id: receipt_id
+        };
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (action === 'approve') {
+                    console.log('Data updated successfully');
+                } else if (action === 'reject') {
+                    console.log('Data rejected successfully');
+                }
+            } else {
+                console.error('Error:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+</script>
 {% endblock %}
