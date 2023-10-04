@@ -804,10 +804,9 @@ def get_preprocess_data(pagination, list_display):
             elif item == "is_approved":
                 button_data.extend(
                     [("Approve", resource.id), ("Reject", resource.id), ("Edit", resource.id)])
-            else:
+            elif item != "id":  # Exclude "id" attribute
                 other_data.append((item, getattr(resource, item)))
-
-        processed_data.append((image_data, button_data, other_data))
+                processed_data.append((image_data, button_data, other_data))
 
     return processed_data
 
