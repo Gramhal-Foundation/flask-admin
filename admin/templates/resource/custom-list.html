@@ -31,6 +31,7 @@
                 {% for button_label, receipt_id in data_tuple[1] %}
                     <div>
                         <button
+                            id="message"
                             class="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 my-2 rounded-lg"
                             type="submit"
                             onclick="handleButtonClick('{{ button_label }}', this.getAttribute('data-receipt-id'))"
@@ -95,11 +96,12 @@
         })
         .then(response => response.json())
         .then(data => {
+
             if (data.success) {
                 if (action === 'approve') {
-                    console.log('Data updated successfully');
+                    alert('data approved successfully!!');
                 } else if (action === 'reject') {
-                    console.log('Data rejected successfully');
+                    alert('data rejected successfully!!');
                 }
             } else {
                 console.error('Error:', data.message);
