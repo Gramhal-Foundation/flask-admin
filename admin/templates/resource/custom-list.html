@@ -9,6 +9,7 @@
 <div class="mb-4">
     <ul class="flex">
         <li>
+            <input type="hidden" id="buttonState" value="pending">
             <button type="button"
                 class="text-white bg-blue-400 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
                 onclick="displayReceipts('pending')">Pending Receipts</button>
@@ -20,22 +21,19 @@
         </li>
     </ul>
 </div>
-<div id="receiptsSectionPending" style="display: none;">
+<div id="receiptsSection" style="display: block;">
     <div class="flex flex-wrap -mx-4">
         {% for data_tuple in processed_data %}
-        {% for other_item in data_tuple[2] %}
-        {% if other_item[0] == 'is_approved' and other_item[1] is none %}
         <div class="w-1/2 px-4 py-4">
-            <div class="bg-gray-120 p-6 rounded-lg shadow-xl">
-                <div class="flex flex-col border rounded-lg p-1"
-                    style="max-width: 700px; display: flex;">
+                <div class="flex flex-col border rounded-lg p-1 shadow-xl"
+                    style="max-width: 900px; display: flex;">
                     <div style="display: flex; flex-direction: row;">
                         <div
-                            style="width: 800px; height: 423.04px; position: relative; overflow: hidden;">
+                            style="width: 800px; height: 500px; position: relative; overflow: hidden;">
                             <img src="{{ image_url }}" alt=""
                                 style="width: 100%; height: 100%; object-fit: cover; border-radius: 6.45px;">
                         </div>
-                        <div style="flex: 1; padding-left: 20px;">
+                        <div style="flex: 1; padding-left: 10px;">
                             <div
                                 style="font-family: Mukta; font-size: 16px; font-weight: 400; line-height: 19px; letter-spacing: 0em; text-align: left; margin-bottom: 100px;">
                                 {% for other_item in data_tuple[2] %}
@@ -45,12 +43,12 @@
                                 {% endfor %}
                             </div>
                             {% for button_label, receipt_id in data_tuple[1] %}
-                            <div style="padding-left: 20px; ">
+                            <div style="display: flex; justify-content: center; align-items: center; ">
                                 <button id="action_button"
                                     class="
                                             font-semibold py-2 px-4 my-2 rounded-lg
                                             {% if button_label == 'Approve' %}
-                                                bg-green-500 text-white hover:bg-green-600
+                                                bg-blue-500 text-white hover:bg-blue-600
                                             {% elif button_label == 'Reject' %}
                                                 bg-red-500 text-white hover:bg-red-600
                                             {% elif button_label == 'Edit' %}
@@ -68,87 +66,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        {% endif %}
-        {% endfor %}
-        {% endfor %}
-    </div>
-    <div class="mt-4 flex items-end">
-        {% if pagination.has_prev %}
-        <a href="{{ url_for('.resource_list', resource_type=resource_type, page=pagination.prev_num) }}"
-            class="mx-1 px-3 py-1 rounded border text-blue-500">
-            {{ 'Prev' }}
-        </a>
-        {% endif %}
-        {% for num in pagination.iter_pages() %}
-        {% if num %}
-        {% if num != pagination.page %}
-        <a href="{{ url_for('.resource_list', resource_type=resource_type, page=num) }}"
-            class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
-        {% else %}
-        <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
-        {% endif %}
-        {% else %}
-        ...
-        {% endif %}
-        {% endfor %}
-    
-        {% if pagination.has_next %}
-        <a href="{{ url_for('.resource_list', resource_type=resource_type, page=pagination.next_num) }}"
-            class="mx-1 px-3 py-1 rounded border text-blue-500">
-            {{ 'Next' }}
-        </a>
-        {% endif %}
-    </div>
-</div>
-<div id="receiptsSectionAll" style="display: none;">
-    <div class="flex flex-wrap -mx-4">
-        {% for data_tuple in processed_data %}
-        <div class="w-1/2 px-4 py-4">
-            <div class="bg-gray-120 p-6 rounded-lg shadow-xl">
-                <div class="flex flex-col border rounded-lg p-1"
-                    style="max-width: 700px; display: flex;">
-                    <div style="display: flex; flex-direction: row;">
-                        <div
-                            style="width: 800px; height: 423.04px; position: relative; overflow: hidden;">
-                            <img src="{{ image_url }}" alt=""
-                                style="width: 100%; height: 100%; object-fit: cover; border-radius: 6.45px;">
-                        </div>
-                        <div style="flex: 1; padding-left: 20px;">
-                            <div
-                                style="font-family: Mukta; font-size: 16px; font-weight: 400; line-height: 19px; letter-spacing: 0em; text-align: left; margin-bottom: 100px;">
-                                {% for other_item in data_tuple[2] %}
-                                <h2 style="color: #777; display: inline; font-size: 20px;">{{ other_item[0] | format_label | capitalize }}:</h2>
-                                <h2 style="color: #000; display: inline;"> {{ other_item[1] | capitalize }}</h2>
-                                <br>
-                                {% endfor %}
-                            </div>
-                            {% for button_label, receipt_id in data_tuple[1] %}
-                            <div style="padding-left: 20px; ">
-                                <button id="action_button"
-                                    class="
-                                            font-semibold py-2 px-4 my-2 rounded-lg
-                                            {% if button_label == 'Approve' %}
-                                                bg-green-500 text-white hover:bg-green-600
-                                            {% elif button_label == 'Reject' %}
-                                                bg-red-500 text-white hover:bg-red-600
-                                            {% elif button_label == 'Edit' %}
-                                                bg-white text-black border border-black hover:bg-black hover:text-white
-                                            {% endif %}
-                                        "
-                                    type="submit"
-                                    onclick="handleButtonClick('{{ button_label }}', this.getAttribute('data-receipt-id'))"
-                                    data-receipt-id="{{ receipt_id }}"
-                                    style="width: 100px; height: 40px;">
-                                    {{ button_label }}
-                                </button>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
         {% endfor %}
     </div>
@@ -180,54 +97,47 @@
         {% endif %}
     </div>
 </div>
-    <script>
+<script>
     function displayReceipts(type) {
-        var receiptsSectionPending = document.getElementById('receiptsSectionPending');
-        var receiptsSectionAll = document.getElementById('receiptsSectionAll');
+        var receiptsSection = document.getElementById('receiptsSection');
         if (type === 'pending') {
-            receiptsSectionPending.style.display = 'block';
-            receiptsSectionAll.style.display = 'none';
+            receiptsSection.style.display = 'none';
         } else {
-            receiptsSectionPending.style.display = 'none';
-            receiptsSectionAll.style.display = 'block';
+            receiptsSection.style.display = 'block';
         }
     }
 
-        function handleButtonClick(action, receipt_id) {
-            action = action.toLowerCase();
-            console.log('id', receipt_id);
-            var baseUrl = 'http://localhost:5000/admin/';
+    function handleButtonClick(action, receipt_id) {
+        var editButtonClicked = false;
+        action = action.toLowerCase();
+        var baseUrl = 'http://localhost:5000/admin/';
 
-            var route = 'update_approval_status';
-            var url = baseUrl + route;
-            var data = {
-                action: action,
-                receipt_id: receipt_id
-            };
+        var route = 'update_approval_status';
+        var url = baseUrl + route;
+        var data = {
+            action: action,
+            receipt_id: receipt_id
+        };
 
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                var buttonElement =document.getElementById('action_button');
-                if (data.success) {
-                    if (action === 'approve') {
-                        buttonElement.style.backgroundColor = 'pink';
-                    } else if (action === 'reject') {
-                        alert('data rejected successfully!!');
-                    }
-                } else {
-                    console.error('Error:', data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+        if(action=='edit'){
+            editButtonClicked= true; 
         }
-    </script>
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if ( !editButtonClicked && data.success) {
+                window.location.reload();
+            } 
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+</script>
 {% endblock %}
