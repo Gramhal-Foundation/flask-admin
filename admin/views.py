@@ -797,16 +797,17 @@ def get_preprocess_data(pagination, list_display):
         image_data = []
         button_data = []
         other_data = []
-
+        other_data.append(("is_approved", getattr(resource, "is_approved")))
         for item in list_display:
             if item == "receipt_image_url":
                 image_data.append(getattr(resource, item))
             elif item == "is_approved":
                 button_data.extend(
                     [("Approve", resource.id), ("Reject", resource.id), ("Edit", resource.id)])
-            elif item != "id":  # Exclude "id" attribute
+            # elif item != "id":  # Exclude "id" attribute
+            else:
                 other_data.append((item, getattr(resource, item)))
-                processed_data.append((image_data, button_data, other_data))
+        processed_data.append((image_data, button_data, other_data))
 
     return processed_data
 
@@ -829,3 +830,37 @@ def update_approval_status():
         return jsonify({'success': True, 'message': 'Approval status updated successfully'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
+
+
+@app.route("/resource/pending_receipts")
+@login_required
+def pending_receipts(resource_type):
+    resource_class = get_resource_class(resource_type)
+    model = resource_class.model
+    is_custom_template = resource_class.is_custom_template
+    per_page = 50
+    page = request.args.get("page", default=1, type=int)
+    primary_key_column = model.__table__.primary_key.columns.keys()[0]
+    pagination = model.query.order_by(primary_key_column).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    list_display = resource_class.list_display
+
+    if is_custom_template:
+        processed_data = get_preprocess_data(pagination, list_display)
+        is_condition_satisfied = False
+
+        for data_tuple in processed_data:
+            for other_item in data_tuple[2]:
+                if other_item[0] == 'is_approved' and other_item[1] is None:
+                    is_condition_satisfied = True
+                    break
+
+        if is_condition_satisfied:
+            return render_template(
+                "resource/custom-list.html",
+                pagination=pagination,
+                resource_type=resource_type,
+                list_display=list_display,
+                processed_data=processed_data,
+            )
