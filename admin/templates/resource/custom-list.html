@@ -80,16 +80,18 @@
 </div>
 <div class="mt-4 flex items-end">
     {% if pagination.has_prev %}
-    <a href="{{ url_for('.resource_list', resource_type=resource_type, page=pagination.prev_num) }}"
-        class="mx-1 px-3 py-1 rounded border text-blue-500">
+    <a href="javascript:void(0);" 
+       onclick="displayReceipts('all', '{{ pagination.prev_num }}')"
+       class="mx-1 px-3 py-1 rounded border text-blue-500">
         {{ 'Prev' }}
     </a>
     {% endif %}
     {% for num in pagination.iter_pages() %}
     {% if num %}
     {% if num != pagination.page %}
-    <a href="{{ url_for('.resource_list', resource_type=resource_type, page=num) }}"
-        class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
+    <a href="javascript:void(0);" 
+       onclick="displayReceipts('all', '{{ num }}')"
+       class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
     {% else %}
     <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
     {% endif %}
@@ -98,19 +100,21 @@
     {% endif %}
     {% endfor %}
     {% if pagination.has_next %}
-    <a href="{{ url_for('.resource_list', resource_type=resource_type, page=pagination.next_num) }}"
-        class="mx-1 px-3 py-1 rounded border text-blue-500">
+    <a href="javascript:void(0);" 
+       onclick="displayReceipts('all', '{{ pagination.next_num }}')"
+       class="mx-1 px-3 py-1 rounded border text-blue-500">
         {{ 'Next' }}
     </a>
     {% endif %}
 </div>
+
 <script>
-    function displayReceipts(buttonValue) {
+    function displayReceipts(buttonValue, page=1) {
         let pendingButton = document.getElementById('pendingButton');
         let allReceiptButton = document.getElementById('allReceiptButton');
         let resourceType = "{{ resource_type }}";
 
-        let url = `/admin/resource/${resourceType}/${buttonValue}`;
+        let url = `/admin/resource/${resourceType}/${buttonValue}?page=${page}`;
 
         window.location.href = url;
     }
@@ -158,9 +162,13 @@
             console.log('all');
             pendingButton.style.backgroundColor = 'white';
             pendingButton.style.color = 'black';
+            pendingButton.style.boxShadow = '0px 0px 5px 0px rgba(0,0,0,0.75)'; // Add shadow
+            pendingButton.style.border = '1px solid #000'; // Add border
         } else if (window.location.toString().match(/pending/)) {
             allReceiptButton.style.backgroundColor = 'white';
             allReceiptButton.style.color = 'black';
+            allReceiptButton.style.boxShadow = '0px 0px 5px 0px rgba(0,0,0,0.75)'; // Add shadow
+            allReceiptButton.style.border = '1px solid #000';
         }
     }
 
