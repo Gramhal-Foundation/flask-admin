@@ -17,7 +17,7 @@
         <li>
             <button type="button"
                 class="text-white bg-blue-400 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-                onclick="displayReceipts('no pending')" >All Receipts</button>
+                onclick="displayReceipts('all')" >All Receipts</button>
         </li>
     </ul>
 </div>
@@ -98,13 +98,12 @@
     </div>
 </div>
 <script>
-    function displayReceipts(type) {
-        var receiptsSection = document.getElementById('receiptsSection');
-        if (type === 'pending') {
-            receiptsSection.style.display = 'none';
-        } else {
-            receiptsSection.style.display = 'block';
-        }
+    function displayReceipts(buttonValue) {
+        var resourceType = "{{ resource_type }}";
+
+        var url = `/admin/resource/${resourceType}/${buttonValue}`;
+
+        window.location.href = url;
     }
 
     function handleButtonClick(action, receipt_id) {
