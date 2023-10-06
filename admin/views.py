@@ -453,19 +453,8 @@ def resource_list(resource_type):
     per_page = 50
     page = request.args.get("page", default=1, type=int)
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
-    pagination = model.query.filter(model.is_approved != None).order_by(primary_key_column).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
-    # if button_data_type == 'pending':
-    # # Filter resources where is_approved is not None
-    #     pagination = model.query.filter(model.is_approved != None).order_by(primary_key_column).paginate(
-    #         page=page, per_page=per_page, error_out=False
-    #     )
-    # else:
-    #     # Display all resources
-    #     pagination = model.query.order_by(primary_key_column).paginate(
-    #         page=page, per_page=per_page, error_out=False
-    #     )
+    pagination = model.query.order_by(primary_key_column).paginate(
+        page=page, per_page=per_page, error_out=False)
     list_display = resource_class.list_display
     if is_custom_template:
         processed_data = get_preprocess_data(pagination, list_display)
