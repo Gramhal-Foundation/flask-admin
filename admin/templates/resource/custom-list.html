@@ -37,9 +37,9 @@
             {% endfor %}
             <div style="flex: 1; padding-left: 10px;">
                 <div
-                    style="font-size: 16px; font-weight: 400; line-height: 19px; letter-spacing: 0em; text-align: left; margin-bottom: 100px;">
+                    style="font-size: 16px; font-weight: 400; line-height: 19px; letter-spacing: 0em; text-align: left; margin-bottom: 150px;">
                     {% for other_item in data_tuple[2] %}
-                    <h2 style="color: #777; display: inline; font-size: 15px;">{{ other_item[0] | format_label | capitalize }}:</h2>
+                    <h2 style="color: #363535; display: inline; font-size: 15px;">{{ other_item[0] | format_label | capitalize }}:</h2>
                     <h2 style="color: #000; display: inline;"> {{ other_item[1] | capitalize }}</h2>
                     <br>
                     {% endfor %}
