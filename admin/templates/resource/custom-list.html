@@ -5,6 +5,7 @@
 {% endblock %}
 
 {% block content %}
+
 <div class="text-3xl mb-4">Manage {{ resource_type | admin_label_plural }}</div>
 <div class="mb-4">
     <ul class="flex">
@@ -12,14 +13,14 @@
             <input type="hidden" id="buttonState" value="pending">
             <button type="button"
             id="pendingButton"
-                class="text-white bg-blue-400 hover:bg-blue-300 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-                onclick="displayReceipts('pending')">Pending Receipts</button>
+                class="font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 {% if 'pending' in request.path %} text-white bg-blue-500 {% else %} text-black border border-gray-300 {% endif %}"
+                onclick="displayReceipts('pending')">Pending Responses</button>
         </li>
         <li>
             <button type="button"
             id="allReceiptButton"
-                class="text-white bg-blue-400 hover:bg-blue-300 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-                onclick="displayReceipts('all')" >All Receipts</button>
+                class="font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 {% if 'all' in request.path %} text-white bg-blue-500 {% else %} text-black border border-gray-300 {% endif %}"
+                onclick="displayReceipts('all')" >All</button>
         </li>
     </ul>
 </div>
@@ -172,37 +173,5 @@
             console.error('Error:', error);
         });
     }
-
-    function initializeButtonState() {
-        let url = window.location.pathname;
-        let pendingButton = document.getElementById('pendingButton');
-        let allReceiptButton = document.getElementById('allReceiptButton');
-
-
-        if (window.location.toString().match(/all/)) {
-            console.log('all');
-            pendingButton.style.backgroundColor = 'white';
-            pendingButton.style.color = 'black';
-            pendingButton.style.boxShadow = '0px 0px 5px 0px rgba(0,0,0,0.75)';
-            pendingButton.style.border = '1px solid #000';
-        } else if (window.location.toString().match(/pending/)) {
-            allReceiptButton.style.backgroundColor = 'white';
-            allReceiptButton.style.color = 'black';
-            allReceiptButton.style.boxShadow = '0px 0px 5px 0px rgba(0,0,0,0.75)';
-            allReceiptButton.style.border = '1px solid #000';
-        }
-        else{
-            pendingButton.style.backgroundColor = 'white';
-            pendingButton.style.color = 'black';
-            pendingButton.style.boxShadow = '0px 0px 5px 0px rgba(0,0,0,0.75)';
-            pendingButton.style.border = '1px solid #000';
-            allReceiptButton.style.backgroundColor = 'white';
-            allReceiptButton.style.color = 'black';
-            allReceiptButton.style.boxShadow = '0px 0px 5px 0px rgba(0,0,0,0.75)';
-            allReceiptButton.style.border = '1px solid #000';
-        }
-    }
-
-    window.onload = initializeButtonState;
 </script>
 {% endblock %}
