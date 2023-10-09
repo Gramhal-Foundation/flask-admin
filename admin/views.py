@@ -463,6 +463,8 @@ def resource_list(resource_type):
         page=page, per_page=per_page, error_out=False)
     list_display = resource_class.list_display
     if is_custom_template:
+        # TODO: hardcoding needs to be removed
+        pagination = model.query.filter(SaleReceiptModel.booklet_number.isnot(None)).order_by(primary_key_column).paginate(page=page, per_page=per_page, error_out=False)
         processed_data = get_preprocess_data(pagination, list_display)
         return render_template(
             "resource/custom-list.html",
@@ -847,16 +849,21 @@ def filter_receipts(resource_type, button_value):
     per_page = 50
     page = request.args.get("page", default=1, type=int)
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
-    if button_value == 'pending':
-        pagination = model.query.filter(model.is_approved == None).order_by(primary_key_column).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
-    else:
-        pagination = model.query.filter(model.is_approved != None).order_by(primary_key_column).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
+    # TODO: filter not working
+    pagination = model.query.order_by(primary_key_column).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
     list_display = resource_class.list_display
     if is_custom_template:
+        # TODO: hardcoding needs to be removed
+        if button_value == 'pending':
+            pagination = model.query.filter(model.is_approved == None, SaleReceiptModel.booklet_number.isnot(None)).order_by(primary_key_column).paginate(
+                page=page, per_page=per_page, error_out=False
+            )
+        else:
+            pagination = model.query.filter(model.is_approved != None, SaleReceiptModel.booklet_number.isnot(None)).order_by(primary_key_column).paginate(
+                page=page, per_page=per_page, error_out=False
+            )
         processed_data = get_preprocess_data(pagination, list_display)
         return render_template(
             "resource/custom-list.html",
