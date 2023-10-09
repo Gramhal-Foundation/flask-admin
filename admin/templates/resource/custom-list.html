@@ -12,13 +12,13 @@
             <input type="hidden" id="buttonState" value="pending">
             <button type="button"
             id="pendingButton"
-                class="text-white bg-blue-400 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                class="text-white bg-blue-400 hover:bg-blue-300 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
                 onclick="displayReceipts('pending')">Pending Receipts</button>
         </li>
         <li>
             <button type="button"
             id="allReceiptButton"
-                class="text-white bg-blue-400 hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                class="text-white bg-blue-400 hover:bg-blue-300 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
                 onclick="displayReceipts('all')" >All Receipts</button>
         </li>
     </ul>
@@ -31,7 +31,7 @@
             {% for image_url in data_tuple[0] %}
             <div
                 style="width: 300px; height: 500px; position: relative; overflow: hidden;">
-                <img src="{{ image_url }}" alt=""
+                <img src="{{ image_url }}" alt="Receipt Image"
                     style="height: 100%; object-fit: cover; border-radius: 6.45px;">
             </div>
             {% endfor %}
@@ -39,8 +39,25 @@
                 <div
                     style="font-size: 16px; font-weight: 400; line-height: 19px; letter-spacing: 0em; text-align: left; margin-bottom: 150px;">
                     {% for other_item in data_tuple[2] %}
-                    <h2 style="color: #363535; display: inline; font-size: 15px;">{{ other_item[0] | format_label | capitalize }}:</h2>
-                    <h2 style="color: #000; display: inline;"> {{ other_item[1] | capitalize }}</h2>
+                    <h2 style="color: #363535; display: inline; font-size: 15px;">
+                        {% if other_item[0] == "is_approved" %}
+                            Receipt Status:
+                        {% else %}
+                            {{ other_item[0] | format_label | capitalize }}:
+                        {% endif %}
+                    </h2>
+                    <!-- <h2 style="color: #000; display: inline;"> {{ other_item[1] | capitalize }}</h2> -->
+                    <h2 style="color: #000; display: inline;">
+                        {% if other_item[1] == true %}
+                            Approved
+                        {% elif other_item[1] == false %}
+                            Rejected
+                        {% elif other_item[1] is none %}
+                            Null
+                        {% else %}
+                            {{ other_item[1] | capitalize }}
+                        {% endif %}
+                    </h2>
                     <br>
                     {% endfor %}
                 </div>
@@ -48,7 +65,7 @@
                 <div style="display: flex; align-items: center; ">
                     {% if button_label == 'Approve' %}
                     <button id="approve_button"
-                        class="font-semibold py-2 px-4 my-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600"
+                        class="font-semibold py-2 px-4 my-2 rounded-lg bg-green-500 text-white hover:bg-green-600"
                         type="submit"
                         onclick="handleButtonClick('{{ button_label }}', '{{ receipt_id }}')"
                         style="width: 100px; height: 40px;">
@@ -56,7 +73,7 @@
                     </button>
                     {% elif button_label == 'Reject' %}
                     <button id="reject_button"
-                        class="font-semibold py-2 px-4 my-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
+                        class="font-semibold py-2 px-4 my-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
                         type="submit"
                         onclick="handleButtonClick('{{ button_label }}', '{{ receipt_id }}')"
                         style="width: 100px; height: 40px;">
@@ -162,12 +179,22 @@
             console.log('all');
             pendingButton.style.backgroundColor = 'white';
             pendingButton.style.color = 'black';
-            pendingButton.style.boxShadow = '0px 0px 5px 0px rgba(0,0,0,0.75)'; // Add shadow
-            pendingButton.style.border = '1px solid #000'; // Add border
+            pendingButton.style.boxShadow = '0px 0px 5px 0px rgba(0,0,0,0.75)';
+            pendingButton.style.border = '1px solid #000';
         } else if (window.location.toString().match(/pending/)) {
             allReceiptButton.style.backgroundColor = 'white';
             allReceiptButton.style.color = 'black';
-            allReceiptButton.style.boxShadow = '0px 0px 5px 0px rgba(0,0,0,0.75)'; // Add shadow
+            allReceiptButton.style.boxShadow = '0px 0px 5px 0px rgba(0,0,0,0.75)';
+            allReceiptButton.style.border = '1px solid #000';
+        }
+        else{
+            pendingButton.style.backgroundColor = 'white';
+            pendingButton.style.color = 'black';
+            pendingButton.style.boxShadow = '0px 0px 5px 0px rgba(0,0,0,0.75)';
+            pendingButton.style.border = '1px solid #000';
+            allReceiptButton.style.backgroundColor = 'white';
+            allReceiptButton.style.color = 'black';
+            allReceiptButton.style.boxShadow = '0px 0px 5px 0px rgba(0,0,0,0.75)';
             allReceiptButton.style.border = '1px solid #000';
         }
     }
