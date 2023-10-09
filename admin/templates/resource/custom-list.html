@@ -63,7 +63,7 @@
                     <br>
                     {% endfor %}
                 </div>
-                {% if data_tuple[2][0][1] is none %}
+                {% if 'pending' in request.path %}
                     <div class="flex items-center">
                         {% for button_label, receipt_id in data_tuple[1] %}
                             {% if button_label == 'Approve' or button_label == 'Reject' %}
