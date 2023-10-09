@@ -10,6 +10,7 @@
 <div class="mb-4">
     <ul class="flex">
         <li>
+            <input type="hidden" id="buttonState" value="pending">
             <button type="button"
             id="pendingButton"
                 class="font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 {% if 'pending' in request.path %} text-white bg-blue-500 {% else %} text-black border border-gray-300 {% endif %}"
@@ -35,9 +36,10 @@
                     style="height: 100%; object-fit: cover; border-radius: 6.45px;">
             </div>
             {% endfor %}
-            <div style="flex: 1; padding-left: 10px;">
+            <div style="flex: 1; padding-left: 10px;" class="flex flex-col justify-between pb-6">
                 <div
-                    style="font-size: 16px; font-weight: 400; line-height: 19px; letter-spacing: 0em; text-align: left; margin-bottom: 150px;">
+                    style="font-size: 16px; font-weight: 400; line-height: 19px;"
+                    class="text-left">
                     {% for other_item in data_tuple[2] %}
                     <h2 style="color: #363535; display: inline; font-size: 15px;">
                         {% if other_item[0] == "is_approved" %}
@@ -46,13 +48,14 @@
                             {{ other_item[0] | format_label | capitalize }}:
                         {% endif %}
                     </h2>
+                    <!-- <h2 style="color: #000; display: inline;"> {{ other_item[1] | capitalize }}</h2> -->
                     <h2 style="color: #000; display: inline;">
                         {% if other_item[1] == true %}
                             Approved
                         {% elif other_item[1] == false %}
                             Rejected
                         {% elif other_item[1] is none %}
-                            Null
+                            Pending
                         {% else %}
                             {{ other_item[1] | capitalize }}
                         {% endif %}
@@ -60,29 +63,38 @@
                     <br>
                     {% endfor %}
                 </div>
-                {% if data_tuple[2][0][1] is none %}
-                {% for button_label, receipt_id in data_tuple[1] %}
-                <div style="display: inline-flex; align-items: center; ">
-                    {% if button_label == 'Approve' %}
-                    <button id="approve_button"
-                        class="font-semibold py-2 px-4 my-2 rounded-lg bg-green-500 text-white hover:bg-green-600"
-                        type="submit"
-                        onclick="handleButtonClick('{{ button_label }}', '{{ receipt_id }}')"
-                        style="width: 100px; height: 40px;">
-                        {{ button_label }}
-                    </button>
-                    {% elif button_label == 'Reject' %}
-                    <button id="reject_button"
-                        class="font-semibold py-2 px-4 my-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
-                        type="submit"
-                        onclick="handleButtonClick('{{ button_label }}', '{{ receipt_id }}')"
-                        style="width: 100px; height: 40px;">
-                        {{ button_label }}
-                    </button>
-                    {% endif %}
+                <div class="flex items-center">
+                    {% for button_label, receipt_id in data_tuple[1] %}
+                        {% if button_label == 'Approve' or button_label == 'Reject' %}
+                            {% if button_label == 'Approve' %}
+                                <button id="approve_button"
+                                    class="font-semibold py-2 px-4 my-2 rounded-lg bg-green-500 text-white hover:bg-green-600"
+                                    type="submit"
+                                    onclick="handleButtonClick('{{ button_label }}', '{{ receipt_id }}')"
+                                    style="width: 100px; height: 40px;">
+                                    {{ button_label }}
+                                </button>
+                            {% else %}
+                                <button id="reject_button"
+                                    class="font-semibold py-2 px-4 my-2 rounded-lg bg-red-600 text-white hover:bg-red-700 ml-2"
+                                    type="submit"
+                                    onclick="handleButtonClick('{{ button_label }}', '{{ receipt_id }}')"
+                                    style="width: 100px; height: 40px;">
+                                    {{ button_label }}
+                                </button>
+                            {% endif %}
+                        {% endif %}
+                        {% if button_label == 'Edit' %}
+                            <button id="edit_button"
+                                class="font-semibold py-2 px-4 my-2 rounded-lg bg-white text-black border border-black hover:bg-black hover:text-white"
+                                type="submit"
+                                onclick="handleButtonClick('{{ button_label }}', '{{ receipt_id }}')"
+                                style="width: 100px; height: 40px;">
+                                {{ button_label }}
+                            </button>
+                        {% endif %}
+                    {% endfor %}
                 </div>
-                {% endfor %}
-                {% endif %}
             </div>
         </div>
     </div>
@@ -90,7 +102,7 @@
 </div>
 <div class="mt-4 flex items-end">
     {% if pagination.has_prev %}
-    <a href="javascript:void(0);" 
+    <a href="javascript:void(0);"
        onclick="displayReceipts('all', '{{ pagination.prev_num }}')"
        class="mx-1 px-3 py-1 rounded border text-blue-500">
         {{ 'Prev' }}
@@ -99,7 +111,7 @@
     {% for num in pagination.iter_pages() %}
     {% if num %}
     {% if num != pagination.page %}
-    <a href="javascript:void(0);" 
+    <a href="javascript:void(0);"
        onclick="displayReceipts('all', '{{ num }}')"
        class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
     {% else %}
@@ -110,7 +122,7 @@
     {% endif %}
     {% endfor %}
     {% if pagination.has_next %}
-    <a href="javascript:void(0);" 
+    <a href="javascript:void(0);"
        onclick="displayReceipts('all', '{{ pagination.next_num }}')"
        class="mx-1 px-3 py-1 rounded border text-blue-500">
         {{ 'Next' }}
@@ -132,7 +144,7 @@
     function handleButtonClick(action, receipt_id) {
         let editButtonClicked = false;
         action = action.toLowerCase();
-        let baseUrl = 'http://localhost:5000/admin/';
+        let baseUrl = '/admin/';
 
         let route = 'update_approval_status';
         let url = baseUrl + route;
@@ -142,7 +154,7 @@
         };
 
         if(action=='edit'){
-            editButtonClicked= true; 
+            editButtonClicked= true;
         }
         fetch(url, {
             method: 'POST',
@@ -155,7 +167,7 @@
         .then(data => {
             if ( !editButtonClicked && data.success) {
                 window.location.reload();
-            } 
+            }
         })
         .catch(error => {
             console.error('Error:', error);
