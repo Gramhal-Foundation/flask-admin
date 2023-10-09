@@ -63,38 +63,40 @@
                     <br>
                     {% endfor %}
                 </div>
-                <div class="flex items-center">
-                    {% for button_label, receipt_id in data_tuple[1] %}
-                        {% if button_label == 'Approve' or button_label == 'Reject' %}
-                            {% if button_label == 'Approve' %}
-                                <button id="approve_button"
-                                    class="font-semibold py-2 px-4 my-2 rounded-lg bg-green-500 text-white hover:bg-green-600"
-                                    type="submit"
-                                    onclick="handleButtonClick('{{ button_label }}', '{{ receipt_id }}')"
-                                    style="width: 100px; height: 40px;">
-                                    {{ button_label }}
-                                </button>
-                            {% else %}
-                                <button id="reject_button"
-                                    class="font-semibold py-2 px-4 my-2 rounded-lg bg-red-600 text-white hover:bg-red-700 ml-2"
+                {% if data_tuple[2][0][1] is none %}
+                    <div class="flex items-center">
+                        {% for button_label, receipt_id in data_tuple[1] %}
+                            {% if button_label == 'Approve' or button_label == 'Reject' %}
+                                {% if button_label == 'Approve' %}
+                                    <button id="approve_button"
+                                        class="font-semibold py-2 px-4 my-2 rounded-lg bg-green-500 text-white hover:bg-green-600"
+                                        type="submit"
+                                        onclick="handleButtonClick('{{ button_label }}', '{{ receipt_id }}')"
+                                        style="width: 100px; height: 40px;">
+                                        {{ button_label }}
+                                    </button>
+                                {% else %}
+                                    <button id="reject_button"
+                                        class="font-semibold py-2 px-4 my-2 rounded-lg bg-red-600 text-white hover:bg-red-700 ml-2"
+                                        type="submit"
+                                        onclick="handleButtonClick('{{ button_label }}', '{{ receipt_id }}')"
+                                        style="width: 100px; height: 40px;">
+                                        {{ button_label }}
+                                    </button>
+                                {% endif %}
+                            {% endif %}
+                            {% if button_label == 'Edit' %}
+                                <button id="edit_button"
+                                    class="font-semibold py-2 px-4 my-2 rounded-lg bg-white text-black border border-black hover:bg-black hover:text-white"
                                     type="submit"
                                     onclick="handleButtonClick('{{ button_label }}', '{{ receipt_id }}')"
                                     style="width: 100px; height: 40px;">
                                     {{ button_label }}
                                 </button>
                             {% endif %}
-                        {% endif %}
-                        {% if button_label == 'Edit' %}
-                            <button id="edit_button"
-                                class="font-semibold py-2 px-4 my-2 rounded-lg bg-white text-black border border-black hover:bg-black hover:text-white"
-                                type="submit"
-                                onclick="handleButtonClick('{{ button_label }}', '{{ receipt_id }}')"
-                                style="width: 100px; height: 40px;">
-                                {{ button_label }}
-                            </button>
-                        {% endif %}
-                    {% endfor %}
-                </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
