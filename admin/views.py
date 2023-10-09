@@ -350,7 +350,10 @@ def index():
         werkzeug.wrappers.response.Response: A redirection response
         to the dashboard route.
     """
-    return redirect(url_for(".dashboard"))
+    default_route = url_for('.dashboard')
+    if 'default-route-resource' in admin_configs:
+        default_route = url_for('.resource_list', resource_type=admin_configs['default-route-resource'])
+    return redirect(default_route)
 
 
 @admin.route("/dashboard")
@@ -404,7 +407,10 @@ def login():
 
         if user and bcrypt.check_password_hash(hashed_password, password):
             login_user(user)
-            return redirect(url_for(".dashboard"))
+            default_route = url_for('.dashboard')
+            if 'default-route-resource' in admin_configs:
+                default_route = url_for('.resource_list', resource_type=admin_configs['default-route-resource'])
+            return redirect(default_route)
         else:
             flash("Invalid credentials. Please try again.", "error")
 
