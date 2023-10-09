@@ -457,6 +457,9 @@ def resource_list(resource_type):
         page=page, per_page=per_page, error_out=False)
     list_display = resource_class.list_display
     if is_custom_template:
+        pagination = model.query.filter(model.is_approved == None).order_by(primary_key_column).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
         processed_data = get_preprocess_data(pagination, list_display)
         return render_template(
             "resource/custom-list.html",
@@ -803,7 +806,6 @@ def get_preprocess_data(pagination, list_display):
             elif item == "is_approved":
                 button_data.extend(
                     [("Approve", resource.id), ("Reject", resource.id)])
-            # elif item != "id":  # Exclude "id" attribute
             else:
                 other_data.append((item, getattr(resource, item)))
         processed_data.append((image_data, button_data, other_data))
