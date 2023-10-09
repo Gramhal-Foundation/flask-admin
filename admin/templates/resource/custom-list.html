@@ -1,0 +1,208 @@
+{% extends 'app.html' %}
+
+{% block title %}
+    {{ resource_type | admin_label_plural }}
+{% endblock %}
+
+{% block content %}
+<div class="text-3xl mb-4">Manage {{ resource_type | admin_label_plural }}</div>
+<div class="mb-4">
+    <ul class="flex">
+        <li>
+            <input type="hidden" id="buttonState" value="pending">
+            <button type="button"
+            id="pendingButton"
+                class="text-white bg-blue-400 hover:bg-blue-300 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                onclick="displayReceipts('pending')">Pending Receipts</button>
+        </li>
+        <li>
+            <button type="button"
+            id="allReceiptButton"
+                class="text-white bg-blue-400 hover:bg-blue-300 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                onclick="displayReceipts('all')" >All Receipts</button>
+        </li>
+    </ul>
+</div>
+<div class="flex flex-wrap -mx-4">
+    {% for data_tuple in processed_data %}
+    <div class="w-1/2 px-4 py-4">
+        <div class="flex flex-col border rounded-lg p-1 shadow-xl"
+            style="max-width: 900px; display: flex; flex-direction: row;">
+            {% for image_url in data_tuple[0] %}
+            <div
+                style="width: 300px; height: 500px; position: relative; overflow: hidden;">
+                <img src="{{ image_url }}" alt="Receipt Image"
+                    style="height: 100%; object-fit: cover; border-radius: 6.45px;">
+            </div>
+            {% endfor %}
+            <div style="flex: 1; padding-left: 10px;" class="flex flex-col justify-between pb-6">
+                <div
+                    style="font-size: 16px; font-weight: 400; line-height: 19px;"
+                    class="text-left">
+                    {% for other_item in data_tuple[2] %}
+                    <h2 style="color: #363535; display: inline; font-size: 15px;">
+                        {% if other_item[0] == "is_approved" %}
+                            Receipt Status:
+                        {% else %}
+                            {{ other_item[0] | format_label | capitalize }}:
+                        {% endif %}
+                    </h2>
+                    <!-- <h2 style="color: #000; display: inline;"> {{ other_item[1] | capitalize }}</h2> -->
+                    <h2 style="color: #000; display: inline;">
+                        {% if other_item[1] == true %}
+                            Approved
+                        {% elif other_item[1] == false %}
+                            Rejected
+                        {% elif other_item[1] is none %}
+                            Pending
+                        {% else %}
+                            {{ other_item[1] | capitalize }}
+                        {% endif %}
+                    </h2>
+                    <br>
+                    {% endfor %}
+                </div>
+                <div class="flex items-center">
+                    {% for button_label, receipt_id in data_tuple[1] %}
+                        {% if button_label == 'Approve' or button_label == 'Reject' %}
+                            {% if button_label == 'Approve' %}
+                                <button id="approve_button"
+                                    class="font-semibold py-2 px-4 my-2 rounded-lg bg-green-500 text-white hover:bg-green-600"
+                                    type="submit"
+                                    onclick="handleButtonClick('{{ button_label }}', '{{ receipt_id }}')"
+                                    style="width: 100px; height: 40px;">
+                                    {{ button_label }}
+                                </button>
+                            {% else %}
+                                <button id="reject_button"
+                                    class="font-semibold py-2 px-4 my-2 rounded-lg bg-red-600 text-white hover:bg-red-700 ml-2"
+                                    type="submit"
+                                    onclick="handleButtonClick('{{ button_label }}', '{{ receipt_id }}')"
+                                    style="width: 100px; height: 40px;">
+                                    {{ button_label }}
+                                </button>
+                            {% endif %}
+                        {% endif %}
+                        {% if button_label == 'Edit' %}
+                            <button id="edit_button"
+                                class="font-semibold py-2 px-4 my-2 rounded-lg bg-white text-black border border-black hover:bg-black hover:text-white"
+                                type="submit"
+                                onclick="handleButtonClick('{{ button_label }}', '{{ receipt_id }}')"
+                                style="width: 100px; height: 40px;">
+                                {{ button_label }}
+                            </button>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<div class="mt-4 flex items-end">
+    {% if pagination.has_prev %}
+    <a href="javascript:void(0);"
+       onclick="displayReceipts('all', '{{ pagination.prev_num }}')"
+       class="mx-1 px-3 py-1 rounded border text-blue-500">
+        {{ 'Prev' }}
+    </a>
+    {% endif %}
+    {% for num in pagination.iter_pages() %}
+    {% if num %}
+    {% if num != pagination.page %}
+    <a href="javascript:void(0);"
+       onclick="displayReceipts('all', '{{ num }}')"
+       class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
+    {% else %}
+    <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
+    {% endif %}
+    {% else %}
+    ...
+    {% endif %}
+    {% endfor %}
+    {% if pagination.has_next %}
+    <a href="javascript:void(0);"
+       onclick="displayReceipts('all', '{{ pagination.next_num }}')"
+       class="mx-1 px-3 py-1 rounded border text-blue-500">
+        {{ 'Next' }}
+    </a>
+    {% endif %}
+</div>
+
+<script>
+    function displayReceipts(buttonValue, page=1) {
+        let pendingButton = document.getElementById('pendingButton');
+        let allReceiptButton = document.getElementById('allReceiptButton');
+        let resourceType = "{{ resource_type }}";
+
+        let url = `/admin/resource/${resourceType}/${buttonValue}?page=${page}`;
+
+        window.location.href = url;
+    }
+
+    function handleButtonClick(action, receipt_id) {
+        let editButtonClicked = false;
+        action = action.toLowerCase();
+        let baseUrl = '/admin/';
+
+        let route = 'update_approval_status';
+        let url = baseUrl + route;
+        let data = {
+            action: action,
+            receipt_id: receipt_id
+        };
+
+        if(action=='edit'){
+            editButtonClicked= true;
+        }
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if ( !editButtonClicked && data.success) {
+                window.location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    function initializeButtonState() {
+        let url = window.location.pathname;
+        let pendingButton = document.getElementById('pendingButton');
+        let allReceiptButton = document.getElementById('allReceiptButton');
+
+
+        if (window.location.toString().match(/all/)) {
+            console.log('all');
+            pendingButton.style.backgroundColor = 'white';
+            pendingButton.style.color = 'black';
+            pendingButton.style.boxShadow = '0px 0px 5px 0px rgba(0,0,0,0.75)';
+            pendingButton.style.border = '1px solid #000';
+        } else if (window.location.toString().match(/pending/)) {
+            allReceiptButton.style.backgroundColor = 'white';
+            allReceiptButton.style.color = 'black';
+            allReceiptButton.style.boxShadow = '0px 0px 5px 0px rgba(0,0,0,0.75)';
+            allReceiptButton.style.border = '1px solid #000';
+        }
+        else{
+            pendingButton.style.backgroundColor = 'white';
+            pendingButton.style.color = 'black';
+            pendingButton.style.boxShadow = '0px 0px 5px 0px rgba(0,0,0,0.75)';
+            pendingButton.style.border = '1px solid #000';
+            allReceiptButton.style.backgroundColor = 'white';
+            allReceiptButton.style.color = 'black';
+            allReceiptButton.style.boxShadow = '0px 0px 5px 0px rgba(0,0,0,0.75)';
+            allReceiptButton.style.border = '1px solid #000';
+        }
+    }
+
+    window.onload = initializeButtonState;
+</script>
+{% endblock %}
