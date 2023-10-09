@@ -13,7 +13,7 @@
             </div>
         </nav>
         <div class="flex">
-            <sidebar class="bg-gray-200 w-64 flex flex-col pt-10 h-screen">
+            <sidebar class="bg-gray-200 w-64 flex flex-col pt-10 min-h-screen h-auto">
                 <a href="{{ url_for('.dashboard') }}" class="px-10 py-4 cursor-pointer hover:bg-gray-300">Dashboard</a>
                 {% for resource_type in resource_types %}
                     {% if permissions.get(resource_type).get('read') %}
