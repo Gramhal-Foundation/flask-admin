@@ -453,6 +453,10 @@ def resource_list(resource_type):
         of resources, including the pagination controls and relevant
         information about the resource type and list display attributes.
     """
+    # TODO: hardcoding to be removed
+    if resource_type == 'mandi-receipt':
+        return redirect(url_for('.resource_filter', resource_type=resource_type, button_value='pending'))
+
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
     is_custom_template = resource_class.is_custom_template
@@ -841,8 +845,7 @@ def update_approval_status():
 
 @admin.route("/resource/<string:resource_type>/<string:button_value>")
 @login_required
-def filter_receipts(resource_type, button_value):
-    print('button value', button_value)
+def resource_filter(resource_type, button_value):
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
     is_custom_template = resource_class.is_custom_template
