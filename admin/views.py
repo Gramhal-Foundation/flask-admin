@@ -72,7 +72,7 @@ from flask_wtf import FlaskForm
 from werkzeug.utils import secure_filename
 from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired
-
+from models.salesReceipt import SaleReceiptModel
 from . import admin
 
 bcrypt = Bcrypt(app)
@@ -457,7 +457,7 @@ def resource_list(resource_type):
         page=page, per_page=per_page, error_out=False)
     list_display = resource_class.list_display
     if is_custom_template:
-        pagination = model.query.filter(model.is_approved == None).order_by(primary_key_column).paginate(
+        pagination = model.query.filter(model.is_approved is None).order_by(primary_key_column).paginate(
             page=page, per_page=per_page, error_out=False
         )
         processed_data = get_preprocess_data(pagination, list_display)
@@ -791,18 +791,18 @@ def get_hashed_password(password):
     """
     return bcrypt.generate_password_hash(password, 10).decode("utf-8")
 
+
 def get_preprocess_data(pagination, list_display):
     processed_data = []
 
     for resource in pagination.items:
         image_data = []
         button_data = []
-        other_data = []
-        
+        other_data = []      
         receipt_date = getattr(resource, "receipt_date")
         formatted_receipt_date = receipt_date.strftime("%Y-%m-%d")
         formatted_time = receipt_date.strftime("%I:%M %p")
-        
+
         for item in list_display:
             if item == "receipt_image_url":
                 image_data.append(getattr(resource, item))
@@ -844,13 +844,12 @@ def filter_receipts(resource_type, button_value):
     print('button value', button_value)
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
-    is_custom_template = resource_class.is_custom_template
     per_page = 1
     page = request.args.get("page", default=1, type=int)
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
     list_display = resource_class.list_display
     if button_value == 'pending':
-        pagination = model.query.filter(model.is_approved == None).order_by(primary_key_column).paginate(
+        pagination = model.query.filter(model.is_approved is None).order_by(primary_key_column).paginate(
             page=page, per_page=per_page, error_out=False
         )
         processed_data = get_preprocess_data(pagination, list_display)
@@ -862,7 +861,7 @@ def filter_receipts(resource_type, button_value):
             processed_data=processed_data,
         )
     else:
-        pagination = model.query.filter(model.is_approved != None).order_by(primary_key_column).paginate(
+        pagination = model.query.filter(model.is_approved is not None).order_by(primary_key_column).paginate(
             page=page, per_page=50, error_out=False
         )
         processed_data = get_preprocess_data(pagination, list_display)
