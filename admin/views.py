@@ -62,6 +62,7 @@ from admin_view import admin_configs
 from app import app
 from models.crop import CropModel
 from models.mandi import MandiModel
+from sqlalchemy.orm import joinedload
 
 # [TODO]: dependency on main repo
 from db import db
@@ -138,24 +139,9 @@ def admin_label_singular(label):
     return formatted_label
 
 
-@app.template_filter("admin_format_date")
-def admin_format_date(value):
-    return datetime.strftime(value, "%Y-%m-%d")
-
-
 @app.template_filter("admin_format_datetime")
-def admin_format_datetime(value):
-    """
-    Custom template filter to format a datetime value.
-
-    Args:
-        value (datetime): The datetime value to be formatted.
-
-    Returns:
-        str: The formatted datetime string.
-    """
-
-    return datetime.strftime(value, "%Y-%m-%dT%H:%M")
+def admin_format_datetime(value, format="%Y-%m-%d"):
+    return datetime.strftime(value, format)
 
 
 @app.template_filter("format_label")
@@ -310,7 +296,7 @@ def validate_resource_attribute(resource_type, attribute, initial_value):
         or attribute["type"] == "JSON"
     ):
         attribute_value = initial_value if initial_value else None
-    elif attribute["type"] == "INTEGER":
+    elif attribute["type"] == "INTEGER" or attribute["type"] == "FLOAT":
         attribute_value = initial_value if initial_value else None
     elif attribute["type"] == "BOOLEAN":
         if not isinstance(initial_value, bool):
@@ -580,7 +566,7 @@ def resource_edit(resource_type, resource_id):
     resource = model.query.get(resource_id)
 
     if not resource:
-        return redirect(url_for(".resource_list", resource_type=resource_type))
+        return redirect(request.referrer or url_for(".resource_list", resource_type=resource_type))
 
     editable_attributes = get_editable_attributes(resource_type)
 
@@ -619,7 +605,7 @@ def resource_edit(resource_type, resource_id):
 
     db.session.commit()
 
-    return redirect(url_for(".resource_list", resource_type=resource_type))
+    return redirect(request.referrer or url_for(".resource_list", resource_type=resource_type))
 
 
 @admin.route(
@@ -872,29 +858,41 @@ def resource_filter(resource_type, status):
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
     is_custom_template = resource_class.is_custom_template
-    per_page = 50
+    # per_page = 5
     page = request.args.get("page", default=1, type=int)
-    primary_key_column = model.__table__.primary_key.columns.keys()[0]
+    # primary_key_column = model.__table__.primary_key.columns.keys()[0]
     # TODO: filter not working
-    pagination = model.query.order_by(primary_key_column).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
+    # pagination = model.query.order_by(primary_key_column).paginate(
+    #     page=page, per_page=per_page, error_out=False
+    # )
     list_display = resource_class.list_display
     if is_custom_template:
         # TODO: hardcoding needs to be removed
+        pending_pagination = model.query.filter(model.is_approved == None, model.booklet_number.isnot(None)).order_by(SaleReceiptModel.id).paginate(
+            page=page, per_page=1, error_out=False
+        )
+        all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None, model.booklet_number.isnot(None)).order_by(SaleReceiptModel.id).paginate(
+            page=page, per_page=4, error_out=False
+        )
         if status == 'pending':
-            pagination = model.query.filter(model.is_approved == None, model.booklet_number.isnot(None)).order_by(primary_key_column).paginate(
-                page=page, per_page=1, error_out=False
-            )
+            pagination = pending_pagination
         else:
-            pagination = model.query.filter(model.is_approved != None, model.booklet_number.isnot(None)).order_by(primary_key_column).paginate(
-                page=page, per_page=per_page, error_out=False
-            )
+            pagination = all_pagination
+
+
         mandis = MandiModel.query.all()
         crops = CropModel.query.all()
+        print('pagination.total....................', pagination.total)
+        print('pagination.iter_pages....................', pagination.iter_pages())
+        print('pagination.items....................', pagination.items)
+        for num in pagination.iter_pages():
+            print('num................', num)
+
         return render_template(
             "resource/custom-list.html",
             pagination=pagination,
+            pending_pagination=pending_pagination,
+            all_pagination=all_pagination,
             resource_type=resource_type,
             list_display=list_display,
             mandis=mandis,

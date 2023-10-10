@@ -9,26 +9,25 @@
 <div class="mb-4">
     <ul class="flex">
         <li>
-            <input type="hidden" id="buttonState" value="pending">
-            <button type="button"
-            id="pendingButton" class="font-medium text-sm px-1 py-2.5 mr-2 mb-2 {% if 'pending' in request.path %} text-black font-bold border-b-2 border-sky-500
-            {% elif 'all' in request.path %}
-                text-black  border-b-2
-            {% else %}
-            text-black font-bold border-b-2 border-sky-500
-            {% endif %}
-            "
-                onclick="displayReceipts('pending')">Pending Receipts
+            <button
+                type="button"
+                id="pendingButton"
+                class="font-light text-sm px-2 py-2.5 text-black border-b-2 {% if 'pending' in request.path %} border-blue-500 {% endif %}"
+                onclick="displayReceipts('pending')"
+            >
+                <span class="{% if 'pending' in request.path %} font-bold {% endif %}">Pending Receipts</span>
+                <span>({{pending_pagination.total}})</span>
             </button>
         </li>
         <li>
-            <button type="button"
-            id="allReceiptButton"
-                class="font-medium text-sm px-1 py-2.5 mr-2 mb-2
-                {% if 'all' in request.path %} text-black font-bold border-b-2 border-sky-500
-                {% else %} text-black border-b-2 border-sky-500
-                {% endif %}"
-                onclick="displayReceipts('all')" >System Receipts
+            <button
+                type="button"
+                id="allReceiptButton"
+                class="font-light text-sm px-2 py-2.5 text-black border-b-2 {% if 'all' in request.path %} border-blue-500 {% endif %}"
+                onclick="displayReceipts('all')"
+            >
+                <span class="{% if 'all' in request.path %} font-bold {% endif %}">System Receipts</span>
+                <span>({{all_pagination.total}})</span>
             </button>
         </li>
     </ul>
@@ -43,9 +42,15 @@
                         {% for item in list_display %}
                             {% if item != 'receipt_image_url' %}
                                 <div class="w-1/2 mb-6">
-                                    <div class="uppercase text-xs text-gray-500">{{ item | format_label }}</div>
+                                    {% if item == 'is_approved' %}
+                                        <div class="uppercase text-xs text-gray-500">{{ 'Status' | format_label }}</div>
+                                    {% else %}
+                                        <div class="uppercase text-xs text-gray-500">{{ item | format_label }}</div>
+                                    {% endif %}
                                     {% if item == 'is_approved' %}
                                         <div>Pending</div>
+                                    {% elif item == 'receipt_date' %}
+                                        <div>{{ resource[item] | admin_format_datetime(format="%d/%m/%Y, %I:%M %p") }}</div>
                                     {% else %}
                                         <div>{{resource[item]}}</div>
                                     {% endif %}
@@ -77,15 +82,15 @@
                             {% elif item == "crop_name" %}
                                 <th scope="col" class="px-6 py-3">Crop</th>
                             {% elif item == "contract_number" %}
-                                <th scope="col" class="px-6 py-3">Receipt Number</th>
+                                <th scope="col" class="px-6 py-3">Contract Number</th>
                             {% elif item == "quantity" %}
-                                <th scope="col" class="px-6 py-3">Weight (Quintal)</th>
+                                <th scope="col" class="px-6 py-3">Quantity (Quintal)</th>
                             {% elif item == "price" %}
-                                <th scope="col" class="px-6 py-3">Rate</th>
+                                <th scope="col" class="px-6 py-3">Price</th>
                             {% elif item == "is_approved" %}
                                 <th scope="col" class="px-6 py-3">Status</th>
                             {% elif item == "receipt_date" %}
-                                <th scope="col" class="px-6 py-3">Submission on</th>
+                                <th scope="col" class="px-6 py-3">Receipt Date</th>
                             {% else %}
                                 <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
                             {% endif %}
@@ -114,16 +119,20 @@
                     </td>
                     {% endif %}
                     {% endfor %}
-                    <td class="px-6 py-4 flex items-center">
-                        <div>
-                            <a href="#" onclick="openEditModal('{{ resource.pk }}')" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
-                                <i class="fa-solid fa-receipt"></i>
-                            </a>
-                        </div>
-                        <div>
-                            <a href="#" onclick="openEditHistoryModal('{{ resource.pk }}')" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
-                                <i class="fas fa-history"></i>
-                            </a>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center h-full">
+                            <div>
+                                <a href="#" onclick="openEditModal('{{ resource.pk }}')" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
+                                    <i class="fa-solid fa-receipt"></i>
+                                </a>
+                            </div>
+                            {% if resource.versions %}
+                                <div>
+                                    <a href="#" onclick="openEditHistoryModal('{{ resource.pk }}')" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
+                                        <i class="fas fa-history"></i>
+                                    </a>
+                                </div>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>
@@ -177,7 +186,7 @@
                     <h3 class="mb-6 text-xl font-medium text-gray-900">Edit Receipt</h3>
                     <form action="{{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource.pk) }}" method="POST">
                         <div class="mb-4">
-                            <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Receipt Number</label>
+                            <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Contract Number</label>
                             <input type="text" name="contract_number" id="contract_number" class="border border-gray-300 text-black text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required value="{{resource.contract_number}}">
                         </div>
                         <div class="mb-4">
@@ -219,7 +228,7 @@
                             <input type="text" name="price" id="price" class="border border-gray-300 text-black text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required value="{{resource.price}}">
                         </div>
                         <div class="mb-4">
-                            <label for="quantity" class="block mb-1 text-xs font-light text-gray-500">Approximate weight</label>
+                            <label for="quantity" class="block mb-1 text-xs font-light text-gray-500">Quantity</label>
                             <input type="text" name="quantity" id="quantity" class="border border-gray-300 text-black text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required value="{{resource.quantity}}">
                         </div>
                         <div class="mt-6">
@@ -249,38 +258,41 @@
                     <span class="sr-only">Close modal</span>
                 </button>
                 <div class="px-6 py-6 lg:px-8">
-                    <h3 class="mb-6 text-xl font-medium text-gray-900">Version History</h3>
-                    {% for count in range(1,3): %}
+                    <h3 class="mb-6 text-2xl font-medium text-gray-900">Edit History</h3>
+                    {% for version in resource.versions %}
                         <div class="mb-4">
-                            <div class="text-xl">Version {{count}}</div>
+                            <div class="text-lg">Version {{loop.index}}</div>
+                            <div class="text-sm text-gray-700">{{version.created_at | admin_format_datetime(format="%d/%m/%Y, %I:%M %p") }}</div>
                         </div>
                         <div class="flex flex-wrap">
                             <div class="mb-4 w-1/3">
                                 <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Receipt Number</label>
-                                <div>{{resource.contract_number}}</div>
+                                <div>{{version.contract_number}}</div>
                             </div>
                             <div class="mb-4 w-1/3">
-                                <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Booklet Number</label>
-                                <div>{{resource.booklet_number}}</div>
+                                <label for="booklet_number" class="block mb-1 text-xs font-light text-gray-500">Booklet Number</label>
+                                <div>{{version.booklet_number}}</div>
                             </div>
                             <div class="mb-4 w-1/3">
-                                <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Mandi</label>
-                                <div>{{resource.mandi_id}}</div>
+                                <label for="mandi_id" class="block mb-1 text-xs font-light text-gray-500">Mandi</label>
+                                <div>{{version.mandi_id}}</div>
                             </div>
                             <div class="mb-4 w-1/3">
-                                <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Crop</label>
-                                <div>{{resource.crop_id}}</div>
+                                <label for="crop_id" class="block mb-1 text-xs font-light text-gray-500">Crop</label>
+                                <div>{{version.crop_id}}</div>
                             </div>
                             <div class="mb-4 w-1/3">
-                                <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Rate</label>
-                                <div>{{resource.price}}</div>
+                                <label for="price" class="block mb-1 text-xs font-light text-gray-500">Price</label>
+                                <div>₹{{version.price}}</div>
                             </div>
                             <div class="mb-4 w-1/3">
-                                <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Approximate weight</label>
-                                <div>{{resource.quantity}}</div>
+                                <label for="quantity" class="block mb-1 text-xs font-light text-gray-500">Quantity</label>
+                                <div>{{version.quantity}} Quintal</div>
                             </div>
                         </div>
-                        <hr class="my-6" />
+                        {% if not loop.last %}
+                            <hr class="my-6" />
+                        {% endif %}
                     {% endfor %}
                 </div>
             </div>
