@@ -62,6 +62,7 @@ from admin_view import admin_configs
 from app import app
 from models.crop import CropModel
 from models.mandi import MandiModel
+from models.salesReceipt import SaleReceiptEditModel
 
 # [TODO]: dependency on main repo
 from db import db
@@ -882,6 +883,10 @@ def resource_filter(resource_type, status):
     list_display = resource_class.list_display
     pending_receipts = model.query.filter(model.is_approved == None, model.booklet_number.isnot(None)).count()
     all_receipts = model.query.filter(model.is_approved != None, model.booklet_number.isnot(None)).count()
+    query = SaleReceiptEditModel.query
+
+    edit_receipt_all_data = query.all()
+    # print('all',all_data)
     if is_custom_template:
         # TODO: hardcoding needs to be removed
         if status == 'pending':
@@ -902,5 +907,6 @@ def resource_filter(resource_type, status):
             mandis=mandis,
             crops=crops,
             pending_receipts=pending_receipts,
-            all_receipts=all_receipts
+            all_receipts=all_receipts,
+            edit_receipt_all_data=edit_receipt_all_data
         )

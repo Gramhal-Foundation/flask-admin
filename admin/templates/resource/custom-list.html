@@ -250,37 +250,39 @@
                 </button>
                 <div class="px-6 py-6 lg:px-8">
                     <h3 class="mb-6 text-xl font-medium text-gray-900">Version History</h3>
-                    {% for count in range(1,3): %}
+                    {% for edit_data in edit_receipt_all_data %}
+                    {% if edit_data.sale_receipt_id == resource.pk %}
                         <div class="mb-4">
                             <div class="text-xl">Version {{count}}</div>
                         </div>
                         <div class="flex flex-wrap">
                             <div class="mb-4 w-1/3">
                                 <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Receipt Number</label>
-                                <div>{{resource.contract_number}}</div>
+                                <div>{{edit_data.sale_receipt_id}}</div>
                             </div>
                             <div class="mb-4 w-1/3">
                                 <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Booklet Number</label>
-                                <div>{{resource.booklet_number}}</div>
+                                <div>{{edit_data.booklet_number}}</div>
                             </div>
                             <div class="mb-4 w-1/3">
                                 <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Mandi</label>
-                                <div>{{resource.mandi_id}}</div>
+                                <div>{{edit_data.mandi_id}}</div>
                             </div>
                             <div class="mb-4 w-1/3">
                                 <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Crop</label>
-                                <div>{{resource.crop_id}}</div>
+                                <div>{{edit_data.crop_id}}</div>
                             </div>
                             <div class="mb-4 w-1/3">
                                 <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Rate</label>
-                                <div>{{resource.price}}</div>
+                                <div>{{edit_data.price}}</div>
                             </div>
                             <div class="mb-4 w-1/3">
                                 <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Approximate weight</label>
-                                <div>{{resource.quantity}}</div>
+                                <div>{{edit_data.quantity}}</div>
                             </div>
                         </div>
                         <hr class="my-6" />
+                    {% endif %}
                     {% endfor %}
                 </div>
             </div>
