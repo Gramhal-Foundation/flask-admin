@@ -120,11 +120,13 @@
                                 <i class="fa-solid fa-receipt"></i>
                             </a>
                         </div>
-                        <div>
-                            <a href="#" onclick="openEditHistoryModal('{{ resource.pk }}')" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
-                                <i class="fas fa-history"></i>
-                            </a>
-                        </div>
+                        {% if resource.versions %}
+                            <div>
+                                <a href="#" onclick="openEditHistoryModal('{{ resource.pk }}')" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
+                                    <i class="fas fa-history"></i>
+                                </a>
+                            </div>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
@@ -250,37 +252,40 @@
                 </button>
                 <div class="px-6 py-6 lg:px-8">
                     <h3 class="mb-6 text-xl font-medium text-gray-900">Version History</h3>
-                    {% for count in range(1,3): %}
+                    {% for version in resource.versions %}
                         <div class="mb-4">
-                            <div class="text-xl">Version {{count}}</div>
+                            <div class="text-xl">Version {{loop.index}}</div>
+                            <div class="text-md text-gray-700">{{version.created_at | admin_format_datetime(format="%d/%m/%Y, %I:%M %p") }}</div>
                         </div>
                         <div class="flex flex-wrap">
                             <div class="mb-4 w-1/3">
                                 <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Receipt Number</label>
-                                <div>{{resource.contract_number}}</div>
+                                <div>{{version.contract_number}}</div>
                             </div>
                             <div class="mb-4 w-1/3">
                                 <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Booklet Number</label>
-                                <div>{{resource.booklet_number}}</div>
+                                <div>{{version.booklet_number}}</div>
                             </div>
                             <div class="mb-4 w-1/3">
                                 <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Mandi</label>
-                                <div>{{resource.mandi_id}}</div>
+                                <div>{{version.mandi_id}}</div>
                             </div>
                             <div class="mb-4 w-1/3">
                                 <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Crop</label>
-                                <div>{{resource.crop_id}}</div>
+                                <div>{{version.crop_id}}</div>
                             </div>
                             <div class="mb-4 w-1/3">
                                 <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Rate</label>
-                                <div>{{resource.price}}</div>
+                                <div>₹{{version.price}}</div>
                             </div>
                             <div class="mb-4 w-1/3">
                                 <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Approximate weight</label>
-                                <div>{{resource.quantity}}</div>
+                                <div>{{version.quantity}} Quintal</div>
                             </div>
                         </div>
-                        <hr class="my-6" />
+                        {% if not loop.last %}
+                            <hr class="my-6" />
+                        {% endif %}
                     {% endfor %}
                 </div>
             </div>
