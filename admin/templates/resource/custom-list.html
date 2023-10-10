@@ -44,7 +44,11 @@
                             {% if item != 'receipt_image_url' %}
                                 <div class="w-1/2 mb-6">
                                     <div class="uppercase text-xs text-gray-500">{{ item | format_label }}</div>
-                                    <div>{{resource[item]}}</div>
+                                    {% if item == 'is_approved' %}
+                                        <div>Pending</div>
+                                    {% else %}
+                                        <div>{{resource[item]}}</div>
+                                    {% endif %}
                                 </div>
                             {% endif %}
                         {% endfor %}
@@ -222,10 +226,10 @@
                             <button type="submit" class="text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Save</button>
                             <button type="button" onclick="closeEditModal('{{resource.pk}}')" class="text-black bg-gray-300 hover:bg-gray-400 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center ml-2">Cancel</button>
                         </div>
-                        <input type="hidden" name="mandi_name" id="mandi_name" />
-                        <input type="hidden" name="mandi_name_hi" id="mandi_name_hi" />
-                        <input type="hidden" name="crop_name" id="crop_name" />
-                        <input type="hidden" name="crop_name_hi" id="crop_name_hi" />
+                        <input type="hidden" name="mandi_name" id="mandi_name" value="{{resource.mandi_name}}" />
+                        <input type="hidden" name="mandi_name_hi" id="mandi_name_hi" value="{{resource.mandi_name_hi}}" />
+                        <input type="hidden" name="crop_name" id="crop_name" value="{{resource.crop_name}}" />
+                        <input type="hidden" name="crop_name_hi" id="crop_name_hi" value="{{resource.crop_name_hi}}" />
                     </form>
                 </div>
             </div>
