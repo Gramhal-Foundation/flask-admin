@@ -60,7 +60,8 @@ import pandas as pd
 from admin_view import *
 from admin_view import admin_configs
 from app import app
-from copy import deepcopy
+from models.crop import CropModel
+from models.mandi import MandiModel
 
 # [TODO]: dependency on main repo
 from db import db
@@ -889,11 +890,13 @@ def resource_filter(resource_type, status):
             pagination = model.query.filter(model.is_approved != None, model.booklet_number.isnot(None)).order_by(primary_key_column).paginate(
                 page=page, per_page=per_page, error_out=False
             )
-        processed_data = get_preprocess_data(pagination, list_display)
+        mandis = MandiModel.query.all()
+        crops = CropModel.query.all()
         return render_template(
             "resource/custom-list.html",
             pagination=pagination,
             resource_type=resource_type,
             list_display=list_display,
-            processed_data=processed_data,
+            mandis=mandis,
+            crops=crops,
         )
