@@ -868,7 +868,7 @@ def resource_filter(resource_type, status):
     list_display = resource_class.list_display
     if is_custom_template:
         # TODO: hardcoding needs to be removed
-        pending_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved == None, model.booklet_number.isnot(None)).order_by(SaleReceiptModel.id).paginate(
+        pending_pagination = model.query.filter(model.is_approved == None, model.booklet_number.isnot(None)).order_by(SaleReceiptModel.id).paginate(
             page=page, per_page=1, error_out=False
         )
         all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None, model.booklet_number.isnot(None)).order_by(SaleReceiptModel.id).paginate(
