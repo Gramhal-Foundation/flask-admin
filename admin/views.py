@@ -577,7 +577,7 @@ def resource_edit(resource_type, resource_id):
     resource = model.query.get(resource_id)
 
     if not resource:
-        return redirect(url_for(".resource_list"))
+        return redirect(url_for(".resource_list", resource_type=resource_type))
 
     editable_attributes = get_editable_attributes(resource_type)
 
@@ -591,14 +591,15 @@ def resource_edit(resource_type, resource_id):
         )
 
     for attribute in editable_attributes:
-        attribute_value = request.form.get(attribute["name"])
-        if attribute["name"] == admin_configs["user"]["secret"]:
-            attribute_value = get_hashed_password(attribute_value)
+        if attribute["name"] in request.form:
+            attribute_value = request.form.get(attribute["name"])
+            if attribute["name"] == admin_configs["user"]["secret"]:
+                attribute_value = get_hashed_password(attribute_value)
 
-        validated_attribute_value = validate_resource_attribute(
-            resource_type, attribute, attribute_value
-        )
-        setattr(resource, attribute["name"], validated_attribute_value)
+            validated_attribute_value = validate_resource_attribute(
+                resource_type, attribute, attribute_value
+            )
+            setattr(resource, attribute["name"], validated_attribute_value)
 
     db.session.commit()
 
@@ -814,7 +815,7 @@ def get_preprocess_data(pagination, list_display):
                 image_data.append(getattr(resource, item))
             elif item == "is_approved":
                 button_data.extend(
-                    [("Approve", resource.id), ("Reject", resource.id)])
+                    [("Edit", resource.id), ("Approve", resource.id), ("Reject", resource.id)])
             # elif item != "id":  # Exclude "id" attribute
             else:
                 other_data.append((item, getattr(resource, item)))
