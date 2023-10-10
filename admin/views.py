@@ -350,10 +350,7 @@ def index():
         werkzeug.wrappers.response.Response: A redirection response
         to the dashboard route.
     """
-    default_route = url_for('.dashboard')
-    if 'default-route-resource' in admin_configs:
-        default_route = url_for('.resource_list', resource_type=admin_configs['default-route-resource'])
-    return redirect(default_route)
+    return redirect(url_for(".dashboard"))
 
 
 @admin.route("/dashboard")
@@ -407,10 +404,7 @@ def login():
 
         if user and bcrypt.check_password_hash(hashed_password, password):
             login_user(user)
-            default_route = url_for('.dashboard')
-            if 'default-route-resource' in admin_configs:
-                default_route = url_for('.resource_list', resource_type=admin_configs['default-route-resource'])
-            return redirect(default_route)
+            return redirect(url_for(".dashboard"))
         else:
             flash("Invalid credentials. Please try again.", "error")
 
@@ -453,10 +447,6 @@ def resource_list(resource_type):
         of resources, including the pagination controls and relevant
         information about the resource type and list display attributes.
     """
-    # TODO: hardcoding to be removed
-    if resource_type == 'mandi-receipt':
-        return redirect(url_for('.resource_filter', resource_type=resource_type, button_value='pending'))
-
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
     is_custom_template = resource_class.is_custom_template
@@ -467,14 +457,9 @@ def resource_list(resource_type):
         page=page, per_page=per_page, error_out=False)
     list_display = resource_class.list_display
     if is_custom_template:
-<<<<<<< HEAD
         pagination = model.query.filter(model.is_approved == None).order_by(primary_key_column).paginate(
             page=page, per_page=per_page, error_out=False
         )
-=======
-        # TODO: hardcoding needs to be removed
-        pagination = model.query.filter(SaleReceiptModel.booklet_number.isnot(None)).order_by(primary_key_column).paginate(page=page, per_page=per_page, error_out=False)
->>>>>>> f623b6b845e72bebee16ab2d4ee45504505f2568
         processed_data = get_preprocess_data(pagination, list_display)
         return render_template(
             "resource/custom-list.html",
@@ -855,7 +840,8 @@ def update_approval_status():
 
 @admin.route("/resource/<string:resource_type>/<string:button_value>")
 @login_required
-def resource_filter(resource_type, button_value):
+def filter_receipts(resource_type, button_value):
+    print('button value', button_value)
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
     is_custom_template = resource_class.is_custom_template
@@ -867,21 +853,6 @@ def resource_filter(resource_type, button_value):
         pagination = model.query.filter(model.is_approved == None).order_by(primary_key_column).paginate(
             page=page, per_page=per_page, error_out=False
         )
-    # TODO: filter not working
-    pagination = model.query.order_by(primary_key_column).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
-    list_display = resource_class.list_display
-    if is_custom_template:
-        # TODO: hardcoding needs to be removed
-        if button_value == 'pending':
-            pagination = model.query.filter(model.is_approved == None, SaleReceiptModel.booklet_number.isnot(None)).order_by(primary_key_column).paginate(
-                page=page, per_page=per_page, error_out=False
-            )
-        else:
-            pagination = model.query.filter(model.is_approved != None, SaleReceiptModel.booklet_number.isnot(None)).order_by(primary_key_column).paginate(
-                page=page, per_page=per_page, error_out=False
-            )
         processed_data = get_preprocess_data(pagination, list_display)
         return render_template(
             "resource/custom-list.html",
@@ -902,12 +873,3 @@ def resource_filter(resource_type, button_value):
             list_display=list_display,
             processed_data=processed_data,
         )
-    # if is_custom_template:
-    #     processed_data = get_preprocess_data(pagination, list_display)
-    #     return render_template(
-    #         "resource/custom-list.html",
-    #         pagination=pagination,
-    #         resource_type=resource_type,
-    #         list_display=list_display,
-    #         processed_data=processed_data,
-    #     )
