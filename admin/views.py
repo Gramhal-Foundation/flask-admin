@@ -566,7 +566,7 @@ def resource_edit(resource_type, resource_id):
     resource = model.query.get(resource_id)
 
     if not resource:
-        return redirect(url_for(".resource_list", resource_type=resource_type))
+        return redirect(request.referrer or url_for(".resource_list", resource_type=resource_type))
 
     editable_attributes = get_editable_attributes(resource_type)
 
@@ -605,7 +605,7 @@ def resource_edit(resource_type, resource_id):
 
     db.session.commit()
 
-    return redirect(url_for(".resource_list", resource_type=resource_type))
+    return redirect(request.referrer or url_for(".resource_list", resource_type=resource_type))
 
 
 @admin.route(
