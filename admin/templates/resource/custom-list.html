@@ -183,10 +183,10 @@
                         <div class="mb-4">
                             <label for="mandi_id" class="block mb-1 text-xs font-light text-gray-500">Mandi</label>
                             <div class="w-full relative">
-                                <select name="mandi_id" class="block appearance-none w-full border border-gray-300 px-2.5 py-2.5 pr-8 rounded leading-tight focus:ring-blue-500 focus:border-blue-500 text-sm" required>
-                                    <option value="1" {% if resource.mandi_id == 1 %} selected {%endif%}>Mandi 1</option>
-                                    <option value="2" {% if resource.mandi_id == 2 %} selected {%endif%}>chhindwara</option>
-                                    <option value="3" {% if resource.mandi_id == 3 %} selected {%endif%}>Mandi 3</option>
+                                <select id="mandi_id" name="mandi_id" class="block appearance-none w-full border border-gray-300 px-2.5 py-2.5 pr-8 rounded leading-tight focus:ring-blue-500 focus:border-blue-500 text-sm" required>
+                                    {% for mandi in mandis %}
+                                        <option value="{{mandi.id}}" data-mandi-name="{{mandi.mandi_name}}" data-mandi-name-hi="{{mandi.mandi_name_hi}}" {% if resource.mandi_id == mandi.id %} selected {%endif%}>{{ mandi.mandi_name }}</option>
+                                    {% endfor %}
                                 </select>
                                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
                                     <svg class="fill-current h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -198,10 +198,10 @@
                         <div class="mb-4">
                             <label for="crop_id" class="block mb-1 text-xs font-light text-gray-500">Crop</label>
                             <div class="w-full relative">
-                                <select name="crop_id" class="block appearance-none w-full border border-gray-300 px-2.5 py-2.5 pr-8 rounded leading-tight focus:ring-blue-500 focus:border-blue-500 text-sm" required>
-                                    <option value="1" {% if resource.crop_id == 1 %} selected {%endif%}>Crop 1</option>
-                                    <option value="2" {% if resource.crop_id == 2 %} selected {%endif%}>wheat</option>
-                                    <option value="3" {% if resource.crop_id == 3 %} selected {%endif%}>Crop 3</option>
+                                <select id="crop_id" name="crop_id" class="block appearance-none w-full border border-gray-300 px-2.5 py-2.5 pr-8 rounded leading-tight focus:ring-blue-500 focus:border-blue-500 text-sm" required>
+                                    {% for crop in crops %}
+                                        <option value="{{crop.crop_id}}" data-crop-name="{{crop.crop_name}}" data-crop-name-hi="{{crop.crop_name_hi}}" {% if resource.crop_id == crop.crop_id %} selected {%endif%}>{{ crop.crop_name }}</option>
+                                    {% endfor %}
                                 </select>
                                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
                                     <svg class="fill-current h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -222,6 +222,10 @@
                             <button type="submit" class="text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Save</button>
                             <button type="button" onclick="closeEditModal('{{resource.pk}}')" class="text-black bg-gray-300 hover:bg-gray-400 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center ml-2">Cancel</button>
                         </div>
+                        <input type="hidden" name="mandi_name" id="mandi_name" />
+                        <input type="hidden" name="mandi_name_hi" id="mandi_name_hi" />
+                        <input type="hidden" name="crop_name" id="crop_name" />
+                        <input type="hidden" name="crop_name_hi" id="crop_name_hi" />
                     </form>
                 </div>
             </div>
@@ -281,6 +285,39 @@
 {% endfor %}
 
 <script>
+    // Get the select element and hidden input field
+    const mandiSelectElement = document.getElementById('mandi_id');
+    const mandiNameField = document.getElementById('mandi_name');
+    const mandiNameHiField = document.getElementById('mandi_name_hi');
+
+    // Add change event listener to the select element
+    mandiSelectElement.addEventListener('change', function() {
+        const mandiName = mandiSelectElement.options[mandiSelectElement.selectedIndex].getAttribute('data-mandi-name');
+        const mandiNameHi = mandiSelectElement.options[mandiSelectElement.selectedIndex].getAttribute('data-mandi-name-hi');
+        console.log('mandiName...', mandiName)
+        console.log('mandiNameHi...', mandiNameHi)
+
+        // Update the value of the hidden input field
+        mandiNameField.value = mandiName;
+        mandiNameHiField.value = mandiNameHi;
+    });
+
+    // Get the select element and hidden input field
+    const cropSelectElement = document.getElementById('crop_id');
+    const cropNameField = document.getElementById('crop_name');
+    const cropNameHiField = document.getElementById('crop_name_hi');
+
+    // Add change event listener to the select element
+    cropSelectElement.addEventListener('change', function() {
+        const cropName = cropSelectElement.options[cropSelectElement.selectedIndex].getAttribute('data-crop-name');
+        const cropNameHi = cropSelectElement.options[cropSelectElement.selectedIndex].getAttribute('data-crop-name-hi');
+
+
+        // Update the value of the hidden input field
+        cropNameField.value = cropName;
+        cropNameHiField.value = cropNameHi;
+    });
+
     let modal = null;
 
     function openEditModal(pk) {
