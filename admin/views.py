@@ -60,6 +60,7 @@ import pandas as pd
 from admin_view import *
 from admin_view import admin_configs
 from app import app
+from copy import deepcopy
 
 # [TODO]: dependency on main repo
 from db import db
@@ -589,6 +590,19 @@ def resource_edit(resource_type, resource_id):
             editable_attributes=editable_attributes,
             admin_configs=admin_configs,
         )
+
+    if hasattr(resource_class, "revisions") and hasattr(resource_class, "revision_model") and resource_class.revisions:
+        revision_model = resource_class.revision_model
+        revision_pk = resource_class.revision_pk
+        cloned_attributes_to_save = {}
+        for column, value in resource.__dict__.items():
+            if column == 'id':
+                cloned_attributes_to_save[revision_pk] = value
+            elif column != '_sa_instance_state':
+                cloned_attributes_to_save[column] = value
+        cloned_resource = revision_model(**cloned_attributes_to_save)
+        db.session.add(cloned_resource)
+        db.session.commit()
 
     for attribute in editable_attributes:
         if attribute["name"] in request.form:
