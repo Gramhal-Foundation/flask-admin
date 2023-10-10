@@ -6,7 +6,6 @@
 
 {% block content %}
 
-<div class="text-3xl mb-4">Manage {{ resource_type | admin_label_plural }}</div>
 <div class="mb-4">
     <ul class="flex">
         <li>
@@ -25,9 +24,9 @@
         <li>
             <button type="button"
             id="allReceiptButton"
-                class="font-medium text-sm px-1 py-2.5 mr-2 mb-2 
+                class="font-medium text-sm px-1 py-2.5 mr-2 mb-2
                 {% if 'all' in request.path %} text-black font-bold border-b-2 border-sky-500
-                {% else %} text-black border-b-2 border-sky-500 
+                {% else %} text-black border-b-2 border-sky-500
                 {% endif %}"
                 onclick="displayReceipts('all')" >System Receipts
             </button>
@@ -71,7 +70,7 @@
                             </div>
                             <div class="value"> {% if other_item[1] is not none %}
                                 <h2 class="mb-3 text-xl text-black font-semibold">{{ other_item[1] | capitalize }}</h2>
-                                
+
                             {% endif %}</div>
                         </div>
                     </div>
@@ -115,7 +114,7 @@
                 {% endif %}
             </div>
             {% for image_url in data_tuple[0] %}
-            <div style="width: 482px; height: 656px; position: relative; overflow: hidden;">
+            <div style="width: 482px; height: auto; position: relative; overflow: hidden; margin-top: -75px">
                 <img src="{{ image_url }}" alt="Receipt Image" style="width: 100%; object-fit: cover; border-radius: 6.45px;">
             </div>
             {% endfor %}
@@ -153,7 +152,7 @@
                     <th scope="col" class="px-6 py-3">Actions</th>
                 {% endif %}
             </tr>
-            
+
         </thead>
         <tbody>
             {% for resource in pagination.items %}
