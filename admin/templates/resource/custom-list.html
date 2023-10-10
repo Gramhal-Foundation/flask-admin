@@ -6,64 +6,79 @@
 
 {% block content %}
 
-<div class="text-3xl mb-4">Manage {{ resource_type | admin_label_plural }}</div>
 <div class="mb-4">
     <ul class="flex">
         <li>
             <input type="hidden" id="buttonState" value="pending">
             <button type="button"
-            id="pendingButton"
-                class="font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 {% if 'pending' in request.path %} text-white bg-blue-500 {% else %} text-black border border-gray-300 {% endif %}"
-                onclick="displayReceipts('pending')">Pending Responses</button>
+            id="pendingButton" class="font-medium text-sm px-1 py-2.5 mr-2 mb-2 {% if 'pending' in request.path %} text-black font-bold border-b-2 border-sky-500
+            {% elif 'all' in request.path %}
+                text-black  border-b-2
+            {% else %}
+            text-black font-bold border-b-2 border-sky-500
+            {% endif %}
+            "
+                onclick="displayReceipts('pending')">Pending Receipts
+            </button>
         </li>
         <li>
             <button type="button"
             id="allReceiptButton"
-                class="font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 {% if 'all' in request.path %} text-white bg-blue-500 {% else %} text-black border border-gray-300 {% endif %}"
-                onclick="displayReceipts('all')" >All</button>
+                class="font-medium text-sm px-1 py-2.5 mr-2 mb-2
+                {% if 'all' in request.path %} text-black font-bold border-b-2 border-sky-500
+                {% else %} text-black border-b-2 border-sky-500
+                {% endif %}"
+                onclick="displayReceipts('all')" >System Receipts
+            </button>
         </li>
     </ul>
 </div>
-<div class="flex flex-wrap -mx-4">
+
+{% if 'pending' in request.path or 'all' not in request.path %}
+<div class="mx-4">
     {% for data_tuple in processed_data %}
-    <div class="w-1/2 px-4 py-4">
-        <div class="flex flex-col border rounded-lg p-1 shadow-xl"
-            style="max-width: 900px; display: flex; flex-direction: row;">
-            {% for image_url in data_tuple[0] %}
-            <div
-                style="width: 300px; height: 500px; position: relative; overflow: hidden;">
-                <img src="{{ image_url }}" alt="Receipt Image"
-                    style="height: 100%; object-fit: cover; border-radius: 6.45px;">
-            </div>
-            {% endfor %}
-            <div style="flex: 1; padding-left: 10px;" class="flex flex-col justify-between pb-6">
+    <div class="">
+        <div class="flex flex-col"
+            style="max-width: 1200px; display: flex; flex-direction: row;">
+            <div style="flex: 1;" class="flex flex-col justify-between pb-6">
                 <div
-                    style="font-size: 16px; font-weight: 400; line-height: 19px;"
-                    class="text-left">
+                    style="display: grid;
+                    column-gap: 50px;
+                    grid-template-columns: auto auto auto auto;  font-size: 16px; font-weight: 400; line-height: 19px;"
+                    class="flex text-left">
                     {% for other_item in data_tuple[2] %}
-                    <h2 style="color: #363535; display: inline; font-size: 15px;">
-                        {% if other_item[0] == "is_approved" %}
-                            Receipt Status:
-                        {% else %}
-                            {{ other_item[0] | format_label | capitalize }}:
-                        {% endif %}
-                    </h2>
-                    <!-- <h2 style="color: #000; display: inline;"> {{ other_item[1] | capitalize }}</h2> -->
-                    <h2 style="color: #000; display: inline;">
-                        {% if other_item[1] == true %}
-                            Approved
-                        {% elif other_item[1] == false %}
-                            Rejected
-                        {% elif other_item[1] is none %}
-                            Pending
-                        {% else %}
-                            {{ other_item[1] | capitalize }}
-                        {% endif %}
-                    </h2>
+                    <div style="margin-top: 10px; margin-bottom: 10px;   display: flex; justify-content: space-between;">
+                        <div class="item-container">
+                            <div class="label">
+                                {% if other_item[0] == "mandi_name" %}
+                                    <h6 class="mb-3 text-base ">Mandi</h6>
+                                {% elif other_item[0] == "crop_name" %}
+                                    <h6 class="mb-3 text-base " >Crop</h6>
+                                {% elif other_item[0] == "contract_number" %}
+                                    <h6 class="mb-3 text-base ">Receipt Number</h6>
+                                {% elif other_item[0] == "price" %}
+                                    <h6 class="mb-3 text-base ">Rate</h6>
+                                {% elif other_item[0] == "quantity" %}
+                                    <h6 class="mb-3 text-base ">Approximate weight</h6>
+                                {% elif other_item[0] == "booklet_number" %}
+                                    <h6 class="mb-3 text-base ">Booklet Number</h6>
+                                {% elif other_item[0] == "receipt_date" %}
+                                    <h6 class="mb-3 text-base">Date</h6>
+                                {% elif other_item[0] == "Time" %}
+                                    <h6 class="mb-3 text-base ">Time of Submission</h6>
+                                {% endif %}
+                            </div>
+                            <div class="value"> {% if other_item[1] is not none %}
+                                <h2 class="mb-3 text-xl text-black font-semibold">{{ other_item[1] | capitalize }}</h2>
+
+                            {% endif %}</div>
+                        </div>
+                    </div>
+
                     <br>
                     {% endfor %}
                 </div>
-                {% if 'pending' in request.path %}
+                {% if 'pending' in request.path   or 'all' not in request.path %}
                     <div class="flex items-center">
                         {% for button_label, receipt_id in data_tuple[1] %}
                             {% if button_label == 'Approve' or button_label == 'Reject' %}
@@ -98,10 +113,82 @@
                     </div>
                 {% endif %}
             </div>
+            {% for image_url in data_tuple[0] %}
+            <div style="width: 482px; height: auto; position: relative; overflow: hidden; margin-top: -75px">
+                <img src="{{ image_url }}" alt="Receipt Image" style="width: 100%; object-fit: cover; border-radius: 6.45px;">
+            </div>
+            {% endfor %}
         </div>
     </div>
     {% endfor %}
 </div>
+{% else %}
+<div class="relative overflow-x-auto my-8">
+    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+            <tr>
+                {% for item in list_display %}
+                    {% if item != "receipt_image_url" %}
+                        {% if item == "mandi_name" %}
+                            <th scope="col" class="px-6 py-3">Mandi</th>
+                        {% elif item == "crop_name" %}
+                            <th scope="col" class="px-6 py-3">Crop</th>
+                        {% elif item == "contract_number" %}
+                            <th scope="col" class="px-6 py-3">Receipt Number</th>
+                        {% elif item == "quantity" %}
+                            <th scope="col" class="px-6 py-3">Weight (Quintal)</th>
+                        {% elif item == "price" %}
+                            <th scope="col" class="px-6 py-3">Rate</th>
+                        {% elif item == "is_approved" %}
+                            <th scope="col" class="px-6 py-3">Status</th>
+                        {% elif item == "receipt_date" %}
+                            <th scope="col" class="px-6 py-3">Submission on</th>
+                        {% else %}
+                            <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+                {% if permissions.get(resource_type).get('update') or permissions.get(resource_type).get('delete'): %}
+                    <th scope="col" class="px-6 py-3">Actions</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for resource in pagination.items %}
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                    {% for item in list_display %}
+                        {% if item != "receipt_image_url" %}
+                            <td class="px-6 py-4">
+                                {% if item == "is_approved" %}
+                                    {% if resource[item] %}
+                                        <span class="text-green-500">Approved</span>
+                                    {% else %}
+                                        <span class="text-red-500">Rejected</span>
+                                    {% endif %}
+                                {% else %}
+                                    {{ resource[item] }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+                    {% endfor %}
+                    <td class="px-6 py-4 flex items-center">
+                        <div>
+                            <a href="#" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
+                                <i class="fa-solid fa-receipt"></i>
+                            </a>
+                        </div>
+                        <div>
+                            <a href="#" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
+                                <i class="fas fa-history"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
 <div class="mt-4 flex items-end">
     {% if pagination.has_prev %}
     <a href="javascript:void(0);"
@@ -131,6 +218,7 @@
     </a>
     {% endif %}
 </div>
+{% endif %}
 
 <script>
     function displayReceipts(buttonValue, page=1) {
