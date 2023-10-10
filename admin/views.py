@@ -888,14 +888,10 @@ def resource_filter(resource_type, status):
             pagination = model.query.filter(model.is_approved == None, model.booklet_number.isnot(None)).order_by(primary_key_column).paginate(
                 page=page, per_page=1, error_out=False
             )
-            # pending_receipts=pagination.total
-            # print('pagination', pending_receipts)
         else:
             pagination = model.query.filter(model.is_approved != None, model.booklet_number.isnot(None)).order_by(primary_key_column).paginate(
                 page=page, per_page=per_page, error_out=False
             )
-            # all_receipts=pagination.total
-            # print('pagination', all_receipts)
         mandis = MandiModel.query.all()
         crops = CropModel.query.all()
         return render_template(
