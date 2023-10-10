@@ -34,93 +34,93 @@
     </ul>
 </div>
 
-{% if 'pending' in request.path or 'all' not in request.path %}
-<div class="mx-4">
-    {% for data_tuple in processed_data %}
-    <div class="">
-        <div class="flex flex-col"
-            style="max-width: 1200px; display: flex; flex-direction: row;">
-            <div style="flex: 1;" class="flex flex-col justify-between pb-6">
-                <div
-                    style="display: grid;
-                    column-gap: 50px;
-                    grid-template-columns: auto auto auto auto;  font-size: 16px; font-weight: 400; line-height: 19px;"
-                    class="flex text-left">
-                    {% for other_item in data_tuple[2] %}
-                    <div style="margin-top: 10px; margin-bottom: 10px;   display: flex; justify-content: space-between;">
-                        <div class="item-container">
-                            <div class="label">
-                                {% if other_item[0] == "mandi_name" %}
-                                    <h6 class="mb-3 text-base ">Mandi</h6>
-                                {% elif other_item[0] == "crop_name" %}
-                                    <h6 class="mb-3 text-base " >Crop</h6>
-                                {% elif other_item[0] == "contract_number" %}
-                                    <h6 class="mb-3 text-base ">Receipt Number</h6>
-                                {% elif other_item[0] == "price" %}
-                                    <h6 class="mb-3 text-base ">Rate</h6>
-                                {% elif other_item[0] == "quantity" %}
-                                    <h6 class="mb-3 text-base ">Approximate weight</h6>
-                                {% elif other_item[0] == "booklet_number" %}
-                                    <h6 class="mb-3 text-base ">Booklet Number</h6>
-                                {% elif other_item[0] == "receipt_date" %}
-                                    <h6 class="mb-3 text-base">Date</h6>
-                                {% elif other_item[0] == "Time" %}
-                                    <h6 class="mb-3 text-base ">Time of Submission</h6>
-                                {% endif %}
+{% if 'pending' in request.path %}
+    <div class="mx-4">
+        {% for data_tuple in processed_data %}
+        <div class="">
+            <div class="flex flex-col"
+                style="max-width: 1200px; display: flex; flex-direction: row;">
+                <div style="flex: 1;" class="flex flex-col justify-between pb-6">
+                    <div
+                        style="display: grid;
+                        column-gap: 50px;
+                        grid-template-columns: auto auto auto auto;  font-size: 16px; font-weight: 400; line-height: 19px;"
+                        class="flex text-left">
+                        {% for other_item in data_tuple[2] %}
+                        <div style="margin-top: 10px; margin-bottom: 10px;   display: flex; justify-content: space-between;">
+                            <div class="item-container">
+                                <div class="label">
+                                    {% if other_item[0] == "mandi_name" %}
+                                        <h6 class="mb-3 text-base ">Mandi</h6>
+                                    {% elif other_item[0] == "crop_name" %}
+                                        <h6 class="mb-3 text-base " >Crop</h6>
+                                    {% elif other_item[0] == "contract_number" %}
+                                        <h6 class="mb-3 text-base ">Receipt Number</h6>
+                                    {% elif other_item[0] == "price" %}
+                                        <h6 class="mb-3 text-base ">Rate</h6>
+                                    {% elif other_item[0] == "quantity" %}
+                                        <h6 class="mb-3 text-base ">Approximate weight</h6>
+                                    {% elif other_item[0] == "booklet_number" %}
+                                        <h6 class="mb-3 text-base ">Booklet Number</h6>
+                                    {% elif other_item[0] == "receipt_date" %}
+                                        <h6 class="mb-3 text-base">Date</h6>
+                                    {% elif other_item[0] == "Time" %}
+                                        <h6 class="mb-3 text-base ">Time of Submission</h6>
+                                    {% endif %}
+                                </div>
+                                <div class="value"> {% if other_item[1] is not none %}
+                                    <h2 class="mb-3 text-xl text-black font-semibold">{{ other_item[1] | capitalize }}</h2>
+
+                                {% endif %}</div>
                             </div>
-                            <div class="value"> {% if other_item[1] is not none %}
-                                <h2 class="mb-3 text-xl text-black font-semibold">{{ other_item[1] | capitalize }}</h2>
-
-                            {% endif %}</div>
                         </div>
-                    </div>
 
-                    <br>
-                    {% endfor %}
-                </div>
-                {% if 'pending' in request.path   or 'all' not in request.path %}
-                    <div class="flex items-center">
-                        {% for button_label, receipt_id in data_tuple[1] %}
-                            {% if button_label == 'Approve' or button_label == 'Reject' %}
-                                {% if button_label == 'Approve' %}
-                                    <button id="approve_button"
-                                        class="font-semibold py-2 px-4 my-2 rounded-lg bg-green-500 text-white hover:bg-green-600"
-                                        type="submit"
-                                        onclick="handleButtonClick('{{ button_label }}', '{{ receipt_id }}')"
-                                        style="width: 100px; height: 40px;">
-                                        {{ button_label }}
-                                    </button>
-                                {% else %}
-                                    <button id="reject_button"
-                                        class="font-semibold py-2 px-4 my-2 rounded-lg bg-red-600 text-white hover:bg-red-700 ml-2"
-                                        type="submit"
-                                        onclick="handleButtonClick('{{ button_label }}', '{{ receipt_id }}')"
-                                        style="width: 100px; height: 40px;">
-                                        {{ button_label }}
-                                    </button>
-                                {% endif %}
-                            {% endif %}
-                            {% if button_label == 'Edit' %}
-                                <button id="openEditModal"
-                                    class="font-semibold py-2 px-4 my-2 rounded-lg bg-white text-black border border-black hover:bg-black hover:text-white"
-                                    type="button"
-                                    style="width: 100px; height: 40px;">
-                                    {{ button_label }}
-                                </button>
-                            {% endif %}
+                        <br>
                         {% endfor %}
                     </div>
-                {% endif %}
+                    {% if 'pending' in request.path %}
+                        <div class="flex items-center">
+                            {% for button_label, receipt_id in data_tuple[1] %}
+                                {% if button_label == 'Approve' or button_label == 'Reject' %}
+                                    {% if button_label == 'Approve' %}
+                                        <button id="approve_button"
+                                            class="font-semibold py-2 px-4 my-2 rounded-lg bg-green-500 text-white hover:bg-green-600"
+                                            type="submit"
+                                            onclick="handleButtonClick('{{ button_label }}', '{{ receipt_id }}')"
+                                            style="width: 100px; height: 40px;">
+                                            {{ button_label }}
+                                        </button>
+                                    {% else %}
+                                        <button id="reject_button"
+                                            class="font-semibold py-2 px-4 my-2 rounded-lg bg-red-600 text-white hover:bg-red-700 ml-2"
+                                            type="submit"
+                                            onclick="handleButtonClick('{{ button_label }}', '{{ receipt_id }}')"
+                                            style="width: 100px; height: 40px;">
+                                            {{ button_label }}
+                                        </button>
+                                    {% endif %}
+                                {% endif %}
+                                {% if button_label == 'Edit' %}
+                                    <button id="openEditModal"
+                                        class="font-semibold py-2 px-4 my-2 rounded-lg bg-white text-black border border-black hover:bg-black hover:text-white"
+                                        type="button"
+                                        style="width: 100px; height: 40px;">
+                                        {{ button_label }}
+                                    </button>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                {% for image_url in data_tuple[0] %}
+                <div style="width: 482px; height: auto; position: relative; overflow: hidden; margin-top: -75px">
+                    <img src="{{ image_url }}" alt="Receipt Image" style="width: 100%; object-fit: cover; border-radius: 6.45px;">
+                </div>
+                {% endfor %}
             </div>
-            {% for image_url in data_tuple[0] %}
-            <div style="width: 482px; height: auto; position: relative; overflow: hidden; margin-top: -75px">
-                <img src="{{ image_url }}" alt="Receipt Image" style="width: 100%; object-fit: cover; border-radius: 6.45px;">
-            </div>
-            {% endfor %}
         </div>
+        {% endfor %}
     </div>
-    {% endfor %}
-</div>
 {% else %}
     <div class="relative overflow-x-auto my-8">
         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">

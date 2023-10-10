@@ -456,7 +456,7 @@ def resource_list(resource_type):
     """
     # TODO: hardcoding to be removed
     if resource_type == 'mandi-receipt':
-        return redirect(url_for('.resource_filter', resource_type=resource_type, button_value='pending'))
+        return redirect(url_for('.resource_filter', resource_type=resource_type, status='pending'))
 
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
@@ -865,9 +865,9 @@ def update_approval_status():
         return jsonify({'success': False, 'message': str(e)})
 
 
-@admin.route("/resource/<string:resource_type>/<string:button_value>")
+@admin.route("/resource/<string:resource_type>/<string:status>")
 @login_required
-def resource_filter(resource_type, button_value):
+def resource_filter(resource_type, status):
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
     is_custom_template = resource_class.is_custom_template
@@ -881,7 +881,7 @@ def resource_filter(resource_type, button_value):
     list_display = resource_class.list_display
     if is_custom_template:
         # TODO: hardcoding needs to be removed
-        if button_value == 'pending':
+        if status == 'pending':
             pagination = model.query.filter(model.is_approved == None, model.booklet_number.isnot(None)).order_by(primary_key_column).paginate(
                 page=page, per_page=1, error_out=False
             )
