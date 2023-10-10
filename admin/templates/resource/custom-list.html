@@ -117,7 +117,7 @@
                             </a>
                         </div>
                         <div>
-                            <a href="#" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
+                            <a href="#" onclick="openEditHistoryModal('{{ resource.pk }}')" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
                                 <i class="fas fa-history"></i>
                             </a>
                         </div>
@@ -163,7 +163,7 @@
         <div class="relative w-full max-w-md max-h-full mx-auto transition-all duration-300 ease-in-out">
             <!-- Modal content -->
             <div class="relative bg-white rounded-lg shadow">
-                <button onclick="closeModal('{{resource.pk}}')" type="button" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center" data-modal-hide="editModal">
+                <button onclick="closeEditModal('{{resource.pk}}')" type="button" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center" data-modal-hide="editModal">
                     <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
                     </svg>
@@ -220,7 +220,7 @@
                         </div>
                         <div class="mt-6">
                             <button type="submit" class="text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Save</button>
-                            <button type="button" onclick="closeModal('{{resource.pk}}')" class="text-black bg-gray-300 hover:bg-gray-400 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center ml-2">Cancel</button>
+                            <button type="button" onclick="closeEditModal('{{resource.pk}}')" class="text-black bg-gray-300 hover:bg-gray-400 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center ml-2">Cancel</button>
                         </div>
                     </form>
                 </div>
@@ -229,26 +229,79 @@
     </div>
 {% endfor %}
 
+{% for resource in pagination.items %}
+    <div id="{{'editHistoryModal' ~ resource.pk}}" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 w-full p-4 hidden overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full bg-gray-600 bg-opacity-60">
+        <div class="relative w-full max-w-md max-h-full mx-auto transition-all duration-300 ease-in-out">
+            <!-- Modal content -->
+            <div class="relative bg-white rounded-lg shadow">
+                <button onclick="closeEditHistoryModal('{{resource.pk}}')" type="button" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center" data-modal-hide="editModal">
+                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                    </svg>
+                    <span class="sr-only">Close modal</span>
+                </button>
+                <div class="px-6 py-6 lg:px-8">
+                    <h3 class="mb-6 text-xl font-medium text-gray-900">Version History</h3>
+                    {% for count in range(1,3): %}
+                        <div class="mb-4">
+                            <div class="text-xl">Version {{count}}</div>
+                        </div>
+                        <div class="flex flex-wrap">
+                            <div class="mb-4 w-1/3">
+                                <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Receipt Number</label>
+                                <div>{{resource.contract_number}}</div>
+                            </div>
+                            <div class="mb-4 w-1/3">
+                                <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Booklet Number</label>
+                                <div>{{resource.booklet_number}}</div>
+                            </div>
+                            <div class="mb-4 w-1/3">
+                                <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Mandi</label>
+                                <div>{{resource.mandi_id}}</div>
+                            </div>
+                            <div class="mb-4 w-1/3">
+                                <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Crop</label>
+                                <div>{{resource.crop_id}}</div>
+                            </div>
+                            <div class="mb-4 w-1/3">
+                                <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Rate</label>
+                                <div>{{resource.price}}</div>
+                            </div>
+                            <div class="mb-4 w-1/3">
+                                <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Approximate weight</label>
+                                <div>{{resource.quantity}}</div>
+                            </div>
+                        </div>
+                        <hr class="my-6" />
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
 <script>
     let modal = null;
-    // const openEditModalBtn = document.querySelector('.openEditModal');
-    // const closeModalBtn = document.querySelector('.closeModal');
 
-    // Function to open the modal
     function openEditModal(pk) {
         modal = document.getElementById('editModal' + pk)
         modal.classList.remove('hidden');
     }
 
-    // Function to close the modal
-    function closeModal(pk) {
+    function closeEditModal(pk) {
         modal = document.getElementById('editModal' + pk)
         modal.classList.add('hidden');
     }
 
-    // Event listeners to open and close the modal
-    // openEditModalBtn.addEventListener('click', openEditModal);
-    // closeModalBtn.addEventListener('click', closeModal);
+    function openEditHistoryModal(pk) {
+        modal = document.getElementById('editHistoryModal' + pk)
+        modal.classList.remove('hidden');
+    }
+
+    function closeEditHistoryModal(pk) {
+        modal = document.getElementById('editHistoryModal' + pk)
+        modal.classList.add('hidden');
+    }
 
     function displayReceipts(buttonValue, page=1) {
         let pendingButton = document.getElementById('pendingButton');
