@@ -18,7 +18,7 @@
             text-black font-bold border-b-2 border-sky-500
             {% endif %}
             "
-                onclick="displayReceipts('pending')">Pending Receipts
+                onclick="displayReceipts('pending')">Pending Receipts <span>({{ pending_receipts }})</span>
             </button>
         </li>
         <li>
@@ -28,7 +28,7 @@
                 {% if 'all' in request.path %} text-black font-bold border-b-2 border-sky-500
                 {% else %} text-black border-b-2 border-sky-500
                 {% endif %}"
-                onclick="displayReceipts('all')" >System Receipts
+                onclick="displayReceipts('all')" >System Receipts<span>({{ all_receipts }})</span>
             </button>
         </li>
     </ul>

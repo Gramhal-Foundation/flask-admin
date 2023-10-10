@@ -880,16 +880,22 @@ def resource_filter(resource_type, status):
         page=page, per_page=per_page, error_out=False
     )
     list_display = resource_class.list_display
+    pending_receipts = model.query.filter(model.is_approved == None, model.booklet_number.isnot(None)).count()
+    all_receipts = model.query.filter(model.is_approved != None, model.booklet_number.isnot(None)).count()
     if is_custom_template:
         # TODO: hardcoding needs to be removed
         if status == 'pending':
             pagination = model.query.filter(model.is_approved == None, model.booklet_number.isnot(None)).order_by(primary_key_column).paginate(
                 page=page, per_page=1, error_out=False
             )
+            # pending_receipts=pagination.total
+            # print('pagination', pending_receipts)
         else:
             pagination = model.query.filter(model.is_approved != None, model.booklet_number.isnot(None)).order_by(primary_key_column).paginate(
                 page=page, per_page=per_page, error_out=False
             )
+            # all_receipts=pagination.total
+            # print('pagination', all_receipts)
         mandis = MandiModel.query.all()
         crops = CropModel.query.all()
         return render_template(
@@ -899,4 +905,6 @@ def resource_filter(resource_type, status):
             list_display=list_display,
             mandis=mandis,
             crops=crops,
+            pending_receipts=pending_receipts,
+            all_receipts=all_receipts
         )
