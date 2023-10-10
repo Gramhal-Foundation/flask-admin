@@ -122,101 +122,101 @@
     {% endfor %}
 </div>
 {% else %}
-<div class="relative overflow-x-auto my-8">
-    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-            <tr>
-                {% for item in list_display %}
-                    {% if item != "receipt_image_url" %}
-                        {% if item == "mandi_name" %}
-                            <th scope="col" class="px-6 py-3">Mandi</th>
-                        {% elif item == "crop_name" %}
-                            <th scope="col" class="px-6 py-3">Crop</th>
-                        {% elif item == "contract_number" %}
-                            <th scope="col" class="px-6 py-3">Receipt Number</th>
-                        {% elif item == "quantity" %}
-                            <th scope="col" class="px-6 py-3">Weight (Quintal)</th>
-                        {% elif item == "price" %}
-                            <th scope="col" class="px-6 py-3">Rate</th>
-                        {% elif item == "is_approved" %}
-                            <th scope="col" class="px-6 py-3">Status</th>
-                        {% elif item == "receipt_date" %}
-                            <th scope="col" class="px-6 py-3">Submission on</th>
-                        {% else %}
-                            <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
-                        {% endif %}
-                    {% endif %}
-                {% endfor %}
-                {% if permissions.get(resource_type).get('update') or permissions.get(resource_type).get('delete'): %}
-                    <th scope="col" class="px-6 py-3">Actions</th>
-                {% endif %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for resource in pagination.items %}
-                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+    <div class="relative overflow-x-auto my-8">
+        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
                     {% for item in list_display %}
                         {% if item != "receipt_image_url" %}
-                            <td class="px-6 py-4">
-                                {% if item == "is_approved" %}
-                                    {% if resource[item] %}
-                                        <span class="text-green-500">Approved</span>
-                                    {% else %}
-                                        <span class="text-red-500">Rejected</span>
-                                    {% endif %}
-                                {% else %}
-                                    {{ resource[item] }}
-                                {% endif %}
-                            </td>
+                            {% if item == "mandi_name" %}
+                                <th scope="col" class="px-6 py-3">Mandi</th>
+                            {% elif item == "crop_name" %}
+                                <th scope="col" class="px-6 py-3">Crop</th>
+                            {% elif item == "contract_number" %}
+                                <th scope="col" class="px-6 py-3">Receipt Number</th>
+                            {% elif item == "quantity" %}
+                                <th scope="col" class="px-6 py-3">Weight (Quintal)</th>
+                            {% elif item == "price" %}
+                                <th scope="col" class="px-6 py-3">Rate</th>
+                            {% elif item == "is_approved" %}
+                                <th scope="col" class="px-6 py-3">Status</th>
+                            {% elif item == "receipt_date" %}
+                                <th scope="col" class="px-6 py-3">Submission on</th>
+                            {% else %}
+                                <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
+                            {% endif %}
                         {% endif %}
                     {% endfor %}
-                    <td class="px-6 py-4 flex items-center">
-                        <div>
-                            <a href="#" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
-                                <i class="fa-solid fa-receipt"></i>
-                            </a>
-                        </div>
-                        <div>
-                            <a href="#" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
-                                <i class="fas fa-history"></i>
-                            </a>
-                        </div>
-                    </td>
+                    {% if permissions.get(resource_type).get('update') or permissions.get(resource_type).get('delete'): %}
+                        <th scope="col" class="px-6 py-3">Actions</th>
+                    {% endif %}
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+            </thead>
+            <tbody>
+                {% for resource in pagination.items %}
+                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                        {% for item in list_display %}
+                            {% if item != "receipt_image_url" %}
+                                <td class="px-6 py-4">
+                                    {% if item == "is_approved" %}
+                                        {% if resource[item] %}
+                                            <span class="text-green-500">Approved</span>
+                                        {% else %}
+                                            <span class="text-red-500">Rejected</span>
+                                        {% endif %}
+                                    {% else %}
+                                        {{ resource[item] }}
+                                    {% endif %}
+                                </td>
+                            {% endif %}
+                        {% endfor %}
+                        <td class="px-6 py-4 flex items-center">
+                            <div>
+                                <a href="#" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
+                                    <i class="fa-solid fa-receipt"></i>
+                                </a>
+                            </div>
+                            <div>
+                                <a href="#" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
+                                    <i class="fas fa-history"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-<div class="mt-4 flex items-end">
-    {% if pagination.has_prev %}
-    <a href="javascript:void(0);"
-       onclick="displayReceipts('all', '{{ pagination.prev_num }}')"
-       class="mx-1 px-3 py-1 rounded border text-blue-500">
-        {{ 'Prev' }}
-    </a>
-    {% endif %}
-    {% for num in pagination.iter_pages() %}
-    {% if num %}
-    {% if num != pagination.page %}
-    <a href="javascript:void(0);"
-       onclick="displayReceipts('all', '{{ num }}')"
-       class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
-    {% else %}
-    <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
-    {% endif %}
-    {% else %}
-    ...
-    {% endif %}
-    {% endfor %}
-    {% if pagination.has_next %}
-    <a href="javascript:void(0);"
-       onclick="displayReceipts('all', '{{ pagination.next_num }}')"
-       class="mx-1 px-3 py-1 rounded border text-blue-500">
-        {{ 'Next' }}
-    </a>
-    {% endif %}
-</div>
+    <div class="mt-4 flex items-end">
+        {% if pagination.has_prev %}
+        <a href="javascript:void(0);"
+        onclick="displayReceipts('all', '{{ pagination.prev_num }}')"
+        class="mx-1 px-3 py-1 rounded border text-blue-500">
+            {{ 'Prev' }}
+        </a>
+        {% endif %}
+        {% for num in pagination.iter_pages() %}
+        {% if num %}
+        {% if num != pagination.page %}
+        <a href="javascript:void(0);"
+        onclick="displayReceipts('all', '{{ num }}')"
+        class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
+        {% else %}
+        <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
+        {% endif %}
+        {% else %}
+        ...
+        {% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+        <a href="javascript:void(0);"
+        onclick="displayReceipts('all', '{{ pagination.next_num }}')"
+        class="mx-1 px-3 py-1 rounded border text-blue-500">
+            {{ 'Next' }}
+        </a>
+        {% endif %}
+    </div>
 {% endif %}
 
 <div id="editModal" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 w-full p-4 hidden overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full bg-gray-600 bg-opacity-60">
