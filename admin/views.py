@@ -868,19 +868,26 @@ def resource_filter(resource_type, status):
     list_display = resource_class.list_display
     if is_custom_template:
         # TODO: hardcoding needs to be removed
-        pending_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved == None, model.booklet_number.isnot(None)).order_by(SaleReceiptModel.id, SaleReceiptEditModel.created_at).paginate(
+        pending_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved == None, model.booklet_number.isnot(None)).order_by(SaleReceiptModel.id).paginate(
             page=page, per_page=1, error_out=False
         )
-        all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None, model.booklet_number.isnot(None)).order_by(SaleReceiptModel.id, SaleReceiptEditModel.created_at).paginate(
-            page=page, per_page=20, error_out=False
+        all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None, model.booklet_number.isnot(None)).order_by(SaleReceiptModel.id).paginate(
+            page=page, per_page=4, error_out=False
         )
         if status == 'pending':
             pagination = pending_pagination
         else:
             pagination = all_pagination
 
+
         mandis = MandiModel.query.all()
         crops = CropModel.query.all()
+        print('pagination.total....................', pagination.total)
+        print('pagination.iter_pages....................', pagination.iter_pages())
+        print('pagination.items....................', pagination.items)
+        for num in pagination.iter_pages():
+            print('num................', num)
+
         return render_template(
             "resource/custom-list.html",
             pagination=pagination,
