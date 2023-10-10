@@ -798,7 +798,7 @@ def get_preprocess_data(pagination, list_display):
     for resource in pagination.items:
         image_data = []
         button_data = []
-        other_data = []      
+        other_data = []
         receipt_date = getattr(resource, "receipt_date")
         formatted_receipt_date = receipt_date.strftime("%Y-%m-%d")
         formatted_time = receipt_date.strftime("%I:%M %p")
