@@ -9,26 +9,25 @@
 <div class="mb-4">
     <ul class="flex">
         <li>
-            <input type="hidden" id="buttonState" value="pending">
-            <button type="button"
-            id="pendingButton" class="font-medium text-sm px-1 py-2.5 mr-2 mb-2 {% if 'pending' in request.path %} text-black font-bold border-b-2 border-sky-500
-            {% elif 'all' in request.path %}
-                text-black  border-b-2
-            {% else %}
-            text-black font-bold border-b-2 border-sky-500
-            {% endif %}
-            "
-                onclick="displayReceipts('pending')">Pending Receipts
+            <button
+                type="button"
+                id="pendingButton"
+                class="font-light text-sm px-2 py-2.5 text-black border-b-2 {% if 'pending' in request.path %} border-blue-500 {% endif %}"
+                onclick="displayReceipts('pending')"
+            >
+                <span class="{% if 'pending' in request.path %} font-bold {% endif %}">Pending Receipts</span>
+                <span>({{pending_pagination.total}})</span>
             </button>
         </li>
         <li>
-            <button type="button"
-            id="allReceiptButton"
-                class="font-medium text-sm px-1 py-2.5 mr-2 mb-2
-                {% if 'all' in request.path %} text-black font-bold border-b-2 border-sky-500
-                {% else %} text-black border-b-2 border-sky-500
-                {% endif %}"
-                onclick="displayReceipts('all')" >System Receipts
+            <button
+                type="button"
+                id="allReceiptButton"
+                class="font-light text-sm px-2 py-2.5 text-black border-b-2 {% if 'all' in request.path %} border-blue-500 {% endif %}"
+                onclick="displayReceipts('all')"
+            >
+                <span class="{% if 'all' in request.path %} font-bold {% endif %}">System Receipts</span>
+                <span>({{all_pagination.total}})</span>
             </button>
         </li>
     </ul>
@@ -85,13 +84,13 @@
                             {% elif item == "contract_number" %}
                                 <th scope="col" class="px-6 py-3">Contract Number</th>
                             {% elif item == "quantity" %}
-                                <th scope="col" class="px-6 py-3">Weight (Quintal)</th>
+                                <th scope="col" class="px-6 py-3">Quantity (Quintal)</th>
                             {% elif item == "price" %}
-                                <th scope="col" class="px-6 py-3">Rate</th>
+                                <th scope="col" class="px-6 py-3">Price</th>
                             {% elif item == "is_approved" %}
                                 <th scope="col" class="px-6 py-3">Status</th>
                             {% elif item == "receipt_date" %}
-                                <th scope="col" class="px-6 py-3">Submission on</th>
+                                <th scope="col" class="px-6 py-3">Receipt Date</th>
                             {% else %}
                                 <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
                             {% endif %}
@@ -227,7 +226,7 @@
                             <input type="text" name="price" id="price" class="border border-gray-300 text-black text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required value="{{resource.price}}">
                         </div>
                         <div class="mb-4">
-                            <label for="quantity" class="block mb-1 text-xs font-light text-gray-500">Approximate weight</label>
+                            <label for="quantity" class="block mb-1 text-xs font-light text-gray-500">Quantity</label>
                             <input type="text" name="quantity" id="quantity" class="border border-gray-300 text-black text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required value="{{resource.quantity}}">
                         </div>
                         <div class="mt-6">

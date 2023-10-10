@@ -858,30 +858,34 @@ def resource_filter(resource_type, status):
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
     is_custom_template = resource_class.is_custom_template
-    per_page = 50
+    # per_page = 5
     page = request.args.get("page", default=1, type=int)
-    primary_key_column = model.__table__.primary_key.columns.keys()[0]
+    # primary_key_column = model.__table__.primary_key.columns.keys()[0]
     # TODO: filter not working
-    pagination = model.query.order_by(primary_key_column).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
+    # pagination = model.query.order_by(primary_key_column).paginate(
+    #     page=page, per_page=per_page, error_out=False
+    # )
     list_display = resource_class.list_display
     if is_custom_template:
         # TODO: hardcoding needs to be removed
+        pending_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved == None, model.booklet_number.isnot(None)).order_by(SaleReceiptModel.id, SaleReceiptEditModel.created_at).paginate(
+            page=page, per_page=1, error_out=False
+        )
+        all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None, model.booklet_number.isnot(None)).order_by(SaleReceiptModel.id, SaleReceiptEditModel.created_at).paginate(
+            page=page, per_page=20, error_out=False
+        )
         if status == 'pending':
-            pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved == None, model.booklet_number.isnot(None)).order_by(SaleReceiptModel.id, SaleReceiptEditModel.created_at).paginate(
-                page=page, per_page=1, error_out=False
-            )
+            pagination = pending_pagination
         else:
-            pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None, model.booklet_number.isnot(None)).order_by(SaleReceiptModel.id, SaleReceiptEditModel.created_at).paginate(
-                page=page, per_page=per_page, error_out=False
-            )
+            pagination = all_pagination
 
         mandis = MandiModel.query.all()
         crops = CropModel.query.all()
         return render_template(
             "resource/custom-list.html",
             pagination=pagination,
+            pending_pagination=pending_pagination,
+            all_pagination=all_pagination,
             resource_type=resource_type,
             list_display=list_display,
             mandis=mandis,
