@@ -12,33 +12,36 @@
         <li>
             <input type="hidden" id="buttonState" value="pending">
             <button type="button"
-            id="pendingButton"
-                class="font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 {% if 'pending' in request.path %}
-                text-white bg-blue-500
+            id="pendingButton" class="font-medium text-sm px-1 py-2.5 mr-2 mb-2 {% if 'pending' in request.path %} text-black font-bold border-b-2 border-sky-500
             {% elif 'all' in request.path %}
-                text-black border border-gray-300
+                text-black  border-b-2
             {% else %}
-            text-white bg-blue-500
+            text-black font-bold border-b-2 border-sky-500
             {% endif %}
             "
-                onclick="displayReceipts('pending')">Pending Responses</button>
+                onclick="displayReceipts('pending')">Pending Receipts
+            </button>
         </li>
         <li>
             <button type="button"
             id="allReceiptButton"
-                class="font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 {% if 'all' in request.path %} text-white bg-blue-500 {% else %} text-black border border-gray-300 {% endif %}"
-                onclick="displayReceipts('all')" >All</button>
+                class="font-medium text-sm px-1 py-2.5 mr-2 mb-2 
+                {% if 'all' in request.path %} text-black font-bold border-b-2 border-sky-500
+                {% else %} text-black border-b-2 border-sky-500 
+                {% endif %}"
+                onclick="displayReceipts('all')" >System Receipts
+            </button>
         </li>
     </ul>
 </div>
 
-{% if 'pending' in request.path %}
+{% if 'pending' in request.path or 'all' not in request.path %}
 <div class="mx-4">
     {% for data_tuple in processed_data %}
-    <div class="px-4 py-4">
-        <div class="flex flex-col border rounded-lg p-1 shadow-xl"
-            style="max-width: 900px; display: flex; flex-direction: row;">
-            <div style="flex: 1; padding-left: 10px;" class="flex flex-col justify-between pb-6">
+    <div class="">
+        <div class="flex flex-col"
+            style="max-width: 1200px; display: flex; flex-direction: row;">
+            <div style="flex: 1;" class="flex flex-col justify-between pb-6">
                 <div
                     style="display: grid;
                     column-gap: 50px;
@@ -49,25 +52,25 @@
                         <div class="item-container">
                             <div class="label">
                                 {% if other_item[0] == "mandi_name" %}
-                                    <h6 class="mb-3 text-lg font-small">Mandi</h6>
+                                    <h6 class="mb-3 text-base ">Mandi</h6>
                                 {% elif other_item[0] == "crop_name" %}
-                                    <h6 class="mb-3 text-lg font-small" >Crop</h6>
+                                    <h6 class="mb-3 text-base " >Crop</h6>
                                 {% elif other_item[0] == "contract_number" %}
-                                    <h6 class="mb-3 text-lg font-small">Receipt Number</h6>
+                                    <h6 class="mb-3 text-base ">Receipt Number</h6>
                                 {% elif other_item[0] == "price" %}
-                                    <h6 class="mb-3 text-lg font-small">Rate</h6>
+                                    <h6 class="mb-3 text-base ">Rate</h6>
                                 {% elif other_item[0] == "quantity" %}
-                                    <h6 class="mb-3 text-lg font-small">Approximate weight</h6>
+                                    <h6 class="mb-3 text-base ">Approximate weight</h6>
                                 {% elif other_item[0] == "booklet_number" %}
-                                    <h6 class="mb-3 text-lg font-small">Booklet Number</h6>
+                                    <h6 class="mb-3 text-base ">Booklet Number</h6>
                                 {% elif other_item[0] == "receipt_date" %}
-                                    <h6 class="mb-3 text-lg font-small">Date</h6>
+                                    <h6 class="mb-3 text-base">Date</h6>
                                 {% elif other_item[0] == "Time" %}
-                                    <h6 class="mb-3 text-lg font-small">Time of Submission</h6>
+                                    <h6 class="mb-3 text-base ">Time of Submission</h6>
                                 {% endif %}
                             </div>
                             <div class="value"> {% if other_item[1] is not none %}
-                                <h2 class="mb-3 text-lg font-medium text-blue-500">{{ other_item[1] | capitalize }}</h2>
+                                <h2 class="mb-3 text-xl text-black font-semibold">{{ other_item[1] | capitalize }}</h2>
                                 
                             {% endif %}</div>
                         </div>
@@ -76,7 +79,7 @@
                     <br>
                     {% endfor %}
                 </div>
-                {% if 'pending' in request.path %}
+                {% if 'pending' in request.path   or 'all' not in request.path %}
                     <div class="flex items-center">
                         {% for button_label, receipt_id in data_tuple[1] %}
                             {% if button_label == 'Approve' or button_label == 'Reject' %}
@@ -113,8 +116,7 @@
             </div>
             {% for image_url in data_tuple[0] %}
             <div style="width: 482px; height: 656px; position: relative; overflow: hidden;">
-                <img src="{{ image_url }}" alt="Receipt Image"
-                    style="height: 100%; object-fit: cover; border-radius: 6.45px;">
+                <img src="{{ image_url }}" alt="Receipt Image" style="width: 100%; object-fit: cover; border-radius: 6.45px;">
             </div>
             {% endfor %}
         </div>
@@ -161,9 +163,9 @@
                             <td class="px-6 py-4">
                                 {% if item == "is_approved" %}
                                     {% if resource[item] %}
-                                        Approved
+                                        <span class="text-green-500">Approved</span>
                                     {% else %}
-                                        Rejected
+                                        <span class="text-red-500">Rejected</span>
                                     {% endif %}
                                 {% else %}
                                     {{ resource[item] }}
@@ -172,24 +174,18 @@
                         {% endif %}
                     {% endfor %}
 
-                    {% if permissions.get(resource_type).get('update') or permissions.get(resource_type).get('delete'): %}
-                        <td class="px-6 py-4 flex items-center">
-                            {% if permissions.get(resource_type).get('update'): %}
-                                <div>
-                                    <a href={{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource.pk) }} class="font-bold py-2 pr-4 rounded text-black">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                </div>
-                            {% endif %}
-                            {% if permissions.get(resource_type).get('delete'): %}
-                                <div>
-                                    <form action={{ url_for('.resource_delete', resource_type=resource_type, resource_id=resource.pk)}} method="POST" onsubmit="return confirm('Do you really want to delete this {{ resource_type }}?');">
-                                        <button type="submit"> <i class="fas fa-trash-alt text-red-500"></i></button>
-                                    </form>
-                                </div>
-                            {% endif %}
-                        </td>
-                    {% endif %}
+                    <td class="px-6 py-4 flex items-center">
+                        <div>
+                            <a href=# class="font-bold py-2 pr-4 rounded text-black">
+                                <i class="fa-solid fa-receipt"></i>
+                            </a>
+                        </div>
+                        <div>
+                            <a href=# class="font-bold py-2 pr-4 rounded text-black">
+                                <i class="fas fa-history"></i>
+                            </a>
+                        </div>
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>
