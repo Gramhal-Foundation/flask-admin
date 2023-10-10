@@ -60,6 +60,7 @@ import pandas as pd
 from admin_view import *
 from admin_view import admin_configs
 from app import app
+from copy import deepcopy
 
 # [TODO]: dependency on main repo
 from db import db
@@ -455,7 +456,7 @@ def resource_list(resource_type):
     """
     # TODO: hardcoding to be removed
     if resource_type == 'mandi-receipt':
-        return redirect(url_for('.resource_filter', resource_type=resource_type, button_value='pending'))
+        return redirect(url_for('.resource_filter', resource_type=resource_type, status='pending'))
 
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
@@ -578,7 +579,7 @@ def resource_edit(resource_type, resource_id):
     resource = model.query.get(resource_id)
 
     if not resource:
-        return redirect(url_for(".resource_list"))
+        return redirect(url_for(".resource_list", resource_type=resource_type))
 
     editable_attributes = get_editable_attributes(resource_type)
 
@@ -591,15 +592,29 @@ def resource_edit(resource_type, resource_id):
             admin_configs=admin_configs,
         )
 
-    for attribute in editable_attributes:
-        attribute_value = request.form.get(attribute["name"])
-        if attribute["name"] == admin_configs["user"]["secret"]:
-            attribute_value = get_hashed_password(attribute_value)
+    if hasattr(resource_class, "revisions") and hasattr(resource_class, "revision_model") and resource_class.revisions:
+        revision_model = resource_class.revision_model
+        revision_pk = resource_class.revision_pk
+        cloned_attributes_to_save = {}
+        for column, value in resource.__dict__.items():
+            if column == 'id':
+                cloned_attributes_to_save[revision_pk] = value
+            elif column != '_sa_instance_state':
+                cloned_attributes_to_save[column] = value
+        cloned_resource = revision_model(**cloned_attributes_to_save)
+        db.session.add(cloned_resource)
+        db.session.commit()
 
-        validated_attribute_value = validate_resource_attribute(
-            resource_type, attribute, attribute_value
-        )
-        setattr(resource, attribute["name"], validated_attribute_value)
+    for attribute in editable_attributes:
+        if attribute["name"] in request.form:
+            attribute_value = request.form.get(attribute["name"])
+            if attribute["name"] == admin_configs["user"]["secret"]:
+                attribute_value = get_hashed_password(attribute_value)
+
+            validated_attribute_value = validate_resource_attribute(
+                resource_type, attribute, attribute_value
+            )
+            setattr(resource, attribute["name"], validated_attribute_value)
 
     db.session.commit()
 
@@ -817,9 +832,11 @@ def get_preprocess_data(pagination, list_display):
             if item == "receipt_image_url":
                 image_data.append(getattr(resource, item))
             elif item == "is_approved":
-                button_data.extend([("Approve", resource.id), ("Reject", resource.id)])
+                button_data.extend(
+                    [("Edit", resource.id), ("Approve", resource.id), ("Reject", resource.id)])
             elif item != "receipt_date":
                 other_data.append((item, getattr(resource, item)))
+
         other_data.append(("receipt_date", formatted_receipt_date))
         other_data.append(("Time", formatted_time))
 
@@ -848,9 +865,9 @@ def update_approval_status():
         return jsonify({'success': False, 'message': str(e)})
 
 
-@admin.route("/resource/<string:resource_type>/<string:button_value>")
+@admin.route("/resource/<string:resource_type>/<string:status>")
 @login_required
-def resource_filter(resource_type, button_value):
+def resource_filter(resource_type, status):
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
     is_custom_template = resource_class.is_custom_template
@@ -864,7 +881,7 @@ def resource_filter(resource_type, button_value):
     list_display = resource_class.list_display
     if is_custom_template:
         # TODO: hardcoding needs to be removed
-        if button_value == 'pending':
+        if status == 'pending':
             pagination = model.query.filter(model.is_approved == None, model.booklet_number.isnot(None)).order_by(primary_key_column).paginate(
                 page=page, per_page=1, error_out=False
             )
