@@ -15,7 +15,19 @@
                     Create {{ resource_type | admin_label_singular }}
                 </a>
             {% endif %}
-            <div>
+            <div class="flex">
+                {% if permissions.get(resource_type): %}
+                    <form action={{ url_for('.resource_list', resource_type=resource_type) }} method="GET">
+                        <div class="mr-2 flex">
+                            <input type="text" name="search" id="search" value="{{ search_query }}" placeholder="Search..." class="border border-r-0 border-gray-300 text-black text-sm py-2 px-4 rounded rounded-r-none focus:rounded-r-none" required>
+                            {% if search_query %}
+                                <a href={{ url_for('.resource_list', resource_type=resource_type) }} type="reset" class=" text-white bg-red-700 border border-red-700 py-2 px-5 rounded rounded-l-none"><i class="fas fa-close"></i></a>
+                            {% else %}
+                                <button class="border border-gray-300 bg-gray-300 py-2 px-4 rounded rounded-l-none" type="submit"><i class="fas fa-search"></i></button>
+                            {% endif %}
+                        </div>
+                    </form>
+                {% endif %}
                 {% if permissions.get(resource_type).get('export'): %}
                     <a href={{ url_for('.resource_download', resource_type=resource_type) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded">
                         Download CSV
@@ -74,7 +86,7 @@
         </div>
         <div class="mt-4 flex items-end">
             {% if pagination.has_prev %}
-                <a href="{{ url_for('.resource_list', resource_type=resource_type, page=pagination.prev_num) }}"
+                <a href="{{ url_for('.resource_list', resource_type=resource_type, page=pagination.prev_num, search=search_query) }}"
                     class="mx-1 px-3 py-1 rounded border text-blue-500">
                     {{ 'Prev' }}
                 </a>
@@ -83,7 +95,7 @@
             {% for num in pagination.iter_pages() %}
                 {% if num %}
                     {% if num != pagination.page %}
-                        <a href="{{ url_for('.resource_list', resource_type=resource_type, page=num) }}"
+                        <a href="{{ url_for('.resource_list', resource_type=resource_type, page=num, search=search_query) }}"
                             class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
                     {% else %}
                         <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
@@ -94,7 +106,7 @@
             {% endfor %}
 
             {% if pagination.has_next %}
-                <a href="{{ url_for('.resource_list', resource_type=resource_type, page=pagination.next_num) }}"
+                <a href="{{ url_for('.resource_list', resource_type=resource_type, page=pagination.next_num, search=search_query) }}"
                 class="mx-1 px-3 py-1 rounded border text-blue-500">
                     {{ 'Next' }}
                 </a>

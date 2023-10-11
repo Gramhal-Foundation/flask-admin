@@ -63,6 +63,7 @@ from app import app
 from models.crop import CropModel
 from models.mandi import MandiModel
 from sqlalchemy.orm import joinedload
+from sqlalchemy import cast, Text, or_
 
 # [TODO]: dependency on main repo
 from db import db
@@ -421,8 +422,27 @@ def logout():
     logout_user()
     return redirect(url_for(".login"))
 
+def filter_resources(model, list_display, search_query, page, per_page):
+    primary_key_column = model.__table__.primary_key.columns.keys()[0]
+    if search_query:
+        or_conditions = []
+        for column_name in list_display:
+            column = model.__table__.columns.get(column_name)
+            if column is not None:
+                or_conditions.append(cast(column, Text).ilike(f'%{search_query}%'))
 
-@admin.route("/resource/<string:resource_type>")
+        if or_conditions:
+            search_condition = or_(*or_conditions)
+            pagination = model.query.filter(search_condition).order_by(primary_key_column).paginate(page=page, per_page=per_page, error_out=False)
+        else:
+            pagination = model.query.order_by(primary_key_column).paginate(page=page, per_page=per_page, error_out=False)
+    else:
+        pagination = model.query.order_by(primary_key_column).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+    return pagination
+
+@admin.route("/resource/<string:resource_type>", methods=["GET", "POST"])
 @login_required
 def resource_list(resource_type):
     """
@@ -450,10 +470,14 @@ def resource_list(resource_type):
     is_custom_template = resource_class.is_custom_template
     per_page = 20
     page = request.args.get("page", default=1, type=int)
+    search_query = request.args.get("search", default="")
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
-    pagination = model.query.order_by(primary_key_column).paginate(
-        page=page, per_page=per_page, error_out=False)
+    # pagination = model.query.order_by(primary_key_column).paginate(
+    #     page=page, per_page=per_page, error_out=False)
     list_display = resource_class.list_display
+    pagination = filter_resources(model, list_display, search_query, page, per_page)
+    print('pagination....', pagination)
+    print('search_query....', search_query)
     if is_custom_template:
         pagination = model.query.filter(model.is_approved is None).order_by(primary_key_column).paginate(
             page=page, per_page=1, error_out=False
@@ -465,6 +489,7 @@ def resource_list(resource_type):
             resource_type=resource_type,
             list_display=list_display,
             processed_data=processed_data,
+            search_query=search_query
         )
     else:
         return render_template(
@@ -472,6 +497,7 @@ def resource_list(resource_type):
             pagination=pagination,
             resource_type=resource_type,
             list_display=list_display,
+            search_query=search_query,
         )
 
 
