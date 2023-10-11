@@ -393,7 +393,7 @@ def login():
             getattr(user_model, identifier) == phone).first()
         hashed_password = get_hashed_password(password)
 
-        if user and bcrypt.check_password_hash(hashed_password, password):
+        if user and bcrypt.check_password_hash(user.password, password):
             login_user(user)
             default_route = url_for('.dashboard')
             if 'default-route-resource' in admin_configs:
@@ -448,7 +448,7 @@ def resource_list(resource_type):
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
     is_custom_template = resource_class.is_custom_template
-    per_page = 1
+    per_page = 20
     page = request.args.get("page", default=1, type=int)
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
     pagination = model.query.order_by(primary_key_column).paginate(
@@ -456,7 +456,7 @@ def resource_list(resource_type):
     list_display = resource_class.list_display
     if is_custom_template:
         pagination = model.query.filter(model.is_approved is None).order_by(primary_key_column).paginate(
-            page=page, per_page=per_page, error_out=False
+            page=page, per_page=1, error_out=False
         )
         processed_data = get_preprocess_data(pagination, list_display)
         return render_template(
@@ -596,6 +596,8 @@ def resource_edit(resource_type, resource_id):
         if attribute["name"] in request.form:
             attribute_value = request.form.get(attribute["name"])
             if attribute["name"] == admin_configs["user"]["secret"]:
+                if attribute_value == "" or attribute_value is None:
+                    continue
                 attribute_value = get_hashed_password(attribute_value)
 
             validated_attribute_value = validate_resource_attribute(
@@ -801,6 +803,9 @@ def get_hashed_password(password):
     Example:
     hashed_password = get_hashed_password('my_secure_password')
     """
+    if password == "" or password is None:
+        return password
+
     return bcrypt.generate_password_hash(password, 10).decode("utf-8")
 
 
@@ -879,15 +884,8 @@ def resource_filter(resource_type, status):
         else:
             pagination = all_pagination
 
-
         mandis = MandiModel.query.all()
         crops = CropModel.query.all()
-        print('pagination.total....................', pagination.total)
-        print('pagination.iter_pages....................', pagination.iter_pages())
-        print('pagination.items....................', pagination.items)
-        for num in pagination.iter_pages():
-            print('num................', num)
-
         return render_template(
             "resource/custom-list.html",
             pagination=pagination,
