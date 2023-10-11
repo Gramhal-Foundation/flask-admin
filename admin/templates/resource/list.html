@@ -29,7 +29,7 @@
                     </form>
                 {% endif %}
                 {% if permissions.get(resource_type).get('export'): %}
-                    <a href={{ url_for('.resource_download', resource_type=resource_type) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded">
+                    <a href={{ url_for('.resource_download', resource_type=resource_type, search=search_query) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded">
                         Download CSV
                     </a>
                 {% endif %}

@@ -472,8 +472,6 @@ def resource_list(resource_type):
     page = request.args.get("page", default=1, type=int)
     search_query = request.args.get("search", default="")
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
-    # pagination = model.query.order_by(primary_key_column).paginate(
-    #     page=page, per_page=per_page, error_out=False)
     list_display = resource_class.list_display
     pagination = filter_resources(model, list_display, search_query, page, per_page)
     print('pagination....', pagination)
@@ -690,11 +688,14 @@ def resource_download(resource_type):
     """
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
-    resources = model.query.all()
     output = io.StringIO()
     writer = csv.writer(output)
 
     downloadable_attributes = model.__table__.columns.keys()
+    search_query = request.args.get("search", default="")
+    list_display = resource_class.list_display
+    pagination = filter_resources(model, list_display, search_query, 1, None)
+    resources = pagination.items
 
     writer.writerow(downloadable_attributes)  # csv header
     for resource in resources:
