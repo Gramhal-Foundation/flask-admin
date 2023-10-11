@@ -6,245 +6,250 @@
 
 {% block content %}
 
-<div class="mb-4">
-    <ul class="flex">
-        <li>
-            <button
-                type="button"
-                id="pendingButton"
-                class="font-light text-sm px-2 py-2.5 text-black border-b-2 {% if 'pending' in request.path %} border-blue-500 {% endif %}"
-                onclick="displayReceipts('pending')"
-            >
-                <span class="{% if 'pending' in request.path %} font-bold {% endif %}">Pending Receipts</span>
-                <span>({{pending_pagination.total}})</span>
-            </button>
-        </li>
-        <li>
-            <button
-                type="button"
-                id="allReceiptButton"
-                class="font-light text-sm px-2 py-2.5 text-black border-b-2 {% if 'all' in request.path %} border-blue-500 {% endif %}"
-                onclick="displayReceipts('all')"
-            >
-                <span class="{% if 'all' in request.path %} font-bold {% endif %}">System Receipts</span>
-                <span>({{all_pagination.total}})</span>
-            </button>
-        </li>
-    </ul>
-</div>
-
-{% if 'pending' in request.path %}
-    <div class="mx-4">
-        {% for resource in pagination.items %}
-            <div class="flex">
-                <div class="flex-1">
-                    <div class="flex flex-wrap">
-                        {% for item in list_display %}
-                            {% if item != 'receipt_image_url' %}
-                                <div class="w-1/2 mb-6">
-                                    {% if item == 'is_approved' %}
-                                        <div class="uppercase text-xs text-gray-500">{{ 'Status' | format_label }}</div>
-                                    {% else %}
-                                        <div class="uppercase text-xs text-gray-500">{{ item | format_label }}</div>
-                                    {% endif %}
-                                    {% if item == 'is_approved' %}
-                                        <div>Pending</div>
-                                    {% elif item == 'receipt_date' %}
-                                        <div>{{ resource[item] | admin_format_datetime(format="%d/%m/%Y, %I:%M %p") }}</div>
-                                    {% else %}
-                                        <div>{{resource[item]}}</div>
-                                    {% endif %}
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                    </div>
-                    <div class="mt-6">
-                        <button type="button" onclick="openEditModal('{{ resource.pk }}')" class="rounded-lg border border-black text-black px-6 py-2">Edit</button>
-                        <button type="button" onclick="handleButtonClick('approve', '{{ resource.pk }}')" class="bg-green-500 rounded-lg text-white px-6 py-2 ml-2">Approve</button>
-                        <button type="button" onclick="handleButtonClick('reject', '{{ resource.pk }}')" class="bg-red-500 rounded-lg text-white px-6 py-2 ml-2">Reject</button>
-                    </div>
-                </div>
-                <div class="flex-1">
-                    <img src="{{resource['receipt_image_url']}}" alt="Receipt Image" style="margin-top: -75px" />
-                </div>
-            </div>
-        {% endfor %}
-    </div>
+{% if not permissions.get(resource_type).get('read'): %}
+    <h1>You do not have permission to view this link. Please reach out to support if you need any help.</h1>
 {% else %}
-    <div class="relative overflow-x-auto my-8">
-        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                <tr>
-                    {% for item in list_display %}
-                        {% if item != "receipt_image_url" %}
-                            {% if item == "mandi_name" %}
-                                <th scope="col" class="px-6 py-3">Mandi</th>
-                            {% elif item == "crop_name" %}
-                                <th scope="col" class="px-6 py-3">Crop</th>
-                            {% elif item == "contract_number" %}
-                                <th scope="col" class="px-6 py-3">Contract Number</th>
-                            {% elif item == "quantity" %}
-                                <th scope="col" class="px-6 py-3">Quantity (Quintal)</th>
-                            {% elif item == "price" %}
-                                <th scope="col" class="px-6 py-3">Price</th>
-                            {% elif item == "is_approved" %}
-                                <th scope="col" class="px-6 py-3">Status</th>
-                            {% elif item == "receipt_date" %}
-                                <th scope="col" class="px-6 py-3">Receipt Date</th>
-                            {% else %}
-                                <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
-                            {% endif %}
-                        {% endif %}
-                    {% endfor %}
-                    {% if permissions.get(resource_type).get('update') or permissions.get(resource_type).get('delete'): %}
-                        <th scope="col" class="px-6 py-3">Actions</th>
-                    {% endif %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for resource in pagination.items %}
-                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                    {% for item in list_display %}
-                    {% if item != "receipt_image_url" %}
-                    <td class="px-6 py-4">
-                        {% if item == "is_approved" %}
-                        {% if resource[item] %}
-                        <span class="text-green-500">Approved</span>
-                        {% else %}
-                        <span class="text-red-500">Rejected</span>
-                        {% endif %}
-                        {% else %}
-                        {{ resource[item] }}
-                        {% endif %}
-                    </td>
-                    {% endif %}
-                    {% endfor %}
-                    <td class="px-6 py-4">
-                        <div class="flex items-center h-full">
-                            <div>
-                                <a href="#" onclick="openEditModal('{{ resource.pk }}')" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
-                                    <i class="fa-solid fa-receipt"></i>
-                                </a>
-                            </div>
-                            {% if resource.versions %}
-                                <div>
-                                    <a href="#" onclick="openEditHistoryModal('{{ resource.pk }}')" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
-                                        <i class="fas fa-history"></i>
-                                    </a>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    <div class="mt-4 flex items-end">
-        {% if pagination.has_prev %}
-        <a href="javascript:void(0);"
-        onclick="displayReceipts('all', '{{ pagination.prev_num }}')"
-        class="mx-1 px-3 py-1 rounded border text-blue-500">
-            {{ 'Prev' }}
-        </a>
-        {% endif %}
-        {% for num in pagination.iter_pages() %}
-        {% if num %}
-        {% if num != pagination.page %}
-        <a href="javascript:void(0);"
-        onclick="displayReceipts('all', '{{ num }}')"
-        class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
-        {% else %}
-        <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
-        {% endif %}
-        {% else %}
-        ...
-        {% endif %}
-        {% endfor %}
-        {% if pagination.has_next %}
-        <a href="javascript:void(0);"
-        onclick="displayReceipts('all', '{{ pagination.next_num }}')"
-        class="mx-1 px-3 py-1 rounded border text-blue-500">
-            {{ 'Next' }}
-        </a>
-        {% endif %}
-    </div>
-{% endif %}
-
-{% for resource in pagination.items %}
-    <div id="{{'editModal' ~ resource.pk}}" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 w-full p-4 hidden overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full bg-gray-600 bg-opacity-60">
-        <div class="relative w-full max-w-md max-h-full mx-auto transition-all duration-300 ease-in-out">
-            <!-- Modal content -->
-            <div class="relative bg-white rounded-lg shadow">
-                <button onclick="closeEditModal('{{resource.pk}}')" type="button" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center" data-modal-hide="editModal">
-                    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                    </svg>
-                    <span class="sr-only">Close modal</span>
+    <div class="mb-4">
+        <ul class="flex">
+            <li>
+                <button
+                    type="button"
+                    id="pendingButton"
+                    class="font-light text-sm px-2 py-2.5 text-black border-b-2 {% if 'pending' in request.path %} border-blue-500 {% endif %}"
+                    onclick="displayReceipts('pending')"
+                >
+                    <span class="{% if 'pending' in request.path %} font-bold {% endif %}">Pending Receipts</span>
+                    <span>({{pending_pagination.total}})</span>
                 </button>
-                <div class="px-6 py-6 lg:px-8">
-                    <h3 class="mb-6 text-xl font-medium text-gray-900">Edit Receipt</h3>
-                    <form action="{{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource.pk) }}" method="POST">
-                        <div class="mb-4">
-                            <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Contract Number</label>
-                            <input type="text" name="contract_number" id="contract_number" class="border border-gray-300 text-black text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required value="{{resource.contract_number}}">
-                        </div>
-                        <div class="mb-4">
-                            <label for="booklet_number" class="block mb-1 text-xs font-light text-gray-500">Booklet number</label>
-                            <input type="text" name="booklet_number" id="booklet_number" class="border border-gray-300 text-black text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required value="{{resource.booklet_number}}">
-                        </div>
-                        <div class="mb-4">
-                            <label for="mandi_id" class="block mb-1 text-xs font-light text-gray-500">Mandi</label>
-                            <div class="w-full relative">
-                                <select id="mandi_id" name="mandi_id" class="block appearance-none w-full border border-gray-300 px-2.5 py-2.5 pr-8 rounded leading-tight focus:ring-blue-500 focus:border-blue-500 text-sm" required>
-                                    {% for mandi in mandis %}
-                                        <option value="{{mandi.id}}" data-mandi-name="{{mandi.mandi_name}}" data-mandi-name-hi="{{mandi.mandi_name_hi}}" {% if resource.mandi_id == mandi.id %} selected {%endif%}>{{ mandi.mandi_name }}</option>
-                                    {% endfor %}
-                                </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                                    <svg class="fill-current h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                        <path d="M7.293 8.293a1 1 0 011.414 0L10 9.586l1.293-1.293a1 1 0 111.414 1.414l-2 2a1 1 0 01-1.414 0l-2-2a1 1 0 010-1.414z"/>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mb-4">
-                            <label for="crop_id" class="block mb-1 text-xs font-light text-gray-500">Crop</label>
-                            <div class="w-full relative">
-                                <select id="crop_id" name="crop_id" class="block appearance-none w-full border border-gray-300 px-2.5 py-2.5 pr-8 rounded leading-tight focus:ring-blue-500 focus:border-blue-500 text-sm" required>
-                                    {% for crop in crops %}
-                                        <option value="{{crop.crop_id}}" data-crop-name="{{crop.crop_name}}" data-crop-name-hi="{{crop.crop_name_hi}}" {% if resource.crop_id == crop.crop_id %} selected {%endif%}>{{ crop.crop_name }}</option>
-                                    {% endfor %}
-                                </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                                    <svg class="fill-current h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                        <path d="M7.293 8.293a1 1 0 011.414 0L10 9.586l1.293-1.293a1 1 0 111.414 1.414l-2 2a1 1 0 01-1.414 0l-2-2a1 1 0 010-1.414z"/>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mb-4">
-                            <label for="price" class="block mb-1 text-xs font-light text-gray-500">Rate</label>
-                            <input type="text" name="price" id="price" class="border border-gray-300 text-black text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required value="{{resource.price}}">
-                        </div>
-                        <div class="mb-4">
-                            <label for="quantity" class="block mb-1 text-xs font-light text-gray-500">Quantity</label>
-                            <input type="text" name="quantity" id="quantity" class="border border-gray-300 text-black text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required value="{{resource.quantity}}">
+            </li>
+            <li>
+                <button
+                    type="button"
+                    id="allReceiptButton"
+                    class="font-light text-sm px-2 py-2.5 text-black border-b-2 {% if 'all' in request.path %} border-blue-500 {% endif %}"
+                    onclick="displayReceipts('all')"
+                >
+                    <span class="{% if 'all' in request.path %} font-bold {% endif %}">System Receipts</span>
+                    <span>({{all_pagination.total}})</span>
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    {% if 'pending' in request.path %}
+        <div class="mx-4">
+            {% for resource in pagination.items %}
+                <div class="flex">
+                    <div class="flex-1">
+                        <div class="flex flex-wrap">
+                            {% for item in list_display %}
+                                {% if item != 'receipt_image_url' %}
+                                    <div class="w-1/2 mb-6">
+                                        {% if item == 'is_approved' %}
+                                            <div class="uppercase text-xs text-gray-500">{{ 'Status' | format_label }}</div>
+                                        {% else %}
+                                            <div class="uppercase text-xs text-gray-500">{{ item | format_label }}</div>
+                                        {% endif %}
+                                        {% if item == 'is_approved' %}
+                                            <div>Pending</div>
+                                        {% elif item == 'receipt_date' %}
+                                            <div>{{ resource[item] | admin_format_datetime(format="%d/%m/%Y, %I:%M %p") }}</div>
+                                        {% else %}
+                                            <div>{{resource[item]}}</div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
                         </div>
                         <div class="mt-6">
-                            <button type="submit" class="text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Save</button>
-                            <button type="button" onclick="closeEditModal('{{resource.pk}}')" class="text-black bg-gray-300 hover:bg-gray-400 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center ml-2">Cancel</button>
+                            <button type="button" onclick="openEditModal('{{ resource.pk }}')" class="rounded-lg border border-black text-black px-6 py-2">Edit</button>
+                            <button type="button" onclick="handleButtonClick('approve', '{{ resource.pk }}')" class="bg-green-500 rounded-lg text-white px-6 py-2 ml-2">Approve</button>
+                            <button type="button" onclick="handleButtonClick('reject', '{{ resource.pk }}')" class="bg-red-500 rounded-lg text-white px-6 py-2 ml-2">Reject</button>
                         </div>
-                        <input type="hidden" name="mandi_name" id="mandi_name" value="{{resource.mandi_name}}" />
-                        <input type="hidden" name="mandi_name_hi" id="mandi_name_hi" value="{{resource.mandi_name_hi}}" />
-                        <input type="hidden" name="crop_name" id="crop_name" value="{{resource.crop_name}}" />
-                        <input type="hidden" name="crop_name_hi" id="crop_name_hi" value="{{resource.crop_name_hi}}" />
-                    </form>
+                    </div>
+                    <div class="flex-1">
+                        <img src="{{resource['receipt_image_url']}}" alt="Receipt Image" style="margin-top: -75px" />
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="relative overflow-x-auto my-8">
+            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <tr>
+                        {% for item in list_display %}
+                            {% if item != "receipt_image_url" %}
+                                {% if item == "mandi_name" %}
+                                    <th scope="col" class="px-6 py-3">Mandi</th>
+                                {% elif item == "crop_name" %}
+                                    <th scope="col" class="px-6 py-3">Crop</th>
+                                {% elif item == "contract_number" %}
+                                    <th scope="col" class="px-6 py-3">Contract Number</th>
+                                {% elif item == "quantity" %}
+                                    <th scope="col" class="px-6 py-3">Quantity (Quintal)</th>
+                                {% elif item == "price" %}
+                                    <th scope="col" class="px-6 py-3">Price</th>
+                                {% elif item == "is_approved" %}
+                                    <th scope="col" class="px-6 py-3">Status</th>
+                                {% elif item == "receipt_date" %}
+                                    <th scope="col" class="px-6 py-3">Receipt Date</th>
+                                {% else %}
+                                    <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                        {% if permissions.get(resource_type).get('update') or permissions.get(resource_type).get('delete'): %}
+                            <th scope="col" class="px-6 py-3">Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for resource in pagination.items %}
+                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                        {% for item in list_display %}
+                        {% if item != "receipt_image_url" %}
+                        <td class="px-6 py-4">
+                            {% if item == "is_approved" %}
+                            {% if resource[item] %}
+                            <span class="text-green-500">Approved</span>
+                            {% else %}
+                            <span class="text-red-500">Rejected</span>
+                            {% endif %}
+                            {% else %}
+                            {{ resource[item] }}
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                        {% endfor %}
+                        <td class="px-6 py-4">
+                            <div class="flex items-center h-full">
+                                <div>
+                                    <a href="#" onclick="openEditModal('{{ resource.pk }}')" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
+                                        <i class="fa-solid fa-receipt"></i>
+                                    </a>
+                                </div>
+                                {% if resource.versions %}
+                                    <div>
+                                        <a href="#" onclick="openEditHistoryModal('{{ resource.pk }}')" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
+                                            <i class="fas fa-history"></i>
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-4 flex items-end">
+            {% if pagination.has_prev %}
+            <a href="javascript:void(0);"
+            onclick="displayReceipts('all', '{{ pagination.prev_num }}')"
+            class="mx-1 px-3 py-1 rounded border text-blue-500">
+                {{ 'Prev' }}
+            </a>
+            {% endif %}
+            {% for num in pagination.iter_pages() %}
+            {% if num %}
+            {% if num != pagination.page %}
+            <a href="javascript:void(0);"
+            onclick="displayReceipts('all', '{{ num }}')"
+            class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
+            {% else %}
+            <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
+            {% endif %}
+            {% else %}
+            ...
+            {% endif %}
+            {% endfor %}
+            {% if pagination.has_next %}
+            <a href="javascript:void(0);"
+            onclick="displayReceipts('all', '{{ pagination.next_num }}')"
+            class="mx-1 px-3 py-1 rounded border text-blue-500">
+                {{ 'Next' }}
+            </a>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {% for resource in pagination.items %}
+        <div id="{{'editModal' ~ resource.pk}}" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 w-full p-4 hidden overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full bg-gray-600 bg-opacity-60">
+            <div class="relative w-full max-w-md max-h-full mx-auto transition-all duration-300 ease-in-out">
+                <!-- Modal content -->
+                <div class="relative bg-white rounded-lg shadow">
+                    <button onclick="closeEditModal('{{resource.pk}}')" type="button" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center" data-modal-hide="editModal">
+                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
+                        </svg>
+                        <span class="sr-only">Close modal</span>
+                    </button>
+                    <div class="px-6 py-6 lg:px-8">
+                        <h3 class="mb-6 text-xl font-medium text-gray-900">Edit Receipt</h3>
+                        <form action="{{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource.pk) }}" method="POST">
+                            <div class="mb-4">
+                                <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Contract Number</label>
+                                <input type="text" name="contract_number" id="contract_number" class="border border-gray-300 text-black text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required value="{{resource.contract_number}}">
+                            </div>
+                            <div class="mb-4">
+                                <label for="booklet_number" class="block mb-1 text-xs font-light text-gray-500">Booklet number</label>
+                                <input type="text" name="booklet_number" id="booklet_number" class="border border-gray-300 text-black text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required value="{{resource.booklet_number}}">
+                            </div>
+                            <div class="mb-4">
+                                <label for="mandi_id" class="block mb-1 text-xs font-light text-gray-500">Mandi</label>
+                                <div class="w-full relative">
+                                    <select id="mandi_id" name="mandi_id" class="block appearance-none w-full border border-gray-300 px-2.5 py-2.5 pr-8 rounded leading-tight focus:ring-blue-500 focus:border-blue-500 text-sm" required>
+                                        {% for mandi in mandis %}
+                                            <option value="{{mandi.id}}" data-mandi-name="{{mandi.mandi_name}}" data-mandi-name-hi="{{mandi.mandi_name_hi}}" {% if resource.mandi_id == mandi.id %} selected {%endif%}>{{ mandi.mandi_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                        <svg class="fill-current h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                            <path d="M7.293 8.293a1 1 0 011.414 0L10 9.586l1.293-1.293a1 1 0 111.414 1.414l-2 2a1 1 0 01-1.414 0l-2-2a1 1 0 010-1.414z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label for="crop_id" class="block mb-1 text-xs font-light text-gray-500">Crop</label>
+                                <div class="w-full relative">
+                                    <select id="crop_id" name="crop_id" class="block appearance-none w-full border border-gray-300 px-2.5 py-2.5 pr-8 rounded leading-tight focus:ring-blue-500 focus:border-blue-500 text-sm" required>
+                                        {% for crop in crops %}
+                                            <option value="{{crop.crop_id}}" data-crop-name="{{crop.crop_name}}" data-crop-name-hi="{{crop.crop_name_hi}}" {% if resource.crop_id == crop.crop_id %} selected {%endif%}>{{ crop.crop_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                        <svg class="fill-current h-6 w-6" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                            <path d="M7.293 8.293a1 1 0 011.414 0L10 9.586l1.293-1.293a1 1 0 111.414 1.414l-2 2a1 1 0 01-1.414 0l-2-2a1 1 0 010-1.414z"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label for="price" class="block mb-1 text-xs font-light text-gray-500">Rate</label>
+                                <input type="text" name="price" id="price" class="border border-gray-300 text-black text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required value="{{resource.price}}">
+                            </div>
+                            <div class="mb-4">
+                                <label for="quantity" class="block mb-1 text-xs font-light text-gray-500">Quantity</label>
+                                <input type="text" name="quantity" id="quantity" class="border border-gray-300 text-black text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required value="{{resource.quantity}}">
+                            </div>
+                            <div class="mt-6">
+                                <button type="submit" class="text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Save</button>
+                                <button type="button" onclick="closeEditModal('{{resource.pk}}')" class="text-black bg-gray-300 hover:bg-gray-400 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center ml-2">Cancel</button>
+                            </div>
+                            <input type="hidden" name="mandi_name" id="mandi_name" value="{{resource.mandi_name}}" />
+                            <input type="hidden" name="mandi_name_hi" id="mandi_name_hi" value="{{resource.mandi_name_hi}}" />
+                            <input type="hidden" name="crop_name" id="crop_name" value="{{resource.crop_name}}" />
+                            <input type="hidden" name="crop_name_hi" id="crop_name_hi" value="{{resource.crop_name_hi}}" />
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-{% endfor %}
+    {% endfor %}
+{% endif %}
+
 
 {% for resource in pagination.items %}
     <div id="{{'editHistoryModal' ~ resource.pk}}" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 w-full p-4 hidden overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full bg-gray-600 bg-opacity-60">
