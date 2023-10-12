@@ -59,7 +59,7 @@ import inflect
 import pandas as pd
 from admin_view import *
 from admin_view import admin_configs
-from app import app
+from flask import current_app as app
 from models.crop import CropModel
 from models.mandi import MandiModel
 from sqlalchemy.orm import joinedload
@@ -70,7 +70,6 @@ from db import db
 from flask import Response, flash, redirect, jsonify
 from flask import render_template as real_render_template
 from flask import request, url_for
-from flask_bcrypt import Bcrypt
 from flask_login import login_required, login_user, logout_user
 from flask_wtf import FlaskForm
 from werkzeug.utils import secure_filename
@@ -78,9 +77,9 @@ from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired
 from models.salesReceipt import SaleReceiptModel
 from . import admin
+from flask_bcrypt import Bcrypt
 
-bcrypt = Bcrypt(app)
-
+bcrypt = Bcrypt()
 
 def get_user_model_config():
     return admin_configs["user"]
@@ -114,7 +113,7 @@ def upload_file_to_s3(file, bucket_name="", acl="public-read"):
         return e
 
 
-@app.template_filter("admin_label_plural")
+@admin.app_template_filter("admin_label_plural")
 def admin_label_plural(label):
     """
     Custom template filter to convert a label into its plural form.
@@ -133,19 +132,19 @@ def admin_label_plural(label):
     return formatted_label
 
 
-@app.template_filter("admin_label_singular")
+@admin.app_template_filter("admin_label_singular")
 def admin_label_singular(label):
     formatted_label = label.replace("-", " ")
     formatted_label = string.capwords(formatted_label)
     return formatted_label
 
 
-@app.template_filter("admin_format_datetime")
+@admin.app_template_filter("admin_format_datetime")
 def admin_format_datetime(value, format="%Y-%m-%d"):
     return datetime.strftime(value, format)
 
 
-@app.template_filter("format_label")
+@admin.app_template_filter("format_label")
 def format_label(value):
     """
     Custom template filter to format a label string.
@@ -392,8 +391,7 @@ def login():
         identifier = user_model_config["identifier"]
         user = user_model.query.filter(
             getattr(user_model, identifier) == phone).first()
-        hashed_password = get_hashed_password(password)
-
+        bcrypt.init_app(app)
         if user and bcrypt.check_password_hash(user.password, password):
             login_user(user)
             default_route = url_for('.dashboard')
@@ -474,8 +472,6 @@ def resource_list(resource_type):
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
     list_display = resource_class.list_display
     pagination = filter_resources(model, list_display, search_query, page, per_page)
-    print('pagination....', pagination)
-    print('search_query....', search_query)
     if is_custom_template:
         pagination = model.query.filter(model.is_approved is None).order_by(primary_key_column).paginate(
             page=page, per_page=1, error_out=False
@@ -833,6 +829,7 @@ def get_hashed_password(password):
     if password == "" or password is None:
         return password
 
+    bcrypt.init_app(app)
     return bcrypt.generate_password_hash(password, 10).decode("utf-8")
 
 
