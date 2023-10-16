@@ -620,7 +620,6 @@ def resource_edit(resource_type, resource_id):
         for column, value in resource.__dict__.items():
             if column == 'id':
                 cloned_attributes_to_save[revision_pk] = value
-                print('cloned_attributes_to_save', cloned_attributes_to_save)
             elif column != '_sa_instance_state':
                 cloned_attributes_to_save[column] = value
         cloned_resource = revision_model(**cloned_attributes_to_save)
@@ -907,10 +906,6 @@ def update_approval_status():
                 notes="earned via sale receipt"
             )
             db.session.add(user_membership)
-            db.session.commit()
-            # Add earning wallet plan to user membership end
-
-            return jsonify({'success': True})
         elif action == 'reject':
             sale_receipt.is_approved = False
             sale_receipt.token_amount = 0
