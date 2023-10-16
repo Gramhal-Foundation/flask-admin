@@ -608,10 +608,11 @@ def resource_edit(resource_type, resource_id):
         revision_pk = resource_class.revision_pk
 
         existing_record = SaleReceiptModel.query.filter_by(
-                    booklet_number=resource.booklet_number,
-                    contract_number=resource.contract_number,
-                    mandi_id=resource.mandi_id
-                ).first()
+            booklet_number=resource.booklet_number,
+            contract_number=resource.contract_number,
+            mandi_id=resource.mandi_id
+        ).first()
+
 
         if existing_record:
             return jsonify({"error": "record already exists"})
@@ -889,7 +890,7 @@ def update_approval_status():
             sale_receipt.token_amount = sale_receipt.promised_token
 
             # Add earning wallet plan to user membership start
-            membership_plan_id=""
+            membership_plan_id = ""
 
             if(sale_receipt.token_amount == 10):
                 membership_plan_id = "earned_days_01"
@@ -901,10 +902,10 @@ def update_approval_status():
                 membership_plan_id = "earned_days_04"
 
             user_membership= UserMembership(
-                user_id=sale_receipt.user_id,
-                membership_plan_id=membership_plan_id,
-                payment_src_id="earned_days",
-                notes="earned via sale receipt"
+                user_id = sale_receipt.user_id,
+                membership_plan_id = membership_plan_id,
+                payment_src_id = "earned_days",
+                notes = "earned via sale receipt"
             )
             db.session.add(user_membership)
             db.session.commit()
