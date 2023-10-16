@@ -82,6 +82,7 @@ from flask_bcrypt import Bcrypt
 
 bcrypt = Bcrypt()
 
+
 def get_user_model_config():
     return admin_configs["user"]
 
@@ -421,6 +422,7 @@ def logout():
     logout_user()
     return redirect(url_for(".login"))
 
+
 def filter_resources(model, list_display, search_query, page, per_page):
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
     if search_query:
@@ -440,6 +442,7 @@ def filter_resources(model, list_display, search_query, page, per_page):
             page=page, per_page=per_page, error_out=False
         )
     return pagination
+
 
 @admin.route("/resource/<string:resource_type>", methods=["GET", "POST"])
 @login_required
@@ -603,6 +606,7 @@ def resource_edit(resource_type, resource_id):
     if hasattr(resource_class, "revisions") and hasattr(resource_class, "revision_model") and resource_class.revisions:
         revision_model = resource_class.revision_model
         revision_pk = resource_class.revision_pk
+
         existing_record = SaleReceiptModel.query.filter_by(
                     booklet_number=resource.booklet_number,
                     contract_number=resource.contract_number,
@@ -611,6 +615,7 @@ def resource_edit(resource_type, resource_id):
 
         if existing_record:
             return jsonify({"error": "record already exists"})
+
         cloned_attributes_to_save = {}
         for column, value in resource.__dict__.items():
             if column == 'id':
@@ -886,14 +891,14 @@ def update_approval_status():
             # Add earning wallet plan to user membership start
             membership_plan_id=""
 
-            if(sale_receipt.token_amount== 10):
-                membership_plan_id= "earned_days_01"
-            elif(sale_receipt.token_amount== 8):
-                membership_plan_id= "earned_days_02"
-            elif(sale_receipt.token_amount== 6):
-                membership_plan_id= "earned_days_03"
-            elif(sale_receipt.token_amount== 2):
-                membership_plan_id= "earned_days_04"
+            if(sale_receipt.token_amount == 10):
+                membership_plan_id = "earned_days_01"
+            elif(sale_receipt.token_amount == 8):
+                membership_plan_id = "earned_days_02"
+            elif(sale_receipt.token_amount == 6):
+                membership_plan_id = "earned_days_03"
+            elif(sale_receipt.token_amount == 2):
+                membership_plan_id = "earned_days_04"
 
             user_membership= UserMembership(
                 user_id=sale_receipt.user_id,
