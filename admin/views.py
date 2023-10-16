@@ -922,7 +922,6 @@ def update_approval_status():
         return jsonify({'success': False, 'message': str(e)})
 
 
-
 @admin.route("/resource/<string:resource_type>/<string:status>")
 @login_required
 def resource_filter(resource_type, status):
