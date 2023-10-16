@@ -613,7 +613,6 @@ def resource_edit(resource_type, resource_id):
             mandi_id=resource.mandi_id
         ).first()
 
-
         if existing_record:
             return jsonify({"error": "record already exists"})
 
@@ -892,24 +891,24 @@ def update_approval_status():
             # Add earning wallet plan to user membership start
             membership_plan_id = ""
 
-            if(sale_receipt.token_amount == 10):
+            if sale_receipt.token_amount == 10:
                 membership_plan_id = "earned_days_01"
-            elif(sale_receipt.token_amount == 8):
+            elif sale_receipt.token_amount == 8:
                 membership_plan_id = "earned_days_02"
-            elif(sale_receipt.token_amount == 6):
+            elif sale_receipt.token_amount == 6:
                 membership_plan_id = "earned_days_03"
-            elif(sale_receipt.token_amount == 2):
+            elif sale_receipt.token_amount == 2:
                 membership_plan_id = "earned_days_04"
 
-            user_membership= UserMembership(
-                user_id = sale_receipt.user_id,
-                membership_plan_id = membership_plan_id,
-                payment_src_id = "earned_days",
-                notes = "earned via sale receipt"
+            user_membership = UserMembership(
+                user_id=sale_receipt.user_id,
+                membership_plan_id=membership_plan_id,
+                payment_src_id="earned_days",
+                notes="earned via sale receipt"
             )
             db.session.add(user_membership)
             db.session.commit()
-            # Add earning wallet plan to user membership end 
+            # Add earning wallet plan to user membership end
 
             return jsonify({'success': True})
         elif action == 'reject':
@@ -921,6 +920,7 @@ def update_approval_status():
         return jsonify({'success': True, 'message': 'Approval status updated successfully'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
+
 
 
 @admin.route("/resource/<string:resource_type>/<string:status>")
