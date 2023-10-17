@@ -84,8 +84,8 @@
                                     <th scope="col" class="px-6 py-3">Mandi</th>
                                 {% elif item == "crop_name" %}
                                     <th scope="col" class="px-6 py-3">Crop</th>
-                                {% elif item == "contract_number" %}
-                                    <th scope="col" class="px-6 py-3">Contract Number</th>
+                                {% elif item == "receipt_id" %}
+                                    <th scope="col" class="px-6 py-3">Receipt Number</th>
                                 {% elif item == "quantity" %}
                                     <th scope="col" class="px-6 py-3">Quantity (Quintal)</th>
                                 {% elif item == "price" %}
@@ -189,8 +189,8 @@
                         <h3 class="mb-6 text-xl font-medium text-gray-900">Edit Receipt</h3>
                         <form action="{{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource.pk) }}" method="POST">
                             <div class="mb-4">
-                                <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Contract Number</label>
-                                <input type="text" name="contract_number" id="contract_number" class="border border-gray-300 text-black text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required value="{{resource.contract_number}}">
+                                <label for="receipt_id" class="block mb-1 text-xs font-light text-gray-500">Receipt Number</label>
+                                <input type="text" name="receipt_id" id="receipt_id" class="border border-gray-300 text-black text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required value="{{resource.receipt_id}}">
                             </div>
                             <div class="mb-4">
                                 <label for="booklet_number" class="block mb-1 text-xs font-light text-gray-500">Booklet number</label>
@@ -271,8 +271,8 @@
                         </div>
                         <div class="flex flex-wrap">
                             <div class="mb-4 w-1/3">
-                                <label for="contract_number" class="block mb-1 text-xs font-light text-gray-500">Receipt Number</label>
-                                <div>{{version.contract_number}}</div>
+                                <label for="receipt_id" class="block mb-1 text-xs font-light text-gray-500">Receipt Number</label>
+                                <div>{{version.receipt_id}}</div>
                             </div>
                             <div class="mb-4 w-1/3">
                                 <label for="booklet_number" class="block mb-1 text-xs font-light text-gray-500">Booklet Number</label>
