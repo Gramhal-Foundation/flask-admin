@@ -79,6 +79,9 @@ from models.salesReceipt import SaleReceiptModel
 from . import admin
 from flask_bcrypt import Bcrypt
 
+# TODO: remove project dependency
+from resources.whatsappBot.mandi_v2 import update_cs_mandi_data, update_cs_data_mandi_crop
+
 bcrypt = Bcrypt()
 
 def get_user_model_config():
@@ -604,6 +607,8 @@ def resource_edit(resource_type, resource_id):
         revision_pk = resource_class.revision_pk
         cloned_attributes_to_save = {}
         for column, value in resource.__dict__.items():
+            if column in ['created_at', 'updated_at']:
+                continue
             if column == 'id':
                 cloned_attributes_to_save[revision_pk] = value
             elif column != '_sa_instance_state':
@@ -626,6 +631,10 @@ def resource_edit(resource_type, resource_id):
             setattr(resource, attribute["name"], validated_attribute_value)
 
     db.session.commit()
+
+    if resource_type == 'mandi-receipt' and resource.is_approved:
+        update_cs_mandi_data(sale_receipt=resource, forced=True)
+        update_cs_data_mandi_crop(sale_receipt=resource, forced=True)
 
     return redirect(request.referrer or url_for(".resource_list", resource_type=resource_type))
 
@@ -876,6 +885,10 @@ def update_approval_status():
 
         db.session.commit()
 
+        if action == 'approve':
+            update_cs_mandi_data(sale_receipt=sale_receipt)
+            update_cs_data_mandi_crop(sale_receipt=sale_receipt)
+
         return jsonify({'success': True, 'message': 'Approval status updated successfully'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
@@ -908,8 +921,8 @@ def resource_filter(resource_type, status):
         else:
             pagination = all_pagination
 
-        mandis = MandiModel.query.all()
-        crops = CropModel.query.all()
+        mandis = MandiModel.query.order_by(MandiModel.mandi_name).all()
+        crops = CropModel.query.order_by(CropModel.crop_name).all()
         return render_template(
             "resource/custom-list.html",
             pagination=pagination,
