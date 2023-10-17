@@ -630,6 +630,14 @@ def resource_edit(resource_type, resource_id):
             )
             setattr(resource, attribute["name"], validated_attribute_value)
 
+    if resource_type == 'mandi-receipt':
+        updated_mandi = MandiModel.query.get(resource.mandi_id)
+        updated_crop = CropModel.query.get(resource.crop_id)
+        setattr(resource, 'mandi_name', updated_mandi.mandi_name)
+        setattr(resource, 'mandi_name_hi', updated_mandi.mandi_name_hi)
+        setattr(resource, 'crop_name', updated_crop.crop_name)
+        setattr(resource, 'crop_name_hi', updated_crop.crop_name_hi)
+
     db.session.commit()
 
     if resource_type == 'mandi-receipt' and resource.is_approved:
