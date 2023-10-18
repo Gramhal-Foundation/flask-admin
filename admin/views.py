@@ -606,7 +606,7 @@ def resource_edit(resource_type, resource_id):
         for column, value in resource.__dict__.items():
             if column == 'id':
                 cloned_attributes_to_save[revision_pk] = value
-            elif column != '_sa_instance_state':
+            elif column != '_sa_instance_state' and column != 'created_at' and column != 'updated_at' and column != 'promised_token' and column != 'token_amount':
                 cloned_attributes_to_save[column] = value
         cloned_resource = revision_model(**cloned_attributes_to_save)
         db.session.add(cloned_resource)
