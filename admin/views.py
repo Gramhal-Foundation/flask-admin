@@ -78,6 +78,7 @@ from wtforms.validators import DataRequired
 from models.salesReceipt import SaleReceiptModel
 from . import admin
 from flask_bcrypt import Bcrypt
+from models.membership import UserMembership, MembershipPlans
 
 bcrypt = Bcrypt()
 
@@ -602,6 +603,16 @@ def resource_edit(resource_type, resource_id):
     if hasattr(resource_class, "revisions") and hasattr(resource_class, "revision_model") and resource_class.revisions:
         revision_model = resource_class.revision_model
         revision_pk = resource_class.revision_pk
+        existing_record = SaleReceiptModel.query.filter_by(
+            booklet_number=resource.booklet_number,
+            receipt_id=resource.receipt_id,
+            mandi_id=resource.mandi_id,
+            is_approved= True
+        ).first()
+
+        if existing_record:
+            return jsonify({"error": "record already exists"})
+
         cloned_attributes_to_save = {}
         for column, value in resource.__dict__.items():
             if column == 'id':
@@ -871,8 +882,32 @@ def update_approval_status():
         sale_receipt = SaleReceiptModel.query.get(receipt_id)
         if action == 'approve':
             sale_receipt.is_approved = True
+            sale_receipt.token_amount = sale_receipt.promised_token
+
+            # Add earning wallet plan to user membership start
+            membership_plan_id = ""
+
+            if sale_receipt.token_amount == 10:
+                membership_plan_id = "earned_days_01"
+            elif sale_receipt.token_amount == 8:
+                membership_plan_id = "earned_days_02"
+            elif sale_receipt.token_amount == 6:
+                membership_plan_id = "earned_days_03"
+            elif sale_receipt.token_amount == 2:
+                membership_plan_id = "earned_days_04"
+
+            membership_plan = MembershipPlans.query.all()
+            print('membership_plan', membership_plan)
+            user_membership = UserMembership(
+                user_id=sale_receipt.user_id,
+                membership_plan_id=membership_plan_id,
+                payment_src_id="earned_days",
+                notes="earned via sale receipt"
+            )
+            db.session.add(user_membership)
         elif action == 'reject':
             sale_receipt.is_approved = False
+            sale_receipt.token_amount = 0
 
         db.session.commit()
 
