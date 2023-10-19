@@ -696,6 +696,7 @@ def resource_download(resource_type):
         werkzeug.wrappers.response.Response: A response containing the CSV
         file as an attachment with the appropriate headers for downloading.
     """
+
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
     output = io.StringIO()
