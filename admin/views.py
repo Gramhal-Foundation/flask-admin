@@ -52,7 +52,7 @@ import ast
 import csv
 import io
 import string
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import boto3
 import inflect
@@ -78,7 +78,7 @@ from wtforms.validators import DataRequired
 from models.salesReceipt import SaleReceiptModel
 from . import admin
 from flask_bcrypt import Bcrypt
-from models.membership import UserMembership, MembershipPlans
+from models.membership import UserMembership, MembershipPlans, UserWallet
 
 bcrypt = Bcrypt()
 
@@ -897,14 +897,13 @@ def update_approval_status():
                 membership_plan_id = "earned_days_04"
 
             membership_plan = MembershipPlans.query.all()
-            print('membership_plan', membership_plan)
-            user_membership = UserMembership(
+
+            UserMembership(
                 user_id=sale_receipt.user_id,
                 membership_plan_id=membership_plan_id,
                 payment_src_id="earned_days",
                 notes="earned via sale receipt"
-            )
-            db.session.add(user_membership)
+            ).commit()
         elif action == 'reject':
             sale_receipt.is_approved = False
             sale_receipt.token_amount = 0
