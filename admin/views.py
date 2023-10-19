@@ -63,7 +63,7 @@ from flask import current_app as app
 from models.crop import CropModel
 from models.mandi import MandiModel
 from sqlalchemy.orm import joinedload
-from sqlalchemy import cast, Text, or_
+from sqlalchemy import cast, Text, or_, desc
 
 # [TODO]: dependency on main repo
 from db import db
@@ -918,11 +918,11 @@ def resource_filter(resource_type, status):
     list_display = resource_class.list_display
     if is_custom_template:
         # TODO: hardcoding needs to be removed
-        pending_pagination = model.query.filter(model.is_approved == None, model.booklet_number.isnot(None)).order_by(SaleReceiptModel.id).paginate(
+        pending_pagination = model.query.filter(model.is_approved == None).order_by(SaleReceiptModel.id).paginate(
             page=page, per_page=1, error_out=False
         )
-        all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None, model.booklet_number.isnot(None)).order_by(SaleReceiptModel.id).paginate(
-            page=page, per_page=4, error_out=False
+        all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None).order_by(desc(SaleReceiptModel.id)).paginate(
+            page=page, per_page=10, error_out=False
         )
         if status == 'pending':
             pagination = pending_pagination
