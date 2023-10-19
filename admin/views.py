@@ -82,8 +82,10 @@ from models.membership import UserMembership, MembershipPlans, UserWallet
 
 bcrypt = Bcrypt()
 
+
 def get_user_model_config():
     return admin_configs["user"]
+
 
 def upload_file_to_s3(file, bucket_name="", acl="public-read"):
     """
@@ -420,6 +422,7 @@ def logout():
     logout_user()
     return redirect(url_for(".login"))
 
+
 def filter_resources(model, list_display, search_query, page, per_page):
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
     if search_query:
@@ -439,6 +442,7 @@ def filter_resources(model, list_display, search_query, page, per_page):
             page=page, per_page=per_page, error_out=False
         )
     return pagination
+
 
 @admin.route("/resource/<string:resource_type>", methods=["GET", "POST"])
 @login_required
@@ -603,10 +607,10 @@ def resource_edit(resource_type, resource_id):
         revision_model = resource_class.revision_model
         revision_pk = resource_class.revision_pk
         existing_record = SaleReceiptModel.query.filter_by(
-            booklet_number=resource.booklet_number,
-            receipt_id=resource.receipt_id,
-            mandi_id=resource.mandi_id,
-            is_approved= True
+            booklet_number = resource.booklet_number,
+            receipt_id = resource.receipt_id,
+            mandi_id = resource.mandi_id,
+            is_approved = True
         ).first()
 
         if existing_record:
@@ -894,8 +898,6 @@ def update_approval_status():
                 membership_plan_id = "earned_days_03"
             elif sale_receipt.token_amount == 2:
                 membership_plan_id = "earned_days_04"
-
-            membership_plan = MembershipPlans.query.all()
 
             UserMembership(
                 user_id=sale_receipt.user_id,
