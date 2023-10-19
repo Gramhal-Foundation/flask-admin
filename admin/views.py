@@ -607,10 +607,10 @@ def resource_edit(resource_type, resource_id):
         revision_model = resource_class.revision_model
         revision_pk = resource_class.revision_pk
         existing_record = SaleReceiptModel.query.filter_by(
-            booklet_number = resource.booklet_number,
-            receipt_id = resource.receipt_id,
-            mandi_id = resource.mandi_id,
-            is_approved = True
+            booklet_number=resource.booklet_number,
+            receipt_id=resource.receipt_id,
+            mandi_id=resource.mandi_id,
+            is_approved=True
         ).first()
 
         if existing_record:
