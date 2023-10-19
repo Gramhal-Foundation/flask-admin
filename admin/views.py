@@ -673,12 +673,16 @@ def resource_delete(resource_type, resource_id):
     model = resource_class.model
     resource = model.query.get(resource_id)
 
+    cloned_resource = resource
     if resource:
         db.session.delete(resource)
         db.session.commit()
 
-    return redirect(url_for(".resource_list", resource_type=resource_type))
+    if cloned_resource and resource_type == 'mandi-receipt':
+        update_cs_mandi_data(sale_receipt=cloned_resource, forced=True)
+        update_cs_data_mandi_crop(sale_receipt=cloned_resource, forced=True)
 
+    return redirect(request.referrer or url_for(".resource_list", resource_type=resource_type))
 
 @admin.route("/resource/<string:resource_type>/download", methods=["GET"])
 @login_required

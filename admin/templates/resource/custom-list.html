@@ -136,6 +136,15 @@
                                         </a>
                                     </div>
                                 {% endif %}
+                                <div>
+                                    <form action={{ url_for('.resource_delete', resource_type=resource_type, resource_id=resource.pk)}} method="POST" onsubmit="return confirm('Do you really want to delete this {{ resource_type }}?');">
+                                        <button type="submit">
+                                            <div class="inline font-bold py-2 pr-4 rounded text-red-600 h-4 w-4">
+                                                <i class="fas fa-trash"></i>
+                                            </div>
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </td>
                     </tr>
