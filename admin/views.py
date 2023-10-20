@@ -63,7 +63,7 @@ from flask import current_app as app
 from models.crop import CropModel
 from models.mandi import MandiModel
 from sqlalchemy.orm import joinedload
-from sqlalchemy import cast, Text, or_
+from sqlalchemy import cast, Text, or_, desc
 
 # [TODO]: dependency on main repo
 from db import db
@@ -79,6 +79,9 @@ from models.salesReceipt import SaleReceiptModel
 from . import admin
 from flask_bcrypt import Bcrypt
 from models.membership import UserMembership, MembershipPlans, UserWallet
+
+# TODO: remove project dependency
+from resources.whatsappBot.mandi_v2 import update_cs_mandi_data, update_cs_data_mandi_crop
 
 bcrypt = Bcrypt()
 
@@ -644,7 +647,19 @@ def resource_edit(resource_type, resource_id):
             )
             setattr(resource, attribute["name"], validated_attribute_value)
 
+    if resource_type == 'mandi-receipt':
+        updated_mandi = MandiModel.query.get(resource.mandi_id)
+        updated_crop = CropModel.query.get(resource.crop_id)
+        setattr(resource, 'mandi_name', updated_mandi.mandi_name)
+        setattr(resource, 'mandi_name_hi', updated_mandi.mandi_name_hi)
+        setattr(resource, 'crop_name', updated_crop.crop_name)
+        setattr(resource, 'crop_name_hi', updated_crop.crop_name_hi)
+
     db.session.commit()
+
+    if resource_type == 'mandi-receipt' and resource.is_approved:
+        update_cs_mandi_data(sale_receipt=resource, forced=True)
+        update_cs_data_mandi_crop(sale_receipt=resource, forced=True)
 
     return redirect(request.referrer or url_for(".resource_list", resource_type=resource_type))
 
@@ -675,12 +690,16 @@ def resource_delete(resource_type, resource_id):
     model = resource_class.model
     resource = model.query.get(resource_id)
 
+    cloned_resource = resource
     if resource:
         db.session.delete(resource)
         db.session.commit()
 
-    return redirect(url_for(".resource_list", resource_type=resource_type))
+    if cloned_resource and resource_type == 'mandi-receipt':
+        update_cs_mandi_data(sale_receipt=cloned_resource, forced=True)
+        update_cs_data_mandi_crop(sale_receipt=cloned_resource, forced=True)
 
+    return redirect(request.referrer or url_for(".resource_list", resource_type=resource_type))
 
 @admin.route("/resource/<string:resource_type>/download", methods=["GET"])
 @login_required
@@ -917,6 +936,10 @@ def update_approval_status():
 
         db.session.commit()
 
+        if action == 'approve':
+            update_cs_mandi_data(sale_receipt=sale_receipt)
+            update_cs_data_mandi_crop(sale_receipt=sale_receipt)
+
         return jsonify({'success': True, 'message': 'Approval status updated successfully'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
@@ -938,19 +961,19 @@ def resource_filter(resource_type, status):
     list_display = resource_class.list_display
     if is_custom_template:
         # TODO: hardcoding needs to be removed
-        pending_pagination = model.query.filter(model.is_approved == None, model.booklet_number.isnot(None)).order_by(SaleReceiptModel.id).paginate(
+        pending_pagination = model.query.filter(model.is_approved == None).order_by(SaleReceiptModel.id).paginate(
             page=page, per_page=1, error_out=False
         )
-        all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None, model.booklet_number.isnot(None)).order_by(SaleReceiptModel.id).paginate(
-            page=page, per_page=4, error_out=False
+        all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None).order_by(desc(SaleReceiptModel.id)).paginate(
+            page=page, per_page=10, error_out=False
         )
         if status == 'pending':
             pagination = pending_pagination
         else:
             pagination = all_pagination
 
-        mandis = MandiModel.query.all()
-        crops = CropModel.query.all()
+        mandis = MandiModel.query.order_by(MandiModel.mandi_name).all()
+        crops = CropModel.query.order_by(CropModel.crop_name).all()
         return render_template(
             "resource/custom-list.html",
             pagination=pagination,
