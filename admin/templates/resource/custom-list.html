@@ -79,24 +79,24 @@
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
                         {% for item in list_display %}
-                            {% if item != "receipt_image_url" %}
-                                {% if item == "mandi_name" %}
-                                    <th scope="col" class="px-6 py-3">Mandi</th>
-                                {% elif item == "crop_name" %}
-                                    <th scope="col" class="px-6 py-3">Crop</th>
-                                {% elif item == "receipt_id" %}
-                                    <th scope="col" class="px-6 py-3">Receipt Number</th>
-                                {% elif item == "quantity" %}
-                                    <th scope="col" class="px-6 py-3">Quantity (Quintal)</th>
-                                {% elif item == "price" %}
-                                    <th scope="col" class="px-6 py-3">Price</th>
-                                {% elif item == "is_approved" %}
-                                    <th scope="col" class="px-6 py-3">Status</th>
-                                {% elif item == "receipt_date" %}
-                                    <th scope="col" class="px-6 py-3">Receipt Date</th>
-                                {% else %}
-                                    <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
-                                {% endif %}
+                            {% if item == "mandi_name" %}
+                                <th scope="col" class="px-6 py-3">Mandi</th>
+                            {% elif item == "crop_name" %}
+                                <th scope="col" class="px-6 py-3">Crop</th>
+                            {% elif item == "receipt_id" %}
+                                <th scope="col" class="px-6 py-3">Receipt Number</th>
+                            {% elif item == "quantity" %}
+                                <th scope="col" class="px-6 py-3">Quantity (Quintal)</th>
+                            {% elif item == "price" %}
+                                <th scope="col" class="px-6 py-3">Price</th>
+                            {% elif item == "is_approved" %}
+                                <th scope="col" class="px-6 py-3">Status</th>
+                            {% elif item == "receipt_date" %}
+                                <th scope="col" class="px-6 py-3">Receipt Date</th>
+                            {% elif item == "receipt_image_url" %}
+                                <th scope="col" class="px-6 py-3">Receipt Image</th>
+                            {% else %}
+                                <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
                             {% endif %}
                         {% endfor %}
                         {% if permissions.get(resource_type).get('update') or permissions.get(resource_type).get('delete'): %}
@@ -108,19 +108,26 @@
                     {% for resource in pagination.items %}
                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                         {% for item in list_display %}
-                        {% if item != "receipt_image_url" %}
-                        <td class="px-6 py-4">
-                            {% if item == "is_approved" %}
-                            {% if resource[item] %}
-                            <span class="text-green-500">Approved</span>
-                            {% else %}
-                            <span class="text-red-500">Rejected</span>
-                            {% endif %}
-                            {% else %}
-                            {{ resource[item] }}
-                            {% endif %}
-                        </td>
-                        {% endif %}
+                            <td class="px-6 py-4">
+                                {% if item == "is_approved" %}
+                                    {% if resource[item] %}
+                                        <span class="text-green-500">Approved</span>
+                                    {% else %}
+                                        <span class="text-red-500">Rejected</span>
+                                    {% endif %}
+                                {% elif item == "receipt_image_url" %}
+                                    {% if resource[item] %}
+                                        <a href="{{ resource[item] }}" target="_blank" class="text-blue-500 flex items-center">
+                                            <span class="underline">View</span>
+                                            <i class="fa-solid fa-external-link ml-1"></i>
+                                        </a>
+                                    {% else %}
+                                        <span>-</span>
+                                    {% endif %}
+                                {% else %}
+                                    {{ resource[item] }}
+                                {% endif %}
+                            </td>
                         {% endfor %}
                         <td class="px-6 py-4">
                             <div class="flex items-center h-full">
