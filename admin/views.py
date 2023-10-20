@@ -613,15 +613,20 @@ def resource_edit(resource_type, resource_id):
             is_approved=True
         ).first()
 
-        if existing_record:
-            return jsonify({"error": "record already exists"})
+        if existing_record and existing_record.id != resource.id:
+            return jsonify({"error": "another record already exists with same booklet, receipt and mandi. Please go back and update with correct values."})
 
         cloned_attributes_to_save = {}
         for column, value in resource.__dict__.items():
+            if column in ['_sa_instance_state', 'created_at', 'updated_at', 'promised_token', 'token_amount']:
+                continue
+
             if column == 'id':
                 cloned_attributes_to_save[revision_pk] = value
-            elif column != '_sa_instance_state' and column != 'created_at' and column != 'updated_at' and column != 'promised_token' and column != 'token_amount':
-                cloned_attributes_to_save[column] = value
+                continue
+
+            cloned_attributes_to_save[column] = value
+
         cloned_resource = revision_model(**cloned_attributes_to_save)
         db.session.add(cloned_resource)
         db.session.commit()
