@@ -52,7 +52,7 @@ import ast
 import csv
 import io
 import string
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import boto3
 import inflect
@@ -78,11 +78,13 @@ from wtforms.validators import DataRequired
 from models.salesReceipt import SaleReceiptModel
 from . import admin
 from flask_bcrypt import Bcrypt
+from models.membership import UserMembership, MembershipPlans, UserWallet
 
 # TODO: remove project dependency
 from resources.whatsappBot.mandi_v2 import update_cs_mandi_data, update_cs_data_mandi_crop
 
 bcrypt = Bcrypt()
+
 
 def get_user_model_config():
     return admin_configs["user"]
@@ -423,6 +425,7 @@ def logout():
     logout_user()
     return redirect(url_for(".login"))
 
+
 def filter_resources(model, list_display, search_query, page, per_page):
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
     if search_query:
@@ -442,6 +445,7 @@ def filter_resources(model, list_display, search_query, page, per_page):
             page=page, per_page=per_page, error_out=False
         )
     return pagination
+
 
 @admin.route("/resource/<string:resource_type>", methods=["GET", "POST"])
 @login_required
@@ -605,14 +609,27 @@ def resource_edit(resource_type, resource_id):
     if hasattr(resource_class, "revisions") and hasattr(resource_class, "revision_model") and resource_class.revisions:
         revision_model = resource_class.revision_model
         revision_pk = resource_class.revision_pk
+        existing_record = SaleReceiptModel.query.filter_by(
+            booklet_number=resource.booklet_number,
+            receipt_id=resource.receipt_id,
+            mandi_id=resource.mandi_id,
+            is_approved=True
+        ).first()
+
+        if existing_record and existing_record.id != resource.id:
+            return jsonify({"error": "another record already exists with same booklet, receipt and mandi. Please go back and update with correct values."})
+
         cloned_attributes_to_save = {}
         for column, value in resource.__dict__.items():
-            if column in ['created_at', 'updated_at']:
+            if column in ['_sa_instance_state', 'created_at', 'updated_at', 'promised_token', 'token_amount']:
                 continue
+
             if column == 'id':
                 cloned_attributes_to_save[revision_pk] = value
-            elif column != '_sa_instance_state':
-                cloned_attributes_to_save[column] = value
+                continue
+
+            cloned_attributes_to_save[column] = value
+
         cloned_resource = revision_model(**cloned_attributes_to_save)
         db.session.add(cloned_resource)
         db.session.commit()
@@ -703,6 +720,7 @@ def resource_download(resource_type):
         werkzeug.wrappers.response.Response: A response containing the CSV
         file as an attachment with the appropriate headers for downloading.
     """
+
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
     output = io.StringIO()
@@ -892,8 +910,29 @@ def update_approval_status():
         sale_receipt = SaleReceiptModel.query.get(receipt_id)
         if action == 'approve':
             sale_receipt.is_approved = True
+            sale_receipt.token_amount = sale_receipt.promised_token
+
+            # Add earning wallet plan to user membership start
+            membership_plan_id = ""
+
+            if sale_receipt.token_amount == 10:
+                membership_plan_id = "earned_days_01"
+            elif sale_receipt.token_amount == 8:
+                membership_plan_id = "earned_days_02"
+            elif sale_receipt.token_amount == 6:
+                membership_plan_id = "earned_days_03"
+            elif sale_receipt.token_amount == 2:
+                membership_plan_id = "earned_days_04"
+
+            UserMembership(
+                user_id=sale_receipt.user_id,
+                membership_plan_id=membership_plan_id,
+                payment_src_id="earned_days",
+                notes="earned via sale receipt"
+            ).commit()
         elif action == 'reject':
             sale_receipt.is_approved = False
+            sale_receipt.token_amount = 0
 
         db.session.commit()
 
