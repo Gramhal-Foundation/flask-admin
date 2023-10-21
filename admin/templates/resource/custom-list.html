@@ -68,7 +68,7 @@
                         </div>
                     </div>
                     <div class="flex-1">
-                        <img src="{{resource['receipt_image_url']}}" alt="Receipt Image" style="margin-top: -75px" />
+                        <img id="receiptImage"  src="{{resource['receipt_image_url']}}" alt="Receipt Image" style="margin-top: -75px" onclick="rotateImage()"/>
                     </div>
                 </div>
             {% endfor %}
@@ -420,6 +420,13 @@
         .catch(error => {
             console.error('Error:', error);
         });
+    }
+
+    let rotate_angle = 0;
+    function rotateImage() {
+        rotate_angle = (rotate_angle + 90) % 360;
+        const image = document.getElementById('receiptImage');
+        image.style.transform = `rotate(${rotate_angle}deg)`;
     }
 </script>
 {% endblock %}
