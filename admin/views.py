@@ -701,6 +701,7 @@ def resource_delete(resource_type, resource_id):
 
     return redirect(request.referrer or url_for(".resource_list", resource_type=resource_type))
 
+
 @admin.route("/resource/<string:resource_type>/download", methods=["GET"])
 @login_required
 def resource_download(resource_type):
@@ -971,7 +972,6 @@ def resource_filter(resource_type, status):
             pagination = pending_pagination
         else:
             pagination = all_pagination
-
 
         mandis = MandiModel.query.order_by(MandiModel.mandi_name).all()
         crops = CropModel.query.order_by(CropModel.crop_name).all()
