@@ -968,12 +968,9 @@ def resource_filter(resource_type, status):
             page=page, per_page=10, error_out=False
         )
         if status == 'pending':
-            print('pending')
             pagination = pending_pagination
         else:
-            print('all')
             pagination = all_pagination
-            print('pagination', pagination)
 
         mandis = MandiModel.query.order_by(MandiModel.mandi_name).all()
         crops = CropModel.query.order_by(CropModel.crop_name).all()
