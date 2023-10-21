@@ -701,6 +701,7 @@ def resource_delete(resource_type, resource_id):
 
     return redirect(request.referrer or url_for(".resource_list", resource_type=resource_type))
 
+
 @admin.route("/resource/<string:resource_type>/download", methods=["GET"])
 @login_required
 def resource_download(resource_type):
