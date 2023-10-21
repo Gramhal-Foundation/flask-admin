@@ -964,7 +964,7 @@ def resource_filter(resource_type, status):
         pending_pagination = model.query.filter(model.is_approved == None).order_by(SaleReceiptModel.id).paginate(
             page=page, per_page=1, error_out=False
         )
-        all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None).order_by(desc(SaleReceiptModel.id)).paginate(
+        all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None).order_by(desc(SaleReceiptModel.receipt_date)).paginate(
             page=page, per_page=10, error_out=False
         )
         if status == 'pending':
