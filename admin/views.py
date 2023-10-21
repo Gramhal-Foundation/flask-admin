@@ -972,6 +972,7 @@ def resource_filter(resource_type, status):
         else:
             pagination = all_pagination
 
+
         mandis = MandiModel.query.order_by(MandiModel.mandi_name).all()
         crops = CropModel.query.order_by(CropModel.crop_name).all()
         return render_template(
