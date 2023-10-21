@@ -964,13 +964,16 @@ def resource_filter(resource_type, status):
         pending_pagination = model.query.filter(model.is_approved == None).order_by(SaleReceiptModel.id).paginate(
             page=page, per_page=1, error_out=False
         )
-        all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None).order_by(desc(SaleReceiptModel.id)).paginate(
+        all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None).order_by(desc(SaleReceiptModel.receipt_date)).paginate(
             page=page, per_page=10, error_out=False
         )
         if status == 'pending':
+            print('pending')
             pagination = pending_pagination
         else:
+            print('all')
             pagination = all_pagination
+            print('pagination', pagination)
 
         mandis = MandiModel.query.order_by(MandiModel.mandi_name).all()
         crops = CropModel.query.order_by(CropModel.crop_name).all()
