@@ -954,6 +954,13 @@ def resource_filter(resource_type, status):
     is_custom_template = resource_class.is_custom_template
     # per_page = 5
     page = request.args.get("page", default=1, type=int)
+    mandi = request.args.get("mandi")
+    crop = request.args.get('crop')
+    if(mandi):
+        mandi_id = int(mandi)
+    if(crop):
+        crop_id = int(crop)
+        # print('mandi_id', mandi_id)
     # primary_key_column = model.__table__.primary_key.columns.keys()[0]
     # TODO: filter not working
     # pagination = model.query.order_by(primary_key_column).paginate(
@@ -962,12 +969,34 @@ def resource_filter(resource_type, status):
     list_display = resource_class.list_display
     if is_custom_template:
         # TODO: hardcoding needs to be removed
-        pending_pagination = model.query.filter(model.is_approved == None).order_by(SaleReceiptModel.id).paginate(
-            page=page, per_page=1, error_out=False
-        )
-        all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None).order_by(desc(SaleReceiptModel.receipt_date)).paginate(
-            page=page, per_page=10, error_out=False
-        )
+        if mandi :
+            pending_pagination = model.query.filter(model.is_approved == None,model.mandi_id == mandi_id).order_by(SaleReceiptModel.id).paginate(
+                page=page, per_page=1, error_out=False
+            )
+            all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None,model.mandi_id == mandi_id).order_by(desc(SaleReceiptModel.receipt_date)).paginate(
+                page=page, per_page=10, error_out=False
+            )
+        elif crop:
+            pending_pagination = model.query.filter(model.is_approved == None,model.crop_id == crop_id).order_by(SaleReceiptModel.id).paginate(
+                page=page, per_page=1, error_out=False
+            )
+            all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None,model.crop_id == crop_id).order_by(desc(SaleReceiptModel.receipt_date)).paginate(
+                page=page, per_page=10, error_out=False
+            )
+        elif crop and mandi :
+            pending_pagination = model.query.filter(model.is_approved == None,model.mandi_id == mandi_id,model.crop_id == crop_id).order_by(SaleReceiptModel.id).paginate(
+                page=page, per_page=1, error_out=False
+            )
+            all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None,model.crop_id == crop_id,model.mandi_id == mandi_id).order_by(desc(SaleReceiptModel.receipt_date)).paginate(
+                page=page, per_page=10, error_out=False
+            )
+        else:
+            pending_pagination = model.query.filter(model.is_approved == None).order_by(SaleReceiptModel.id).paginate(
+                page=page, per_page=1, error_out=False
+            )
+            all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None).order_by(desc(SaleReceiptModel.receipt_date)).paginate(
+                page=page, per_page=10, error_out=False
+            )
         if status == 'pending':
             pagination = pending_pagination
         else:

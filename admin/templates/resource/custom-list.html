@@ -9,6 +9,40 @@
 {% if not permissions.get(resource_type).get('read'): %}
     <h1>You do not have permission to view this link. Please reach out to support if you need any help.</h1>
 {% else %}
+<div class="flex space-x-4">
+    <div class="relative inline-block text-left">
+        <button type="button" class="inline-block justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-50" onclick="toggleDropdown('mandiDropdown', 'mandiButton')">
+            <span id="mandiButtonLabel">Select Mandi</span>
+            <svg class="w-4 h-4 inline-block ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" onclick="toggleDropdown('mandiDropdown', 'mandiButton')">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </button>
+        <div class="dropdown-container hidden " id="mandiDropdown" style="max-height: 150px; overflow-y: auto;" onmouseleave="closeDropdown('mandiDropdown')">
+            <ul  class="absolute w-48 py-2 bg-white border border-gray-300 rounded-md shadow-lg" >
+                {% for mandi in mandis %}
+                    <li class="px-4 py-2 hover:bg-gray-100" onclick="selectOption('{{ mandi.mandi_name }}', '{{ mandi.id }}', '{{ selectedCrop }}', 'mandiButtonLabel', 'mandiDropdown')">{{ mandi.mandi_name }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="relative inline-block text-left">
+        <button type="button" class="inline-block justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-50" onclick="toggleDropdown('cropDropdown', 'cropButton')">
+            <span id="cropButtonLabel">Select Crop</span>
+            <svg class="w-4 h-4 inline-block ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </button>
+        <div class="dropdown-container hidden "  id="cropDropdown"  style="max-height: 150px; overflow-y: auto;" onmouseleave="closeDropdown('cropDropdown')">
+            <ul class="absolute w-48 py-2 bg-white border border-gray-300 rounded-md shadow-lg" >
+                {% for crop in crops %}
+                    <li class="px-4 py-2 hover-bg-gray-100" onclick="selectOption('{{ crop.crop_name }}', '{{ selectedMandi }}', '{{ crop.crop_id }}', 'cropButtonLabel', 'cropDropdown')">{{ crop.crop_name }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
     <div class="mb-4">
         <ul class="flex">
             <li>
@@ -323,6 +357,9 @@
 
 <script>
     // Get the select element and hidden input field
+
+    let selectedMandi = "";
+    let selectedCrop = "";
     const mandiSelectElement = document.getElementById('mandi_id');
     const mandiNameField = document.getElementById('mandi_name');
     const mandiNameHiField = document.getElementById('mandi_name_hi');
@@ -421,5 +458,37 @@
             console.error('Error:', error);
         });
     }
+
+    function toggleDropdown(id, buttonId) {
+        const dropdown = document.getElementById(id);
+        dropdown.classList.toggle('hidden');
+    }
+
+    function selectOption(optionText, mandiValue, cropValue, buttonLabelId, dropdownId) {
+        const buttonLabel = document.getElementById(buttonLabelId);
+        buttonLabel.textContent = optionText;
+        if (mandiValue) {
+            selectedMandi = mandiValue;
+        }
+        if (cropValue) {
+            selectedCrop = cropValue;
+        }
+
+        const dropdown = document.getElementById(dropdownId);
+        dropdown.classList.add('hidden');
+        let pendingButton = document.getElementById('pendingButton');
+        let allReceiptButton = document.getElementById('allReceiptButton');
+        let resourceType = "{{ resource_type }}";
+
+        buttonValue = window.location.href.indexOf("pending") > -1?"pending":"all"
+        let url = `/admin/resource/${resourceType}/${buttonValue}?mandi=${selectedMandi}&crop=${selectedCrop}`;
+        window.location.href = url;
+    }
+
+    function closeDropdown(id) {
+        const dropdown = document.getElementById(id);
+        dropdown.classList.add('hidden');
+    }
+
 </script>
 {% endblock %}
