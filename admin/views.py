@@ -63,7 +63,7 @@ from flask import current_app as app
 from models.crop import CropModel
 from models.mandi import MandiModel
 from sqlalchemy.orm import joinedload
-from sqlalchemy import cast, Text, or_, desc
+from sqlalchemy import cast, Text, or_, desc, and_
 
 # [TODO]: dependency on main repo
 from db import db
@@ -968,35 +968,23 @@ def resource_filter(resource_type, status):
     # )
     list_display = resource_class.list_display
     if is_custom_template:
-        # TODO: hardcoding needs to be removed
-        if mandi :
-            pending_pagination = model.query.filter(model.is_approved == None,model.mandi_id == mandi_id).order_by(SaleReceiptModel.id).paginate(
-                page=page, per_page=1, error_out=False
-            )
-            all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None,model.mandi_id == mandi_id).order_by(desc(SaleReceiptModel.receipt_date)).paginate(
-                page=page, per_page=10, error_out=False
-            )
-        elif crop:
-            pending_pagination = model.query.filter(model.is_approved == None,model.crop_id == crop_id).order_by(SaleReceiptModel.id).paginate(
-                page=page, per_page=1, error_out=False
-            )
-            all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None,model.crop_id == crop_id).order_by(desc(SaleReceiptModel.receipt_date)).paginate(
-                page=page, per_page=10, error_out=False
-            )
-        elif crop and mandi :
-            pending_pagination = model.query.filter(model.is_approved == None,model.mandi_id == mandi_id,model.crop_id == crop_id).order_by(SaleReceiptModel.id).paginate(
-                page=page, per_page=1, error_out=False
-            )
-            all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None,model.crop_id == crop_id,model.mandi_id == mandi_id).order_by(desc(SaleReceiptModel.receipt_date)).paginate(
-                page=page, per_page=10, error_out=False
-            )
+        filter_conditions = []
+
+        if mandi:
+            filter_conditions.append(model.mandi_id == mandi_id)
+        if crop:
+            filter_conditions.append(model.crop_id == crop_id)
+
+        if not filter_conditions:
+            pending_filter = (model.is_approved == None,)
+            all_filter = (model.is_approved != None,)
         else:
-            pending_pagination = model.query.filter(model.is_approved == None).order_by(SaleReceiptModel.id).paginate(
-                page=page, per_page=1, error_out=False
-            )
-            all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(model.is_approved != None).order_by(desc(SaleReceiptModel.receipt_date)).paginate(
-                page=page, per_page=10, error_out=False
-            )
+            pending_filter = and_(*(model.is_approved == None, *filter_conditions))
+            all_filter = and_(*(model.is_approved != None, *filter_conditions))
+
+        pending_pagination = model.query.filter(*pending_filter).order_by(SaleReceiptModel.id).paginate(page=page, per_page=1, error_out=False)
+        all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(*all_filter).order_by(desc(SaleReceiptModel.receipt_date)).paginate(page=page, per_page=10, error_out=False)
+
         if status == 'pending':
             pagination = pending_pagination
         else:
@@ -1004,6 +992,7 @@ def resource_filter(resource_type, status):
 
         mandis = MandiModel.query.order_by(MandiModel.mandi_name).all()
         crops = CropModel.query.order_by(CropModel.crop_name).all()
+
         return render_template(
             "resource/custom-list.html",
             pagination=pagination,
