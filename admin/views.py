@@ -960,7 +960,6 @@ def resource_filter(resource_type, status):
         mandi_id = int(mandi)
     if(crop):
         crop_id = int(crop)
-        # print('mandi_id', mandi_id)
     # primary_key_column = model.__table__.primary_key.columns.keys()[0]
     # TODO: filter not working
     # pagination = model.query.order_by(primary_key_column).paginate(

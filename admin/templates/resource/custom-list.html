@@ -481,7 +481,10 @@
         let resourceType = "{{ resource_type }}";
 
         buttonValue = window.location.href.indexOf("pending") > -1?"pending":"all"
-        let url = `/admin/resource/${resourceType}/${buttonValue}?mandi=${selectedMandi}&crop=${selectedCrop}`;
+        const urlSearchParams = new URLSearchParams(window.location.search);
+        const page = urlSearchParams.get('page');
+
+        let url = `/admin/resource/${resourceType}/${buttonValue}?mandi=${selectedMandi}&crop=${selectedCrop}&page=${page}`;
         window.location.href = url;
     }
 
