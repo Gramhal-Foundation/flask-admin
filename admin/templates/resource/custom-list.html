@@ -9,39 +9,25 @@
 {% if not permissions.get(resource_type).get('read'): %}
     <h1>You do not have permission to view this link. Please reach out to support if you need any help.</h1>
 {% else %}
-<div class="flex space-x-4">
-    <div class="relative inline-block text-left">
-        <button type="button" class="inline-block justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-50" onclick="toggleDropdown('mandiDropdown', 'mandiButton')">
-            <span id="mandiButtonLabel">Select Mandi</span>
-            <svg class="w-4 h-4 inline-block ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" onclick="toggleDropdown('mandiDropdown', 'mandiButton')">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-        </button>
-        <div class="dropdown-container hidden " id="mandiDropdown"  onmouseleave="closeDropdown('mandiDropdown')">
-            <ul  class="py-2 bg-white border border-gray-300 rounded-md shadow-lg" style="height: 150px; overflow-y: auto; z-index: 1;">
-                {% for mandi in mandis %}
-                    <li class="px-4 py-2 hover:bg-gray-100" onclick="selectOption('{{ mandi.mandi_name }}', '{{ mandi.id }}', '{{ selectedCrop }}', 'mandiButtonLabel', 'mandiDropdown')">{{ mandi.mandi_name }}</li>
-                {% endfor %}
-            </ul>
+    <form id="filterForm" method="GET">
+        <div class="flex mb-2">
+            <div>
+                <select name="mandi" id="mandi" class="border px-2 py-2 rounded">
+                    <option value="">Select Mandi</option>
+                    {% for mandi in mandis %}
+                        <option value="{{mandi.id}}" {% if selected_mandi == mandi.id %} selected="selected "{% endif %}>{{mandi.mandi_name}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- <div>
+                <select name="crop" id="crop" class="ml-2 border px-2 py-2 rounded max-w-">
+                    {% for crop in crops %}
+                        <option value="{{crop.id}}">{{crop.crop_name}}</option>
+                    {% endfor %}
+                </select>
+            </div> -->
         </div>
-    </div>
-
-    <div class="relative inline-block text-left">
-        <button type="button" class="inline-block justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring focus:ring-indigo-300 focus:ring-opacity-50" onclick="toggleDropdown('cropDropdown', 'cropButton')">
-            <span id="cropButtonLabel">Select Crop</span>
-            <svg class="w-4 h-4 inline-block ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-        </button>
-        <div class="dropdown-container hidden "  id="cropDropdown" onmouseleave="closeDropdown('cropDropdown')">
-            <ul class="py-2 bg-white border border-gray-300 rounded-md shadow-lg" style="height: 150px; overflow-y: auto; z-index: 1;" >
-                {% for crop in crops %}
-                    <li class="px-4 py-2 hover-bg-gray-100" onclick="selectOption('{{ crop.crop_name }}', '{{ selectedMandi }}', '{{ crop.crop_id }}', 'cropButtonLabel', 'cropDropdown')">{{ crop.crop_name }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
-</div>
+    </form>
 
     <div class="mb-4">
         <ul class="flex">
@@ -464,34 +450,16 @@
         dropdown.classList.toggle('hidden');
     }
 
-    function selectOption(optionText, mandiValue, cropValue, buttonLabelId, dropdownId) {
-        const buttonLabel = document.getElementById(buttonLabelId);
-        buttonLabel.textContent = optionText;
-        if (mandiValue) {
-            selectedMandi = mandiValue;
-        }
-        if (cropValue) {
-            selectedCrop = cropValue;
-        }
-
-        const dropdown = document.getElementById(dropdownId);
-        dropdown.classList.add('hidden');
-        let pendingButton = document.getElementById('pendingButton');
-        let allReceiptButton = document.getElementById('allReceiptButton');
-        let resourceType = "{{ resource_type }}";
-
-        buttonValue = window.location.href.indexOf("pending") > -1?"pending":"all"
-        const urlSearchParams = new URLSearchParams(window.location.search);
-        const page = urlSearchParams.get('page');
-
-        let url = `/admin/resource/${resourceType}/${buttonValue}?mandi=${selectedMandi}&crop=${selectedCrop}&page=${page}`;
-        window.location.href = url;
-    }
-
     function closeDropdown(id) {
         const dropdown = document.getElementById(id);
         dropdown.classList.add('hidden');
     }
+
+    var filterMandiSelectElement = document.getElementById('mandi');
+    filterMandiSelectElement.addEventListener('change', function() {
+        var form = document.getElementById('filterForm');
+        form.submit();
+    });
 
 </script>
 {% endblock %}

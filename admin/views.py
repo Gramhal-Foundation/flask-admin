@@ -969,10 +969,14 @@ def resource_filter(resource_type, status):
     if is_custom_template:
         filter_conditions = []
 
+        selected_mandi = None
+        selected_crop = None
         if mandi:
             filter_conditions.append(model.mandi_id == mandi_id)
+            selected_mandi = mandi_id
         if crop:
             filter_conditions.append(model.crop_id == crop_id)
+            selected_crop = crop_id
 
         if not filter_conditions:
             pending_filter = (model.is_approved == None,)
@@ -1001,4 +1005,6 @@ def resource_filter(resource_type, status):
             list_display=list_display,
             mandis=mandis,
             crops=crops,
+            selected_mandi=selected_mandi,
+            selected_crop=selected_crop,
         )
