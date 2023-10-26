@@ -20,13 +20,14 @@
                 </select>
                 <input type="hidden" name="page" value={{pagination.page}}>
             </div>
-            <!-- <div>
+            <div>
                 <select name="crop" id="crop" class="ml-2 border px-2 py-2 rounded max-w-">
+                    <option value="">Select Crop</option>
                     {% for crop in crops %}
-                        <option value="{{crop.id}}">{{crop.crop_name}}</option>
+                        <option value="{{crop.crop_id}}" {% if selected_crop == crop.crop_id %} selected="selected "{% endif %}>{{crop.crop_name}}</option>
                     {% endfor %}
                 </select>
-            </div> -->
+            </div>
         </div>
     </form>
 
@@ -183,7 +184,7 @@
         <div class="mt-4 flex items-end">
             {% if pagination.has_prev %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('all', '{{ pagination.prev_num }}', '{{ selected_mandi }}')"
+            onclick="displayReceipts('all', '{{ pagination.prev_num }}', '{{ selected_mandi }}', '{{ selected_crop}}')"
             class="mx-1 px-3 py-1 rounded border text-blue-500">
                 {{ 'Prev' }}
             </a>
@@ -192,7 +193,7 @@
             {% if num %}
             {% if num != pagination.page %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('all', '{{ num }}', '{{ selected_mandi }}')"
+            onclick="displayReceipts('all', '{{ num }}', '{{ selected_mandi }}', '{{ selected_crop}}')"
             class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
             {% else %}
             <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
@@ -203,7 +204,7 @@
             {% endfor %}
             {% if pagination.has_next %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('all', '{{ pagination.next_num }}', '{{ selected_mandi }}')"
+            onclick="displayReceipts('all', '{{ pagination.next_num }}', '{{ selected_mandi }}', '{{ selected_crop}}')"
             class="mx-1 px-3 py-1 rounded border text-blue-500">
                 {{ 'Next' }}
             </a>
@@ -399,7 +400,7 @@
         modal.classList.add('hidden');
     }
 
-    function displayReceipts(buttonValue, page=1, selectedMandi=null) {
+    function displayReceipts(buttonValue, page=1, selectedMandi=null, selectedCrop=null) {
         let pendingButton = document.getElementById('pendingButton');
         let allReceiptButton = document.getElementById('allReceiptButton');
         let resourceType = "{{ resource_type }}";
@@ -407,6 +408,9 @@
         let url = `/admin/resource/${resourceType}/${buttonValue}?page=${page}`;
         if (selectedMandi) {
             url += `&mandi=${selectedMandi}`
+        }
+        if(selectedCrop) {
+            url+= `&crop=${selectedCrop}`
         }
 
         window.location.href = url;
@@ -459,6 +463,12 @@
 
     var filterMandiSelectElement = document.getElementById('mandi');
     filterMandiSelectElement.addEventListener('change', function() {
+        var form = document.getElementById('filterForm');
+        form.submit();
+    });
+
+    var filterCropSelectElement = document.getElementById('crop');
+    filterCropSelectElement.addEventListener('change', function() {
         var form = document.getElementById('filterForm');
         form.submit();
     });
