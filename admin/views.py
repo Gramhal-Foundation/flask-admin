@@ -657,6 +657,10 @@ def resource_edit(resource_type, resource_id):
 
     db.session.commit()
 
+    # call after update hook
+    if hasattr(resource_class, 'after_update_callback'):
+        resource_class.after_update_callback()
+
     if resource_type == 'mandi-receipt' and resource.is_approved:
         update_cs_mandi_data(sale_receipt=resource, forced=True)
         update_cs_data_mandi_crop(sale_receipt=resource, forced=True)
