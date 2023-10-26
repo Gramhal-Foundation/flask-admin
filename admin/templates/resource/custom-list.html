@@ -18,6 +18,7 @@
                         <option value="{{mandi.id}}" {% if selected_mandi == mandi.id %} selected="selected "{% endif %}>{{mandi.mandi_name}}</option>
                     {% endfor %}
                 </select>
+                <input type="hidden" name="page" value={{pagination.page}}>
             </div>
             <!-- <div>
                 <select name="crop" id="crop" class="ml-2 border px-2 py-2 rounded max-w-">
@@ -182,7 +183,7 @@
         <div class="mt-4 flex items-end">
             {% if pagination.has_prev %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('all', '{{ pagination.prev_num }}')"
+            onclick="displayReceipts('all', '{{ pagination.prev_num }}', '{{ selected_mandi }}')"
             class="mx-1 px-3 py-1 rounded border text-blue-500">
                 {{ 'Prev' }}
             </a>
@@ -191,7 +192,7 @@
             {% if num %}
             {% if num != pagination.page %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('all', '{{ num }}')"
+            onclick="displayReceipts('all', '{{ num }}', '{{ selected_mandi }}')"
             class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
             {% else %}
             <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
@@ -202,7 +203,7 @@
             {% endfor %}
             {% if pagination.has_next %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('all', '{{ pagination.next_num }}')"
+            onclick="displayReceipts('all', '{{ pagination.next_num }}', '{{ selected_mandi }}')"
             class="mx-1 px-3 py-1 rounded border text-blue-500">
                 {{ 'Next' }}
             </a>
@@ -354,8 +355,6 @@
     mandiSelectElement.addEventListener('change', function() {
         const mandiName = mandiSelectElement.options[mandiSelectElement.selectedIndex].getAttribute('data-mandi-name');
         const mandiNameHi = mandiSelectElement.options[mandiSelectElement.selectedIndex].getAttribute('data-mandi-name-hi');
-        console.log('mandiName...', mandiName)
-        console.log('mandiNameHi...', mandiNameHi)
 
         // Update the value of the hidden input field
         mandiNameField.value = mandiName;
@@ -400,12 +399,15 @@
         modal.classList.add('hidden');
     }
 
-    function displayReceipts(buttonValue, page=1) {
+    function displayReceipts(buttonValue, page=1, selectedMandi=null) {
         let pendingButton = document.getElementById('pendingButton');
         let allReceiptButton = document.getElementById('allReceiptButton');
         let resourceType = "{{ resource_type }}";
 
         let url = `/admin/resource/${resourceType}/${buttonValue}?page=${page}`;
+        if (selectedMandi) {
+            url += `&mandi=${selectedMandi}`
+        }
 
         window.location.href = url;
     }
