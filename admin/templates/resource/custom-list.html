@@ -9,6 +9,26 @@
 {% if not permissions.get(resource_type).get('read'): %}
     <h1>You do not have permission to view this link. Please reach out to support if you need any help.</h1>
 {% else %}
+    <form id="filterForm" method="GET">
+        <div class="flex mb-2">
+            <div>
+                <select name="mandi" id="mandi" class="border px-2 py-2 rounded">
+                    <option value="">Select Mandi</option>
+                    {% for mandi in mandis %}
+                        <option value="{{mandi.id}}" {% if selected_mandi == mandi.id %} selected="selected "{% endif %}>{{mandi.mandi_name}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- <div>
+                <select name="crop" id="crop" class="ml-2 border px-2 py-2 rounded max-w-">
+                    {% for crop in crops %}
+                        <option value="{{crop.id}}">{{crop.crop_name}}</option>
+                    {% endfor %}
+                </select>
+            </div> -->
+        </div>
+    </form>
+
     <div class="mb-4">
         <ul class="flex">
             <li>
@@ -323,6 +343,9 @@
 
 <script>
     // Get the select element and hidden input field
+
+    let selectedMandi = "";
+    let selectedCrop = "";
     const mandiSelectElement = document.getElementById('mandi_id');
     const mandiNameField = document.getElementById('mandi_name');
     const mandiNameHiField = document.getElementById('mandi_name_hi');
@@ -421,5 +444,22 @@
             console.error('Error:', error);
         });
     }
+
+    function toggleDropdown(id, buttonId) {
+        const dropdown = document.getElementById(id);
+        dropdown.classList.toggle('hidden');
+    }
+
+    function closeDropdown(id) {
+        const dropdown = document.getElementById(id);
+        dropdown.classList.add('hidden');
+    }
+
+    var filterMandiSelectElement = document.getElementById('mandi');
+    filterMandiSelectElement.addEventListener('change', function() {
+        var form = document.getElementById('filterForm');
+        form.submit();
+    });
+
 </script>
 {% endblock %}
