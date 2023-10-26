@@ -12,7 +12,7 @@
     <form id="filterForm" method="GET">
         <div class="flex mb-2">
             <div>
-                <select name="mandi" id="mandi" class="border px-2 py-2 rounded">
+                <select name="mandi" id="mandi" class="border px-2 py-2 rounded w-40" >
                     <option value="">Select Mandi</option>
                     {% for mandi in mandis %}
                         <option value="{{mandi.id}}" {% if selected_mandi == mandi.id %} selected="selected "{% endif %}>{{mandi.mandi_name}}</option>
@@ -21,7 +21,7 @@
                 <input type="hidden" name="page" value={{pagination.page}}>
             </div>
             <div>
-                <select name="crop" id="crop" class="ml-2 border px-2 py-2 rounded max-w-">
+                <select name="crop" id="crop" class="ml-2 border px-2 py-2 rounded w-40">
                     <option value="">Select Crop</option>
                     {% for crop in crops %}
                         <option value="{{crop.crop_id}}" {% if selected_crop == crop.crop_id %} selected="selected "{% endif %}>{{crop.crop_name}}</option>
