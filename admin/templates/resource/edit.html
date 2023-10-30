@@ -14,7 +14,6 @@
         <div class="w-1/2 mb-4">
           <div class="flex flex-col mr-3">
             <label for={{ attribute.name }} class="uppercase text-gray-500 text-xs mb-1">{{ attribute.name | format_label }}</label>
-              {{attribute.type}}
             {% if attribute["name"] == admin_configs['user']['secret'] %}
               <input type="password" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border border-gray-300 rounded" />
             {% elif 'VARCHAR' in attribute.type %}
