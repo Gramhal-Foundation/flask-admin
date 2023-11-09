@@ -916,7 +916,13 @@ def update_approval_status():
         if action == 'approve':
             sale_receipt.is_approved = True
             sale_receipt.token_amount = sale_receipt.promised_token
+        elif action == 'reject':
+            sale_receipt.is_approved = False
+            sale_receipt.token_amount = 0
 
+        db.session.commit()
+
+        if sale_receipt.is_approved == True:
             # Add earning wallet plan to user membership start
             membership_plan_id = ""
 
@@ -935,11 +941,6 @@ def update_approval_status():
                 payment_src_id="earned_days",
                 notes="earned via sale receipt"
             ).commit()
-        elif action == 'reject':
-            sale_receipt.is_approved = False
-            sale_receipt.token_amount = 0
-
-        db.session.commit()
 
         if action == 'approve':
             update_cs_mandi_data(sale_receipt=sale_receipt)
