@@ -184,7 +184,7 @@
         <div class="mt-4 flex items-end">
             {% if pagination.has_prev %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('all', '{{ pagination.prev_num }}', '{{ selected_mandi }}', '{{ selected_crop}}')"
+            onclick="displayReceipts('all', '{{ pagination.prev_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %})"
             class="mx-1 px-3 py-1 rounded border text-blue-500">
                 {{ 'Prev' }}
             </a>
@@ -193,7 +193,7 @@
             {% if num %}
             {% if num != pagination.page %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('all', '{{ num }}', '{{ selected_mandi }}', '{{ selected_crop}}')"
+            onclick="displayReceipts('all', '{{ num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %})"
             class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
             {% else %}
             <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
@@ -204,7 +204,7 @@
             {% endfor %}
             {% if pagination.has_next %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('all', '{{ pagination.next_num }}', '{{ selected_mandi }}', '{{ selected_crop}}')"
+            onclick="displayReceipts('all', '{{ pagination.next_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %})"
             class="mx-1 px-3 py-1 rounded border text-blue-500">
                 {{ 'Next' }}
             </a>
@@ -352,7 +352,9 @@
     const mandiNameField = document.getElementById('mandi_name');
     const mandiNameHiField = document.getElementById('mandi_name_hi');
 
+
     // Add change event listener to the select element
+    if(mandiSelectElement){
     mandiSelectElement.addEventListener('change', function() {
         const mandiName = mandiSelectElement.options[mandiSelectElement.selectedIndex].getAttribute('data-mandi-name');
         const mandiNameHi = mandiSelectElement.options[mandiSelectElement.selectedIndex].getAttribute('data-mandi-name-hi');
@@ -360,7 +362,9 @@
         // Update the value of the hidden input field
         mandiNameField.value = mandiName;
         mandiNameHiField.value = mandiNameHi;
-    });
+    });}else {
+        console.error("Element with ID 'Mandi ' not selected.");
+    }
 
     // Get the select element and hidden input field
     const cropSelectElement = document.getElementById('crop_id');
@@ -368,6 +372,7 @@
     const cropNameHiField = document.getElementById('crop_name_hi');
 
     // Add change event listener to the select element
+    if(cropSelectElement){
     cropSelectElement.addEventListener('change', function() {
         const cropName = cropSelectElement.options[cropSelectElement.selectedIndex].getAttribute('data-crop-name');
         const cropNameHi = cropSelectElement.options[cropSelectElement.selectedIndex].getAttribute('data-crop-name-hi');
@@ -377,7 +382,9 @@
         cropNameField.value = cropName;
         cropNameHiField.value = cropNameHi;
     });
-
+    }else{
+        console.error("Element with ID 'crop' not selected.");
+    }
     let modal = null;
 
     function openEditModal(pk) {
