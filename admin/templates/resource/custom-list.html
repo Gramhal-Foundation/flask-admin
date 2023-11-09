@@ -12,7 +12,7 @@
     <form id="filterForm" method="GET">
         <div class="flex mb-2">
             <div>
-                <select name="mandi" id="mandi" class="border px-2 py-2 rounded">
+                <select name="mandi" id="mandi" class="border px-2 py-2 rounded w-40" >
                     <option value="">Select Mandi</option>
                     {% for mandi in mandis %}
                         <option value="{{mandi.id}}" {% if selected_mandi == mandi.id %} selected="selected "{% endif %}>{{mandi.mandi_name}}</option>
@@ -20,13 +20,14 @@
                 </select>
                 <input type="hidden" name="page" value={{pagination.page}}>
             </div>
-            <!-- <div>
-                <select name="crop" id="crop" class="ml-2 border px-2 py-2 rounded max-w-">
+            <div>
+                <select name="crop" id="crop" class="ml-2 border px-2 py-2 rounded w-40">
+                    <option value="">Select Crop</option>
                     {% for crop in crops %}
-                        <option value="{{crop.id}}">{{crop.crop_name}}</option>
+                        <option value="{{crop.crop_id}}" {% if selected_crop == crop.crop_id %} selected="selected "{% endif %}>{{crop.crop_name}}</option>
                     {% endfor %}
                 </select>
-            </div> -->
+            </div>
         </div>
     </form>
 
@@ -183,7 +184,7 @@
         <div class="mt-4 flex items-end">
             {% if pagination.has_prev %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('all', '{{ pagination.prev_num }}', '{{ selected_mandi }}')"
+            onclick="displayReceipts('all', '{{ pagination.prev_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %})"
             class="mx-1 px-3 py-1 rounded border text-blue-500">
                 {{ 'Prev' }}
             </a>
@@ -192,7 +193,7 @@
             {% if num %}
             {% if num != pagination.page %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('all', '{{ num }}', '{{ selected_mandi }}')"
+            onclick="displayReceipts('all', '{{ num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %})"
             class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
             {% else %}
             <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
@@ -203,7 +204,7 @@
             {% endfor %}
             {% if pagination.has_next %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('all', '{{ pagination.next_num }}', '{{ selected_mandi }}')"
+            onclick="displayReceipts('all', '{{ pagination.next_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %})"
             class="mx-1 px-3 py-1 rounded border text-blue-500">
                 {{ 'Next' }}
             </a>
@@ -351,7 +352,9 @@
     const mandiNameField = document.getElementById('mandi_name');
     const mandiNameHiField = document.getElementById('mandi_name_hi');
 
+
     // Add change event listener to the select element
+    if(mandiSelectElement){
     mandiSelectElement.addEventListener('change', function() {
         const mandiName = mandiSelectElement.options[mandiSelectElement.selectedIndex].getAttribute('data-mandi-name');
         const mandiNameHi = mandiSelectElement.options[mandiSelectElement.selectedIndex].getAttribute('data-mandi-name-hi');
@@ -359,7 +362,9 @@
         // Update the value of the hidden input field
         mandiNameField.value = mandiName;
         mandiNameHiField.value = mandiNameHi;
-    });
+    });}else {
+        console.error("Element with ID 'Mandi ' not selected.");
+    }
 
     // Get the select element and hidden input field
     const cropSelectElement = document.getElementById('crop_id');
@@ -367,6 +372,7 @@
     const cropNameHiField = document.getElementById('crop_name_hi');
 
     // Add change event listener to the select element
+    if(cropSelectElement){
     cropSelectElement.addEventListener('change', function() {
         const cropName = cropSelectElement.options[cropSelectElement.selectedIndex].getAttribute('data-crop-name');
         const cropNameHi = cropSelectElement.options[cropSelectElement.selectedIndex].getAttribute('data-crop-name-hi');
@@ -376,7 +382,9 @@
         cropNameField.value = cropName;
         cropNameHiField.value = cropNameHi;
     });
-
+    }else{
+        console.error("Element with ID 'crop' not selected.");
+    }
     let modal = null;
 
     function openEditModal(pk) {
@@ -399,7 +407,7 @@
         modal.classList.add('hidden');
     }
 
-    function displayReceipts(buttonValue, page=1, selectedMandi=null) {
+    function displayReceipts(buttonValue, page=1, selectedMandi=null, selectedCrop=null) {
         let pendingButton = document.getElementById('pendingButton');
         let allReceiptButton = document.getElementById('allReceiptButton');
         let resourceType = "{{ resource_type }}";
@@ -407,6 +415,9 @@
         let url = `/admin/resource/${resourceType}/${buttonValue}?page=${page}`;
         if (selectedMandi) {
             url += `&mandi=${selectedMandi}`
+        }
+        if(selectedCrop) {
+            url+= `&crop=${selectedCrop}`
         }
 
         window.location.href = url;
@@ -462,6 +473,12 @@
 
     var filterMandiSelectElement = document.getElementById('mandi');
     filterMandiSelectElement.addEventListener('change', function() {
+        var form = document.getElementById('filterForm');
+        form.submit();
+    });
+
+    var filterCropSelectElement = document.getElementById('crop');
+    filterCropSelectElement.addEventListener('change', function() {
         var form = document.getElementById('filterForm');
         form.submit();
     });
