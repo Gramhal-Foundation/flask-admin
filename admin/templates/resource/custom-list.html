@@ -414,6 +414,8 @@
 
     function handleButtonClick(button, action, receipt_id) {
         button.disabled = true;
+        button.classList.add('bg-opacity-50')
+        button.classList.add('cursor-not-allowed')
         let editButtonClicked = false;
         action = action.toLowerCase();
         let baseUrl = '/admin/';
