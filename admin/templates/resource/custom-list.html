@@ -84,8 +84,8 @@
                         </div>
                         <div class="mt-6">
                             <button type="button" onclick="openEditModal('{{ resource.pk }}')" class="rounded-lg border border-black text-black px-6 py-2">Edit</button>
-                            <button type="button" onclick="handleButtonClick('approve', '{{ resource.pk }}')" class="bg-green-500 rounded-lg text-white px-6 py-2 ml-2">Approve</button>
-                            <button type="button" onclick="handleButtonClick('reject', '{{ resource.pk }}')" class="bg-red-500 rounded-lg text-white px-6 py-2 ml-2">Reject</button>
+                            <button type="button" onclick="handleButtonClick(this, 'approve', '{{ resource.pk }}')" class="bg-green-500 rounded-lg text-white px-6 py-2 ml-2">Approve</button>
+                            <button type="button" onclick="handleButtonClick(this, 'reject', '{{ resource.pk }}')" class="bg-red-500 rounded-lg text-white px-6 py-2 ml-2">Reject</button>
                         </div>
                     </div>
                     <div class="flex-1">
@@ -412,7 +412,8 @@
         window.location.href = url;
     }
 
-    function handleButtonClick(action, receipt_id) {
+    function handleButtonClick(button, action, receipt_id) {
+        button.disabled = true;
         let editButtonClicked = false;
         action = action.toLowerCase();
         let baseUrl = '/admin/';
