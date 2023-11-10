@@ -614,6 +614,7 @@ def resource_edit(resource_type, resource_id):
             receipt_id=resource.receipt_id,
             mandi_id=resource.mandi_id,
             crop_id=resource.crop_id,
+            func.date(SaleReceiptModel.receipt_date)==func.date(resource.receipt_date)
             is_approved=True
         ).first()
 
