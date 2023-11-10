@@ -52,7 +52,7 @@ import ast
 import csv
 import io
 import string
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 import boto3
 import inflect
@@ -63,7 +63,7 @@ from flask import current_app as app
 from models.crop import CropModel
 from models.mandi import MandiModel
 from sqlalchemy.orm import joinedload
-from sqlalchemy import cast, Text, or_, desc, and_
+from sqlalchemy import cast, Text, or_, desc, and_, func
 
 # [TODO]: dependency on main repo
 from db import db
@@ -609,15 +609,17 @@ def resource_edit(resource_type, resource_id):
     if hasattr(resource_class, "revisions") and hasattr(resource_class, "revision_model") and resource_class.revisions:
         revision_model = resource_class.revision_model
         revision_pk = resource_class.revision_pk
-        existing_record = SaleReceiptModel.query.filter_by(
-            booklet_number=resource.booklet_number,
-            receipt_id=resource.receipt_id,
-            mandi_id=resource.mandi_id,
-            crop_id=resource.crop_id,
+        print('booklet_number',resource.booklet_number,  resource.receipt_id, resource.mandi_id, resource.crop_id, resource.receipt_date)
+        existing_record = SaleReceiptModel.query.filter(
+            SaleReceiptModel.booklet_number==resource.booklet_number,
+            SaleReceiptModel.receipt_id==resource.receipt_id,
+            SaleReceiptModel.mandi_id==resource.mandi_id,
+            SaleReceiptModel.crop_id==resource.crop_id,
+            SaleReceiptModel.is_approved==True,
             func.date(SaleReceiptModel.receipt_date)==func.date(resource.receipt_date)
-            is_approved=True
         ).first()
 
+        print('existing_record', existing_record)
         if existing_record and existing_record.id != resource.id:
             return jsonify({"error": "another record already exists with same booklet, receipt and mandi. Please go back and update with correct values."})
 
@@ -913,6 +915,15 @@ def update_approval_status():
         data = request.json
         action = data.get('action')
         receipt_id = data.get('receipt_id')
+
+        existing_record = SaleReceiptModel.query.filter(
+            SaleReceiptModel.booklet_number==resource.booklet_number,
+            SaleReceiptModel.receipt_id==resource.receipt_id,
+            SaleReceiptModel.mandi_id==resource.mandi_id,
+            SaleReceiptModel.crop_id==resource.crop_id,
+            SaleReceiptModel.is_approved==True,
+            func.date(SaleReceiptModel.receipt_date)==func.date(resource.receipt_date)
+        ).first()
 
         sale_receipt = SaleReceiptModel.query.get(receipt_id)
         if action == 'approve':
