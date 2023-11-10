@@ -62,8 +62,9 @@ from admin_view import admin_configs
 from flask import current_app as app
 from models.crop import CropModel
 from models.mandi import MandiModel
+from models.user import UserModel
 from sqlalchemy.orm import joinedload
-from sqlalchemy import cast, Text, or_, desc, and_, func
+from sqlalchemy import cast, Text, or_, desc, and_, func, asc   
 
 # [TODO]: dependency on main repo
 from db import db
@@ -609,7 +610,6 @@ def resource_edit(resource_type, resource_id):
     if hasattr(resource_class, "revisions") and hasattr(resource_class, "revision_model") and resource_class.revisions:
         revision_model = resource_class.revision_model
         revision_pk = resource_class.revision_pk
-        print('booklet_number',resource.booklet_number,  resource.receipt_id, resource.mandi_id, resource.crop_id, resource.receipt_date)
         existing_record = SaleReceiptModel.query.filter(
             SaleReceiptModel.booklet_number==resource.booklet_number,
             SaleReceiptModel.receipt_id==resource.receipt_id,
@@ -619,7 +619,6 @@ def resource_edit(resource_type, resource_id):
             func.date(SaleReceiptModel.receipt_date)==func.date(resource.receipt_date)
         ).first()
 
-        print('existing_record', existing_record)
         if existing_record and existing_record.id != resource.id:
             return jsonify({"error": "another record already exists with same booklet, receipt and mandi. Please go back and update with correct values."})
 
@@ -983,6 +982,10 @@ def resource_filter(resource_type, status):
     # pagination = model.query.order_by(primary_key_column).paginate(
     #     page=page, per_page=per_page, error_out=False
     # )
+
+    # cs_user_details
+    cs_users = UserModel.query.filter(UserModel.roles=='cs_users').order_by(asc(UserModel.name)).all()
+    print('csuser', cs_users)
     list_display = resource_class.list_display
     if is_custom_template:
         filter_conditions = []
@@ -1004,6 +1007,7 @@ def resource_filter(resource_type, status):
             all_filter = and_(*(model.is_approved != None, *filter_conditions))
 
         pending_pagination = model.query.filter(*pending_filter).order_by(SaleReceiptModel.id).paginate(page=page, per_page=1, error_out=False)
+        print('total', pending_pagination.total)
         all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(*all_filter).order_by(desc(SaleReceiptModel.receipt_date)).paginate(page=page, per_page=10, error_out=False)
 
         if status == 'pending':
@@ -1025,4 +1029,5 @@ def resource_filter(resource_type, status):
             crops=crops,
             selected_mandi=selected_mandi,
             selected_crop=selected_crop,
+            cs_users=cs_users
         )

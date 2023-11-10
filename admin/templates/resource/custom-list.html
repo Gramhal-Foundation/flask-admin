@@ -28,6 +28,25 @@
                     {% endfor %}
                 </select>
             </div>
+            <div>
+                <div>
+                    <input
+                        id="autocompleteInput"
+                        placeholder="Select country name"
+                        class="ml-2 border px-2 py-2 rounded w-40"
+                        onkeyup="onkeyUp(event,crops)"
+                    />
+                    <div
+                        id="dropdown"
+                        class="ml-2 w-40 h-60 border border-gray-300 rounded-md bg-white absolute overflow-y-auto hidden"
+                    >
+                    <input type="hidden" name="page" value={{pagination.page}}>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <input type="date" id="dateInput" class="ml-2 border px-2 py-2 rounded" placeholder="Select Date">
+            </div>
         </div>
     </form>
 
@@ -90,7 +109,7 @@
                         </div>
                     </div>
                     <div class="flex-1">
-                        <img src="{{resource['receipt_image_url']}}" alt="Receipt Image" style="margin-top: -75px" />
+                        <img src="{{resource['receipt_image_url']}}" alt="Receipt Image" style="margin-top: -50px" />
                     </div>
                 </div>
             {% endfor %}
@@ -483,5 +502,64 @@
         form.submit();
     });
 
+
+    var crops = [
+        {% for cs_user in cs_users %}
+            {
+                id: '{{ cs_user.id }}',
+                cs_name: '{{ cs_user.name }}',
+                mobile_number: '{{ cs_user.mobile_number }}'
+            },
+        {% endfor %}
+    ];
+    console.log(crops)
+ 
+    function onkeyUp(e) {
+        let keyword = e.target.value;
+        let dropdownEl = document.querySelector("#dropdown");
+        dropdownEl.classList.remove("hidden");
+        let filteredCountries = crops.filter((c) =>
+          c.mobile_number.toLowerCase().includes(keyword.toLowerCase())
+        );
+
+        renderOptions(filteredCountries);
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        renderOptions(crops);
+      });
+
+      function renderOptions(options) {
+        console.log('options', options.name)
+        let dropdownEl = document.querySelector("#dropdown");
+
+        let newHtml = ``;
+
+        options.forEach((crop) => {
+          newHtml += `<div
+            onclick="selectOption('${crop.cs_name}')"
+            class="px-5 py-3 border-b border-gray-200 text-stone-600 cursor-pointer hover:bg-slate-100 transition-colors"
+          >
+            ${crop.cs_name}
+          </div>`;
+        });
+
+        dropdownEl.innerHTML = newHtml;
+      }
+
+      function selectOption(selectedOption) {
+        hideDropdown();
+        let input = document.querySelector("#autocompleteInput");
+        input.value = selectedOption;
+      }
+
+      document.addEventListener("click", () => {
+        hideDropdown();
+      });
+
+      function hideDropdown() {
+        let dropdownEl = document.querySelector("#dropdown");
+        dropdownEl.classList.add("hidden");
+      }
 </script>
 {% endblock %}
