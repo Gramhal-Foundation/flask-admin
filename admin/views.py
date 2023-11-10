@@ -915,16 +915,26 @@ def update_approval_status():
         action = data.get('action')
         receipt_id = data.get('receipt_id')
 
+
+        print('fff')
+        sale_receipt = SaleReceiptModel.query.get(receipt_id)
+        
+        print('fff')
         existing_record = SaleReceiptModel.query.filter(
-            SaleReceiptModel.booklet_number==resource.booklet_number,
-            SaleReceiptModel.receipt_id==resource.receipt_id,
-            SaleReceiptModel.mandi_id==resource.mandi_id,
-            SaleReceiptModel.crop_id==resource.crop_id,
+            SaleReceiptModel.booklet_number==sale_receipt.booklet_number,
+            SaleReceiptModel.receipt_id==sale_receipt.receipt_id,
+            SaleReceiptModel.mandi_id==sale_receipt.mandi_id,
+            SaleReceiptModel.crop_id==sale_receipt.crop_id,
             SaleReceiptModel.is_approved==True,
-            func.date(SaleReceiptModel.receipt_date)==func.date(resource.receipt_date)
+            func.date(SaleReceiptModel.receipt_date)==func.date(sale_receipt.receipt_date)
         ).first()
 
-        sale_receipt = SaleReceiptModel.query.get(receipt_id)
+        print('fff')
+        if existing_record and existing_record.id != sale_receipt.id:
+            return jsonify({"error": "another record already exists with same booklet, receipt and mandi. Please go back and update with correct values."})
+
+        print('fff')
+
         if action == 'approve':
             sale_receipt.is_approved = True
             sale_receipt.token_amount = sale_receipt.promised_token
