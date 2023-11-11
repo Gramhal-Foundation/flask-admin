@@ -303,10 +303,13 @@ def validate_resource_attribute(resource_type, attribute, initial_value):
         attribute_value = initial_value if initial_value else None
     elif attribute["type"] == "INTEGER" or attribute["type"] == "FLOAT":
         attribute_value = initial_value if initial_value else None
+    elif attribute["type"] == "DATE" or attribute["type"] == "DATETIME":
+        attribute_value = initial_value if initial_value else None
     elif attribute["type"] == "BOOLEAN":
         if not isinstance(initial_value, bool):
-            attribute_value = initial_value.lower() == "true"
-        attribute_value = bool(initial_value)
+            attribute_value = True if initial_value.lower() == "true" else False
+        else:
+            attribute_value = bool(initial_value)
 
     return attribute_value
 
@@ -609,13 +612,13 @@ def resource_edit(resource_type, resource_id):
     if hasattr(resource_class, "revisions") and hasattr(resource_class, "revision_model") and resource_class.revisions:
         revision_model = resource_class.revision_model
         revision_pk = resource_class.revision_pk
-        existing_record = SaleReceiptModel.query.filter_by(
-            booklet_number=resource.booklet_number,
-            receipt_id=resource.receipt_id,
-            mandi_id=resource.mandi_id,
-            crop_id=resource.crop_id,
-            func.date(SaleReceiptModel.receipt_date)==func.date(resource.receipt_date)
-            is_approved=True
+        existing_record = SaleReceiptModel.query.filter(
+            SaleReceiptModel.booklet_number==resource.booklet_number,
+            SaleReceiptModel.receipt_id==resource.receipt_id,
+            SaleReceiptModel.mandi_id==resource.mandi_id,
+            SaleReceiptModel.crop_id==resource.crop_id,
+            func.date(SaleReceiptModel.receipt_date)==func.date(resource.receipt_date),
+            SaleReceiptModel.is_approved==True
         ).first()
 
         if existing_record and existing_record.id != resource.id:
@@ -828,7 +831,7 @@ def resource_upload(resource_type):
         uploaded_file = request.files["file"]
         col_names = [attribute["name"] for attribute in uploadable_attributes]
         csv_data = pd.read_csv(uploaded_file, usecols=col_names)
-        for row in csv_data.iterrows():
+        for index, row in csv_data.iterrows():
             attributes_to_save = {}
             for attribute in uploadable_attributes:
                 attribute_value = row[attribute["name"]]
@@ -838,10 +841,13 @@ def resource_upload(resource_type):
                     attribute_value = attribute_value or None
                 elif attribute["type"] == "INTEGER":
                     attribute_value = attribute_value or None
+                elif attribute["type"] == "DATE" or attribute["type"] == "DATETIME":
+                    attribute_value = attribute_value or None
                 elif attribute["type"] == "BOOLEAN":
                     if not isinstance(attribute_value, bool):
-                        attribute_value = attribute_value.lower() == "true"
-                    attribute_value = bool(attribute_value)
+                        attribute_value = True if attribute_value.lower() == "true" else False
+                    else:
+                        attribute_value = bool(attribute_value)
                 attributes_to_save[attribute["name"]] = attribute_value
             new_resource = model(**attributes_to_save)
             db.session.add(new_resource)
