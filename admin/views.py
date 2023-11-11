@@ -1011,19 +1011,22 @@ def resource_filter(resource_type, status):
 
         if not filter_conditions:
             pending_filter = (model.is_approved == None,)
-            all_filter = (model.is_approved != None,)
+            rejected_filter = (model.is_approved == False,)
+            approved_filter = (model.is_approved == True,)
         else:
             pending_filter = and_(*(model.is_approved == None, *filter_conditions))
-            all_filter = and_(*(model.is_approved != None, *filter_conditions))
-
+            rejected_filter = and_(*(model.is_approved == False, *filter_conditions))
+            approved_filter = and_(*(model.is_approved == True, *filter_conditions))
         pending_pagination = model.query.filter(*pending_filter).order_by(SaleReceiptModel.id).paginate(page=page, per_page=1, error_out=False)
         print('total', pending_pagination.total)
-        all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(*all_filter).order_by(desc(SaleReceiptModel.receipt_date)).paginate(page=page, per_page=10, error_out=False)
-
+        rejected_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(*rejected_filter).order_by(desc(SaleReceiptModel.receipt_date)).paginate(page=page, per_page=10, error_out=False)
+        approved_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(*approved_filter).order_by(desc(SaleReceiptModel.receipt_date)).paginate(page=page, per_page=10, error_out=False)
         if status == 'pending':
             pagination = pending_pagination
+        elif status == 'rejected':
+            pagination = rejected_pagination
         else:
-            pagination = all_pagination
+            pagination = approved_pagination
 
         mandis = MandiModel.query.order_by(MandiModel.mandi_name).all()
         crops = CropModel.query.order_by(CropModel.crop_name).all()
@@ -1032,7 +1035,8 @@ def resource_filter(resource_type, status):
             "resource/custom-list.html",
             pagination=pagination,
             pending_pagination=pending_pagination,
-            all_pagination=all_pagination,
+            rejected_pagination=rejected_pagination,
+            approved_pagination=approved_pagination,
             resource_type=resource_type,
             list_display=list_display,
             mandis=mandis,
