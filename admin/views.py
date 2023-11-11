@@ -831,7 +831,7 @@ def resource_upload(resource_type):
         uploaded_file = request.files["file"]
         col_names = [attribute["name"] for attribute in uploadable_attributes]
         csv_data = pd.read_csv(uploaded_file, usecols=col_names)
-        for row in csv_data.iterrows():
+        for index, row in csv_data.iterrows():
             attributes_to_save = {}
             for attribute in uploadable_attributes:
                 attribute_value = row[attribute["name"]]
@@ -841,10 +841,13 @@ def resource_upload(resource_type):
                     attribute_value = attribute_value or None
                 elif attribute["type"] == "INTEGER":
                     attribute_value = attribute_value or None
+                elif attribute["type"] == "DATE" or attribute["type"] == "DATETIME":
+                    attribute_value = attribute_value or None
                 elif attribute["type"] == "BOOLEAN":
                     if not isinstance(attribute_value, bool):
-                        attribute_value = attribute_value.lower() == "true"
-                    attribute_value = bool(attribute_value)
+                        attribute_value = True if attribute_value.lower() == "true" else False
+                    else:
+                        attribute_value = bool(attribute_value)
                 attributes_to_save[attribute["name"]] = attribute_value
             new_resource = model(**attributes_to_save)
             db.session.add(new_resource)
