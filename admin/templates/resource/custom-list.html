@@ -38,7 +38,7 @@
                     />
                     <div
                         id="dropdown"
-                        class="ml-2 w-40 h-60 border border-gray-300 rounded-md bg-white absolute overflow-y-auto hidden"
+                        class="ml-2 w-40 border border-gray-300 rounded-md bg-white absolute overflow-y-auto hidden"
                     >
                     <input type="hidden" name="page" value={{pagination.page}}>
                     </div>
@@ -138,15 +138,17 @@
                             {% elif item == "receipt_id" %}
                                 <th scope="col" class="px-6 py-3">Receipt Number</th>
                             {% elif item == "quantity" %}
-                                <th scope="col" class="px-6 py-3">Quantity (Quintal)</th>
+                                <th scope="col" class="px-6 py-3">Weight (Quintal)</th>
                             {% elif item == "price" %}
-                                <th scope="col" class="px-6 py-3">Price</th>
-                            {% elif item == "is_approved" %}
-                                <th scope="col" class="px-6 py-3">Status</th>
+                                <th scope="col" class="px-6 py-3">Rate</th>
                             {% elif item == "receipt_date" %}
-                                <th scope="col" class="px-6 py-3">Receipt Date</th>
+                                <th scope="col" class="px-6 py-3">Submission On</th>
                             {% elif item == "receipt_image_url" %}
                                 <th scope="col" class="px-6 py-3">Receipt Image</th>
+                            {% elif item == "updated_at" %}
+                            <th scope="col" class="px-6 py-3">Validation On</th>
+                            {% elif item == "is_approved" %}
+                                <th scope="col" class="px-6 py-3">Status</th>
                             {% else %}
                                 <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
                             {% endif %}
@@ -168,12 +170,12 @@
                                         <span class="text-red-500">Rejected</span>
                                     {% endif %}
                                 {% elif item == "receipt_image_url" %}
-                                    {% if resource[item] %}
+                                    <!-- {% if resource[item] %}
                                         <a href="{{ resource[item] }}" target="_blank" class="text-blue-500 flex items-center">
                                             <span class="underline">View</span>
                                             <i class="fa-solid fa-external-link ml-1"></i>
                                         </a>
-                                    {% else %}
+                                    {% else %} -->
                                         <span>-</span>
                                     {% endif %}
                                 {% else %}
@@ -253,15 +255,17 @@
                             {% elif item == "receipt_id" %}
                                 <th scope="col" class="px-6 py-3">Receipt Number</th>
                             {% elif item == "quantity" %}
-                                <th scope="col" class="px-6 py-3">Quantity (Quintal)</th>
+                                <th scope="col" class="px-6 py-3">Weight (Quintal)</th>
                             {% elif item == "price" %}
-                                <th scope="col" class="px-6 py-3">Price</th>
-                            {% elif item == "is_approved" %}
-                                <th scope="col" class="px-6 py-3">Status</th>
+                                <th scope="col" class="px-6 py-3">Rate</th>
                             {% elif item == "receipt_date" %}
-                                <th scope="col" class="px-6 py-3">Receipt Date</th>
+                                <th scope="col" class="px-6 py-3">Submission On</th>
                             {% elif item == "receipt_image_url" %}
                                 <th scope="col" class="px-6 py-3">Receipt Image</th>
+                            {% elif item == "updated_at" %}
+                                <th scope="col" class="px-6 py-3">Validation On</th>
+                            {% elif item == "is_approved" %}
+                                <th scope="col" class="px-6 py-3">Status</th>
                             {% else %}
                                 <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
                             {% endif %}
@@ -283,12 +287,12 @@
                                         <span class="text-red-500">Rejected</span>
                                     {% endif %}
                                 {% elif item == "receipt_image_url" %}
-                                    {% if resource[item] %}
+                                    <!-- {% if resource[item] %}
                                         <a href="{{ resource[item] }}" target="_blank" class="text-blue-500 flex items-center">
                                             <span class="underline">View</span>
                                             <i class="fa-solid fa-external-link ml-1"></i>
                                         </a>
-                                    {% else %}
+                                    {% else %} -->
                                         <span>-</span>
                                     {% endif %}
                                 {% else %}
