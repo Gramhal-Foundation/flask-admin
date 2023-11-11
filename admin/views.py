@@ -609,13 +609,13 @@ def resource_edit(resource_type, resource_id):
     if hasattr(resource_class, "revisions") and hasattr(resource_class, "revision_model") and resource_class.revisions:
         revision_model = resource_class.revision_model
         revision_pk = resource_class.revision_pk
-        existing_record = SaleReceiptModel.query.filter_by(
-            booklet_number=resource.booklet_number,
-            receipt_id=resource.receipt_id,
-            mandi_id=resource.mandi_id,
-            crop_id=resource.crop_id,
-            func.date(SaleReceiptModel.receipt_date)==func.date(resource.receipt_date)
-            is_approved=True
+        existing_record = SaleReceiptModel.query.filter(
+            SaleReceiptModel.booklet_number==resource.booklet_number,
+            SaleReceiptModel.receipt_id==resource.receipt_id,
+            SaleReceiptModel.mandi_id==resource.mandi_id,
+            SaleReceiptModel.crop_id==resource.crop_id,
+            func.date(SaleReceiptModel.receipt_date)==func.date(resource.receipt_date),
+            SaleReceiptModel.is_approved==True
         ).first()
 
         if existing_record and existing_record.id != resource.id:
