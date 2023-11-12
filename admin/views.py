@@ -63,7 +63,7 @@ from flask import current_app as app
 from models.crop import CropModel
 from models.mandi import MandiModel
 from sqlalchemy.orm import joinedload
-from sqlalchemy import cast, Text, or_, desc, and_
+from sqlalchemy import cast, Text, or_, desc, and_, func
 
 # [TODO]: dependency on main repo
 from db import db
@@ -559,6 +559,10 @@ def resource_create(resource_type):
     db.session.add(new_resource)
     db.session.commit()
 
+    # call after create hook
+    if hasattr(resource_class, 'after_create_callback'):
+        resource_class.after_create_callback(resource)
+
     return redirect(url_for(".resource_list", resource_type=resource_type))
 
 
@@ -664,11 +668,7 @@ def resource_edit(resource_type, resource_id):
 
     # call after update hook
     if hasattr(resource_class, 'after_update_callback'):
-        resource_class.after_update_callback()
-
-    if resource_type == 'mandi-receipt' and resource.is_approved:
-        update_cs_mandi_data(sale_receipt=resource, forced=True)
-        update_cs_data_mandi_crop(sale_receipt=resource, forced=True)
+        resource_class.after_update_callback(resource)
 
     return redirect(request.referrer or url_for(".resource_list", resource_type=resource_type))
 
@@ -704,9 +704,9 @@ def resource_delete(resource_type, resource_id):
         db.session.delete(resource)
         db.session.commit()
 
-    if cloned_resource and resource_type == 'mandi-receipt':
-        update_cs_mandi_data(sale_receipt=cloned_resource, forced=True)
-        update_cs_data_mandi_crop(sale_receipt=cloned_resource, forced=True)
+    # call after update hook
+    if cloned_resource and hasattr(resource_class, 'after_delete_callback'):
+        resource_class.after_delete_callback(cloned_resource)
 
     return redirect(request.referrer or url_for(".resource_list", resource_type=resource_type))
 
