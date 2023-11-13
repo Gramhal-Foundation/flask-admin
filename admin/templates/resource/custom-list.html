@@ -32,9 +32,11 @@
                 <div>
                     <input
                         id="autocompleteInput"
-                        placeholder="Select country name"
+                        placeholder="Select User"
                         class="ml-2 border px-2 py-2 rounded w-40"
-                        onkeyup="onkeyUp(event,crops)"
+                        onkeyup="onkeyUp(event)"
+                        name="user_id"
+                        value="{% if selected_user_id %}{{ selected_user_id }}{% endif %}"
                     />
                     <div
                         id="dropdown"
@@ -45,7 +47,8 @@
                 </div>
             </div>
             <div>
-                <input type="date" id="dateInput" class="ml-2 border px-2 py-2 rounded" placeholder="Select Date">
+                <input type="hidden" name="page" value={{pagination.page}}>
+                <input type="date" id="dateInput" name="selected_date" class="ml-2 border px-2 py-2 rounded" placeholder="Select Date" value="{{ selected_date }}">
             </div>
         </div>
     </form>
@@ -170,14 +173,7 @@
                                         <span class="text-red-500">Rejected</span>
                                     {% endif %}
                                 {% elif item == "receipt_image_url" %}
-                                    <!-- {% if resource[item] %}
-                                        <a href="{{ resource[item] }}" target="_blank" class="text-blue-500 flex items-center">
-                                            <span class="underline">View</span>
-                                            <i class="fa-solid fa-external-link ml-1"></i>
-                                        </a>
-                                    {% else %} -->
-                                        <span>-</span>
-                                    {% endif %}
+                                    <span>-</span>
                                 {% else %}
                                     {{ resource[item] }}
                                 {% endif %}
@@ -216,7 +212,7 @@
         <div class="mt-4 flex items-end">
             {% if pagination.has_prev %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('rejected', '{{ pagination.prev_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %})"
+            onclick="displayReceipts('rejected', '{{ pagination.prev_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %},{% if selected_date %}'{{ selected_date }}'{% else %}null{% endif %})"
             class="mx-1 px-3 py-1 rounded border text-blue-500">
                 {{ 'Prev' }}
             </a>
@@ -225,7 +221,7 @@
             {% if num %}
             {% if num != pagination.page %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('rejected', '{{ num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %})"
+            onclick="displayReceipts('rejected', '{{ num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %},{% if selected_date %}'{{ selected_date }}'{% else %}null{% endif %})"
             class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
             {% else %}
             <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
@@ -236,7 +232,7 @@
             {% endfor %}
             {% if pagination.has_next %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('rejected', '{{ pagination.next_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %})"
+            onclick="displayReceipts('rejected', '{{ pagination.next_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %},{% if selected_date %}'{{ selected_date }}'{% else %}null{% endif %})"
             class="mx-1 px-3 py-1 rounded border text-blue-500">
                 {{ 'Next' }}
             </a>
@@ -333,7 +329,7 @@
         <div class="mt-4 flex items-end">
             {% if pagination.has_prev %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('approved', '{{ pagination.prev_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %})"
+            onclick="displayReceipts('approved', '{{ pagination.prev_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %},{% if selected_date %}'{{ selected_date }}'{% else %}null{% endif %})"
             class="mx-1 px-3 py-1 rounded border text-blue-500">
                 {{ 'Prev' }}
             </a>
@@ -342,7 +338,7 @@
             {% if num %}
             {% if num != pagination.page %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('approved', '{{ num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %})"
+            onclick="displayReceipts('approved', '{{ num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %},{% if selected_date %}'{{ selected_date }}'{% else %}null{% endif %})"
             class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
             {% else %}
             <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
@@ -353,7 +349,7 @@
             {% endfor %}
             {% if pagination.has_next %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('approved', '{{ pagination.next_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %})"
+            onclick="displayReceipts('approved', '{{ pagination.next_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %}, {% if selected_date %}'{{ selected_date }}'{% else %}null{% endif %})"
             class="mx-1 px-3 py-1 rounded border text-blue-500">
                 {{ 'Next' }}
             </a>
@@ -556,7 +552,7 @@
         modal.classList.add('hidden');
     }
 
-    function displayReceipts(buttonValue, page=1, selectedMandi=null, selectedCrop=null) {
+    function displayReceipts(buttonValue, page=1, selectedMandi=null, selectedCrop=null, selectedUserId=null, selectedDate=null) {
         let pendingButton = document.getElementById('pendingButton');
         let rejectedReceiptButton = document.getElementById('rejectedReceiptButton');
         let resourceType = "{{ resource_type }}";
@@ -567,6 +563,13 @@
         }
         if(selectedCrop) {
             url+= `&crop=${selectedCrop}`
+        }
+        if (selectedUserId) {
+            url += `&user_id=${selectedUserId}`
+        }
+        if(selectedDate) {
+            console.log(selectedDate)
+            url+= `&selected_date=${selectedDate}`
         }
 
         window.location.href = url;
@@ -632,8 +635,13 @@
         form.submit();
     });
 
+    var filterDateSelectElement = document.getElementById('dateInput');
+    filterDateSelectElement.addEventListener('change', function() {
+        var form = document.getElementById('filterForm');
+        form.submit();
+    });
 
-    var crops = [
+    var users = [
         {% for cs_user in cs_users %}
             {
                 id: '{{ cs_user.id }}',
@@ -642,54 +650,54 @@
             },
         {% endfor %}
     ];
-    console.log(crops)
  
     function onkeyUp(e) {
         let keyword = e.target.value;
         let dropdownEl = document.querySelector("#dropdown");
         dropdownEl.classList.remove("hidden");
-        let filteredCountries = crops.filter((c) =>
+        let filteredUsers = users.filter((c) =>
           c.mobile_number.toLowerCase().includes(keyword.toLowerCase())
         );
 
-        renderOptions(filteredCountries);
-      }
+        renderOptions(filteredUsers);
+    }
 
-      document.addEventListener("DOMContentLoaded", () => {
-        renderOptions(crops);
-      });
+    document.addEventListener("DOMContentLoaded", () => {
+        renderOptions(users);
+    });
 
       function renderOptions(options) {
-        console.log('options', options.name)
         let dropdownEl = document.querySelector("#dropdown");
 
         let newHtml = ``;
 
-        options.forEach((crop) => {
+        options.forEach((user) => {
           newHtml += `<div
-            onclick="selectOption('${crop.cs_name}')"
+            onclick="selectOption('${user.id}')"
             class="px-5 py-3 border-b border-gray-200 text-stone-600 cursor-pointer hover:bg-slate-100 transition-colors"
           >
-            ${crop.cs_name}
+            ${user.cs_name}
           </div>`;
         });
 
         dropdownEl.innerHTML = newHtml;
       }
 
-      function selectOption(selectedOption) {
+    function selectOption(selectedOption) {
         hideDropdown();
         let input = document.querySelector("#autocompleteInput");
         input.value = selectedOption;
-      }
+        var form = document.getElementById('filterForm');
+        form.submit();
+    }
 
-      document.addEventListener("click", () => {
+    document.addEventListener("click", () => {
         hideDropdown();
-      });
+    });
 
-      function hideDropdown() {
+    function hideDropdown() {
         let dropdownEl = document.querySelector("#dropdown");
         dropdownEl.classList.add("hidden");
-      }
+    }
 </script>
 {% endblock %}

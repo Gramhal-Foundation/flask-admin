@@ -983,10 +983,18 @@ def resource_filter(resource_type, status):
     page = request.args.get("page", default=1, type=int)
     mandi = request.args.get("mandi")
     crop = request.args.get('crop')
+    date = request.args.get('selected_date')
+    user_id =None
+    
+    user = request.args.get('user_id')
+    if date:
+        date_object = datetime.strptime(date, '%Y-%m-%d')
     if(mandi):
         mandi_id = int(mandi)
     if(crop):
         crop_id = int(crop)
+    if user is not None:
+        user_id = int(user) if user and user != 'None' else None
     # primary_key_column = model.__table__.primary_key.columns.keys()[0]
     # TODO: filter not working
     # pagination = model.query.order_by(primary_key_column).paginate(
@@ -995,19 +1003,26 @@ def resource_filter(resource_type, status):
 
     # cs_user_details
     cs_users = UserModel.query.filter(UserModel.roles=='cs_users').order_by(asc(UserModel.name)).all()
-    print('csuser', cs_users)
     list_display = resource_class.list_display
     if is_custom_template:
         filter_conditions = []
 
         selected_mandi = None
         selected_crop = None
+        selected_user_id = None
+        selected_date = None
         if mandi:
             filter_conditions.append(model.mandi_id == mandi_id)
             selected_mandi = mandi_id
         if crop:
             filter_conditions.append(model.crop_id == crop_id)
             selected_crop = crop_id
+        if user_id:
+            filter_conditions.append(model.user_id == user_id)
+            selected_user_id = user_id
+        if date:
+            filter_conditions.append(func.date(model.receipt_date)==func.date(date_object))
+            selected_date = date
 
         if not filter_conditions:
             pending_filter = (model.is_approved == None,)
@@ -1018,7 +1033,6 @@ def resource_filter(resource_type, status):
             rejected_filter = and_(*(model.is_approved == False, *filter_conditions))
             approved_filter = and_(*(model.is_approved == True, *filter_conditions))
         pending_pagination = model.query.filter(*pending_filter).order_by(SaleReceiptModel.id).paginate(page=page, per_page=1, error_out=False)
-        print('total', pending_pagination.total)
         rejected_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(*rejected_filter).order_by(desc(SaleReceiptModel.receipt_date)).paginate(page=page, per_page=10, error_out=False)
         approved_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(*approved_filter).order_by(desc(SaleReceiptModel.receipt_date)).paginate(page=page, per_page=10, error_out=False)
         if status == 'pending':
@@ -1043,5 +1057,7 @@ def resource_filter(resource_type, status):
             crops=crops,
             selected_mandi=selected_mandi,
             selected_crop=selected_crop,
+            selected_user_id=selected_user_id,
+            selected_date=selected_date,
             cs_users=cs_users
         )
