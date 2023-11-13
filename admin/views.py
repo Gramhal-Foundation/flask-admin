@@ -916,10 +916,8 @@ def update_approval_status():
         receipt_id = data.get('receipt_id')
 
 
-        print('fff')
         sale_receipt = SaleReceiptModel.query.get(receipt_id)
-        
-        print('fff')
+
         existing_record = SaleReceiptModel.query.filter(
             SaleReceiptModel.booklet_number==sale_receipt.booklet_number,
             SaleReceiptModel.receipt_id==sale_receipt.receipt_id,
@@ -929,11 +927,8 @@ def update_approval_status():
             func.date(SaleReceiptModel.receipt_date)==func.date(sale_receipt.receipt_date)
         ).first()
 
-        print('fff')
         if existing_record and existing_record.id != sale_receipt.id:
             return jsonify({"error": "another record already exists with same booklet, receipt and mandi. Please go back and update with correct values."})
-
-        print('fff')
 
         if action == 'approve':
             sale_receipt.is_approved = True
