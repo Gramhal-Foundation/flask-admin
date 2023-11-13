@@ -29,7 +29,7 @@
                 </select>
             </div>
             <div>
-                <div>
+                <div class="relative">
                     <input
                         id="autocompleteInput"
                         placeholder="Select User"
@@ -41,6 +41,7 @@
                     <div
                         id="dropdown"
                         class="ml-2 w-40 border border-gray-300 rounded-md bg-white absolute overflow-y-auto hidden"
+                        style="z-index: 1;"
                     >
                     <input type="hidden" name="page" value={{pagination.page}}>
                     </div>
@@ -283,14 +284,7 @@
                                         <span class="text-red-500">Rejected</span>
                                     {% endif %}
                                 {% elif item == "receipt_image_url" %}
-                                    <!-- {% if resource[item] %}
-                                        <a href="{{ resource[item] }}" target="_blank" class="text-blue-500 flex items-center">
-                                            <span class="underline">View</span>
-                                            <i class="fa-solid fa-external-link ml-1"></i>
-                                        </a>
-                                    {% else %} -->
                                         <span>-</span>
-                                    {% endif %}
                                 {% else %}
                                     {{ resource[item] }}
                                 {% endif %}
