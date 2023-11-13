@@ -59,29 +59,34 @@ import inflect
 import pandas as pd
 from admin_view import *
 from admin_view import admin_configs
-from flask import current_app as app
-from models.crop import CropModel
-from models.mandi import MandiModel
-from sqlalchemy.orm import joinedload
-from sqlalchemy import cast, Text, or_, desc, and_
 
 # [TODO]: dependency on main repo
 from db import db
-from flask import Response, flash, redirect, jsonify
+from flask import Response
+from flask import current_app as app
+from flask import flash, jsonify, redirect
 from flask import render_template as real_render_template
 from flask import request, url_for
+from flask_bcrypt import Bcrypt
 from flask_login import login_required, login_user, logout_user
 from flask_wtf import FlaskForm
+from models.crop import CropModel
+from models.mandi import MandiModel
+from models.membership import MembershipPlans, UserMembership, UserWallet
+from models.salesReceipt import SaleReceiptModel
+
+# TODO: remove project dependency
+from resources.whatsappBot.mandi_v2 import (
+    update_cs_data_mandi_crop,
+    update_cs_mandi_data,
+)
+from sqlalchemy import Text, and_, cast, desc, func, or_
+from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired
-from models.salesReceipt import SaleReceiptModel
-from . import admin
-from flask_bcrypt import Bcrypt
-from models.membership import UserMembership, MembershipPlans, UserWallet
 
-# TODO: remove project dependency
-from resources.whatsappBot.mandi_v2 import update_cs_mandi_data, update_cs_data_mandi_crop
+from . import admin
 
 bcrypt = Bcrypt()
 
@@ -248,7 +253,9 @@ def render_template(*args, **kwargs):
         }
         if hasattr(resource_obj, "permissions"):
             resource_permissions = resource_obj.permissions
-        template_attributes["permissions"][resource_type] = resource_permissions
+        template_attributes["permissions"][
+            resource_type
+        ] = resource_permissions
 
     if "resource_type" in kwargs:
         original_pk = get_resource_pk(kwargs["resource_type"])
@@ -283,7 +290,8 @@ def get_editable_attributes(resource_type):
     model_attributes = []
     for column in model.__table__.columns:
         model_attributes.append(
-            {"name": str(column.name), "type": str(column.type)})
+            {"name": str(column.name), "type": str(column.type)}
+        )
 
     editable_attributes = []
     for attribute in model_attributes:
@@ -307,7 +315,9 @@ def validate_resource_attribute(resource_type, attribute, initial_value):
         attribute_value = initial_value if initial_value else None
     elif attribute["type"] == "BOOLEAN":
         if not isinstance(initial_value, bool):
-            attribute_value = True if initial_value.lower() == "true" else False
+            attribute_value = (
+                True if initial_value.lower() == "true" else False
+            )
         else:
             attribute_value = bool(initial_value)
 
@@ -346,9 +356,12 @@ def index():
         werkzeug.wrappers.response.Response: A redirection response
         to the dashboard route.
     """
-    default_route = url_for('.dashboard')
-    if 'default-route-resource' in admin_configs:
-        default_route = url_for('.resource_list', resource_type=admin_configs['default-route-resource'])
+    default_route = url_for(".dashboard")
+    if "default-route-resource" in admin_configs:
+        default_route = url_for(
+            ".resource_list",
+            resource_type=admin_configs["default-route-resource"],
+        )
     return redirect(default_route)
 
 
@@ -398,13 +411,17 @@ def login():
         user_model = user_model_config["model"]
         identifier = user_model_config["identifier"]
         user = user_model.query.filter(
-            getattr(user_model, identifier) == phone).first()
+            getattr(user_model, identifier) == phone
+        ).first()
         bcrypt.init_app(app)
         if user and bcrypt.check_password_hash(user.password, password):
             login_user(user)
-            default_route = url_for('.dashboard')
-            if 'default-route-resource' in admin_configs:
-                default_route = url_for('.resource_list', resource_type=admin_configs['default-route-resource'])
+            default_route = url_for(".dashboard")
+            if "default-route-resource" in admin_configs:
+                default_route = url_for(
+                    ".resource_list",
+                    resource_type=admin_configs["default-route-resource"],
+                )
             return redirect(default_route)
         else:
             flash("Invalid credentials. Please try again.", "error")
@@ -436,13 +453,21 @@ def filter_resources(model, list_display, search_query, page, per_page):
         for column_name in list_display:
             column = model.__table__.columns.get(column_name)
             if column is not None:
-                or_conditions.append(cast(column, Text).ilike(f'%{search_query}%'))
+                or_conditions.append(
+                    cast(column, Text).ilike(f"%{search_query}%")
+                )
 
         if or_conditions:
             search_condition = or_(*or_conditions)
-            pagination = model.query.filter(search_condition).order_by(primary_key_column).paginate(page=page, per_page=per_page, error_out=False)
+            pagination = (
+                model.query.filter(search_condition)
+                .order_by(primary_key_column)
+                .paginate(page=page, per_page=per_page, error_out=False)
+            )
         else:
-            pagination = model.query.order_by(primary_key_column).paginate(page=page, per_page=per_page, error_out=False)
+            pagination = model.query.order_by(primary_key_column).paginate(
+                page=page, per_page=per_page, error_out=False
+            )
     else:
         pagination = model.query.order_by(primary_key_column).paginate(
             page=page, per_page=per_page, error_out=False
@@ -470,8 +495,14 @@ def resource_list(resource_type):
         information about the resource type and list display attributes.
     """
     # TODO: hardcoding to be removed
-    if resource_type == 'mandi-receipt':
-        return redirect(url_for('.resource_filter', resource_type=resource_type, status='pending'))
+    if resource_type == "mandi-receipt":
+        return redirect(
+            url_for(
+                ".resource_filter",
+                resource_type=resource_type,
+                status="pending",
+            )
+        )
 
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
@@ -481,10 +512,14 @@ def resource_list(resource_type):
     search_query = request.args.get("search", default="")
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
     list_display = resource_class.list_display
-    pagination = filter_resources(model, list_display, search_query, page, per_page)
+    pagination = filter_resources(
+        model, list_display, search_query, page, per_page
+    )
     if is_custom_template:
-        pagination = model.query.filter(model.is_approved is None).order_by(primary_key_column).paginate(
-            page=page, per_page=1, error_out=False
+        pagination = (
+            model.query.filter(model.is_approved is None)
+            .order_by(primary_key_column)
+            .paginate(page=page, per_page=1, error_out=False)
         )
         processed_data = get_preprocess_data(pagination, list_display)
         return render_template(
@@ -493,7 +528,7 @@ def resource_list(resource_type):
             resource_type=resource_type,
             list_display=list_display,
             processed_data=processed_data,
-            search_query=search_query
+            search_query=search_query,
         )
     else:
         return render_template(
@@ -559,6 +594,10 @@ def resource_create(resource_type):
     db.session.add(new_resource)
     db.session.commit()
 
+    # call after create hook
+    if hasattr(resource_class, "after_create_callback"):
+        resource_class.after_create_callback(new_resource)
+
     return redirect(url_for(".resource_list", resource_type=resource_type))
 
 
@@ -596,7 +635,10 @@ def resource_edit(resource_type, resource_id):
     resource = model.query.get(resource_id)
 
     if not resource:
-        return redirect(request.referrer or url_for(".resource_list", resource_type=resource_type))
+        return redirect(
+            request.referrer
+            or url_for(".resource_list", resource_type=resource_type)
+        )
 
     editable_attributes = get_editable_attributes(resource_type)
 
@@ -609,27 +651,42 @@ def resource_edit(resource_type, resource_id):
             admin_configs=admin_configs,
         )
 
-    if hasattr(resource_class, "revisions") and hasattr(resource_class, "revision_model") and resource_class.revisions:
+    if (
+        hasattr(resource_class, "revisions")
+        and hasattr(resource_class, "revision_model")
+        and resource_class.revisions
+    ):
         revision_model = resource_class.revision_model
         revision_pk = resource_class.revision_pk
         existing_record = SaleReceiptModel.query.filter(
-            SaleReceiptModel.booklet_number==resource.booklet_number,
-            SaleReceiptModel.receipt_id==resource.receipt_id,
-            SaleReceiptModel.mandi_id==resource.mandi_id,
-            SaleReceiptModel.crop_id==resource.crop_id,
-            func.date(SaleReceiptModel.receipt_date)==func.date(resource.receipt_date),
-            SaleReceiptModel.is_approved==True
+            SaleReceiptModel.booklet_number == resource.booklet_number,
+            SaleReceiptModel.receipt_id == resource.receipt_id,
+            SaleReceiptModel.mandi_id == resource.mandi_id,
+            SaleReceiptModel.crop_id == resource.crop_id,
+            func.date(SaleReceiptModel.receipt_date)
+            == func.date(resource.receipt_date),
+            SaleReceiptModel.is_approved is True,
         ).first()
 
         if existing_record and existing_record.id != resource.id:
-            return jsonify({"error": "another record already exists with same booklet, receipt and mandi. Please go back and update with correct values."})
+            return jsonify(
+                {
+                    "error": "another record already exists with same booklet, receipt and mandi. Please go back and update with correct values."
+                }
+            )
 
         cloned_attributes_to_save = {}
         for column, value in resource.__dict__.items():
-            if column in ['_sa_instance_state', 'created_at', 'updated_at', 'promised_token', 'token_amount']:
+            if column in [
+                "_sa_instance_state",
+                "created_at",
+                "updated_at",
+                "promised_token",
+                "token_amount",
+            ]:
                 continue
 
-            if column == 'id':
+            if column == "id":
                 cloned_attributes_to_save[revision_pk] = value
                 continue
 
@@ -652,25 +709,24 @@ def resource_edit(resource_type, resource_id):
             )
             setattr(resource, attribute["name"], validated_attribute_value)
 
-    if resource_type == 'mandi-receipt':
+    if resource_type == "mandi-receipt":
         updated_mandi = MandiModel.query.get(resource.mandi_id)
         updated_crop = CropModel.query.get(resource.crop_id)
-        setattr(resource, 'mandi_name', updated_mandi.mandi_name)
-        setattr(resource, 'mandi_name_hi', updated_mandi.mandi_name_hi)
-        setattr(resource, 'crop_name', updated_crop.crop_name)
-        setattr(resource, 'crop_name_hi', updated_crop.crop_name_hi)
+        setattr(resource, "mandi_name", updated_mandi.mandi_name)
+        setattr(resource, "mandi_name_hi", updated_mandi.mandi_name_hi)
+        setattr(resource, "crop_name", updated_crop.crop_name)
+        setattr(resource, "crop_name_hi", updated_crop.crop_name_hi)
 
     db.session.commit()
 
     # call after update hook
-    if hasattr(resource_class, 'after_update_callback'):
-        resource_class.after_update_callback()
+    if hasattr(resource_class, "after_update_callback"):
+        resource_class.after_update_callback(resource)
 
-    if resource_type == 'mandi-receipt' and resource.is_approved:
-        update_cs_mandi_data(sale_receipt=resource, forced=True)
-        update_cs_data_mandi_crop(sale_receipt=resource, forced=True)
-
-    return redirect(request.referrer or url_for(".resource_list", resource_type=resource_type))
+    return redirect(
+        request.referrer
+        or url_for(".resource_list", resource_type=resource_type)
+    )
 
 
 @admin.route(
@@ -704,11 +760,14 @@ def resource_delete(resource_type, resource_id):
         db.session.delete(resource)
         db.session.commit()
 
-    if cloned_resource and resource_type == 'mandi-receipt':
-        update_cs_mandi_data(sale_receipt=cloned_resource, forced=True)
-        update_cs_data_mandi_crop(sale_receipt=cloned_resource, forced=True)
+    # call after update hook
+    if cloned_resource and hasattr(resource_class, "after_delete_callback"):
+        resource_class.after_delete_callback(cloned_resource)
 
-    return redirect(request.referrer or url_for(".resource_list", resource_type=resource_type))
+    return redirect(
+        request.referrer
+        or url_for(".resource_list", resource_type=resource_type)
+    )
 
 
 @admin.route("/resource/<string:resource_type>/download", methods=["GET"])
@@ -841,11 +900,18 @@ def resource_upload(resource_type):
                     attribute_value = attribute_value or None
                 elif attribute["type"] == "INTEGER":
                     attribute_value = attribute_value or None
-                elif attribute["type"] == "DATE" or attribute["type"] == "DATETIME":
+                elif (
+                    attribute["type"] == "DATE"
+                    or attribute["type"] == "DATETIME"
+                ):
                     attribute_value = attribute_value or None
                 elif attribute["type"] == "BOOLEAN":
                     if not isinstance(attribute_value, bool):
-                        attribute_value = True if attribute_value.lower() == "true" else False
+                        attribute_value = (
+                            True
+                            if attribute_value.lower() == "true"
+                            else False
+                        )
                     else:
                         attribute_value = bool(attribute_value)
                 attributes_to_save[attribute["name"]] = attribute_value
@@ -901,7 +967,12 @@ def get_preprocess_data(pagination, list_display):
                 image_data.append(getattr(resource, item))
             elif item == "is_approved":
                 button_data.extend(
-                    [("Edit", resource.id), ("Approve", resource.id), ("Reject", resource.id)])
+                    [
+                        ("Edit", resource.id),
+                        ("Approve", resource.id),
+                        ("Reject", resource.id),
+                    ]
+                )
             elif item != "receipt_date":
                 other_data.append((item, getattr(resource, item)))
 
@@ -913,24 +984,24 @@ def get_preprocess_data(pagination, list_display):
     return processed_data
 
 
-@admin.route('/update_approval_status', methods=['POST'])
+@admin.route("/update_approval_status", methods=["POST"])
 def update_approval_status():
     try:
         data = request.json
-        action = data.get('action')
-        receipt_id = data.get('receipt_id')
+        action = data.get("action")
+        receipt_id = data.get("receipt_id")
 
         sale_receipt = SaleReceiptModel.query.get(receipt_id)
-        if action == 'approve':
+        if action == "approve":
             sale_receipt.is_approved = True
             sale_receipt.token_amount = sale_receipt.promised_token
-        elif action == 'reject':
+        elif action == "reject":
             sale_receipt.is_approved = False
             sale_receipt.token_amount = 0
 
         db.session.commit()
 
-        if sale_receipt.is_approved == True:
+        if sale_receipt.is_approved is True:
             # Add earning wallet plan to user membership start
             membership_plan_id = ""
 
@@ -947,16 +1018,21 @@ def update_approval_status():
                 user_id=sale_receipt.user_id,
                 membership_plan_id=membership_plan_id,
                 payment_src_id="earned_days",
-                notes="earned via sale receipt"
+                notes="earned via sale receipt",
             ).commit()
 
-        if action == 'approve':
+        if action == "approve":
             update_cs_mandi_data(sale_receipt=sale_receipt)
             update_cs_data_mandi_crop(sale_receipt=sale_receipt)
 
-        return jsonify({'success': True, 'message': 'Approval status updated successfully'})
+        return jsonify(
+            {
+                "success": True,
+                "message": "Approval status updated successfully",
+            }
+        )
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
+        return jsonify({"success": False, "message": str(e)})
 
 
 @admin.route("/resource/<string:resource_type>/<string:status>")
@@ -968,10 +1044,10 @@ def resource_filter(resource_type, status):
     # per_page = 5
     page = request.args.get("page", default=1, type=int)
     mandi = request.args.get("mandi")
-    crop = request.args.get('crop')
-    if(mandi):
+    crop = request.args.get("crop")
+    if mandi:
         mandi_id = int(mandi)
-    if(crop):
+    if crop:
         crop_id = int(crop)
     # primary_key_column = model.__table__.primary_key.columns.keys()[0]
     # TODO: filter not working
@@ -992,16 +1068,29 @@ def resource_filter(resource_type, status):
             selected_crop = crop_id
 
         if not filter_conditions:
-            pending_filter = (model.is_approved == None,)
-            all_filter = (model.is_approved != None,)
+            pending_filter = (model.is_approved is None,)
+            all_filter = (model.is_approved is not None,)
         else:
-            pending_filter = and_(*(model.is_approved == None, *filter_conditions))
-            all_filter = and_(*(model.is_approved != None, *filter_conditions))
+            pending_filter = and_(
+                *(model.is_approved is None, *filter_conditions)
+            )
+            all_filter = and_(
+                *(model.is_approved is not None, *filter_conditions)
+            )
 
-        pending_pagination = model.query.filter(*pending_filter).order_by(SaleReceiptModel.id).paginate(page=page, per_page=1, error_out=False)
-        all_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(*all_filter).order_by(desc(SaleReceiptModel.receipt_date)).paginate(page=page, per_page=10, error_out=False)
+        pending_pagination = (
+            model.query.filter(*pending_filter)
+            .order_by(SaleReceiptModel.id)
+            .paginate(page=page, per_page=1, error_out=False)
+        )
+        all_pagination = (
+            model.query.options(joinedload(SaleReceiptModel.versions))
+            .filter(*all_filter)
+            .order_by(desc(SaleReceiptModel.receipt_date))
+            .paginate(page=page, per_page=10, error_out=False)
+        )
 
-        if status == 'pending':
+        if status == "pending":
             pagination = pending_pagination
         else:
             pagination = all_pagination
