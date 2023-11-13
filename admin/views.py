@@ -594,7 +594,7 @@ def resource_create(resource_type):
     db.session.add(new_resource)
     db.session.commit()
 
-    # call after create hooks
+    # call after create hook
     if hasattr(resource_class, "after_create_callback"):
         resource_class.after_create_callback(new_resource)
 
