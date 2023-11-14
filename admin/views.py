@@ -663,22 +663,12 @@ def resource_edit(resource_type, resource_id):
         revision_model = resource_class.revision_model
         revision_pk = resource_class.revision_pk
         existing_record = SaleReceiptModel.query.filter(
-<<<<<<< HEAD
             SaleReceiptModel.booklet_number==resource.booklet_number,
             SaleReceiptModel.receipt_id==resource.receipt_id,
             SaleReceiptModel.mandi_id==resource.mandi_id,
             SaleReceiptModel.crop_id==resource.crop_id,
             SaleReceiptModel.is_approved==True,
             func.date(SaleReceiptModel.receipt_date)==func.date(resource.receipt_date)
-=======
-            SaleReceiptModel.booklet_number == resource.booklet_number,
-            SaleReceiptModel.receipt_id == resource.receipt_id,
-            SaleReceiptModel.mandi_id == resource.mandi_id,
-            SaleReceiptModel.crop_id == resource.crop_id,
-            func.date(SaleReceiptModel.receipt_date)
-            == func.date(resource.receipt_date),
-            SaleReceiptModel.is_approved is True,
->>>>>>> c806202e542c5ae9aba20e1a0fa91a0d6ce0d3b7
         ).first()
 
         if existing_record and existing_record.id != resource.id:
