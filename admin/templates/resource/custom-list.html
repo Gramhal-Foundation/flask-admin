@@ -600,7 +600,10 @@
                 if (!editButtonClicked) {
                     window.location.reload();
                 }
-            }
+            }else if (data.error === "another record already exists with same booklet, receipt and mandi. Please go back and update with correct values.") {
+            alert(data.error);
+            window.location.reload();
+        }
         })
         .catch(error => {
             alert('Error: ' + error);
@@ -650,7 +653,7 @@
         let dropdownEl = document.querySelector("#dropdown");
         dropdownEl.classList.remove("hidden");
         let filteredUsers = users.filter((c) =>
-          c.mobile_number.toLowerCase().includes(keyword.toLowerCase())
+        c.mobile_number.toLowerCase().includes(keyword.toLowerCase())
         );
 
         renderOptions(filteredUsers);
@@ -660,22 +663,22 @@
         renderOptions(users);
     });
 
-      function renderOptions(options) {
-        let dropdownEl = document.querySelector("#dropdown");
+    function renderOptions(options) {
+    let dropdownEl = document.querySelector("#dropdown");
 
-        let newHtml = ``;
+    let newHtml = ``;
 
-        options.forEach((user) => {
-          newHtml += `<div
-            onclick="selectOption('${user.id}')"
-            class="px-5 py-3 border-b border-gray-200 text-stone-600 cursor-pointer hover:bg-slate-100 transition-colors"
-          >
-            ${user.cs_name}
-          </div>`;
-        });
+    options.forEach((user) => {
+        newHtml += `<div
+        onclick="selectOption('${user.id}')"
+        class="px-5 py-3 border-b border-gray-200 text-stone-600 cursor-pointer hover:bg-slate-100 transition-colors"
+        >
+        ${user.cs_name}
+        </div>`;
+    });
 
-        dropdownEl.innerHTML = newHtml;
-      }
+    dropdownEl.innerHTML = newHtml;
+    }
 
     function selectOption(selectedOption) {
         hideDropdown();
