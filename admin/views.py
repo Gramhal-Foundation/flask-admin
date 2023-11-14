@@ -59,12 +59,6 @@ import inflect
 import pandas as pd
 from admin_view import *
 from admin_view import admin_configs
-from flask import current_app as app
-from models.crop import CropModel
-from models.mandi import MandiModel
-from models.user import UserModel
-from sqlalchemy.orm import joinedload
-from sqlalchemy import cast, Text, or_, desc, and_, func, asc   
 
 # [TODO]: dependency on main repo
 from db import db
@@ -73,19 +67,21 @@ from flask import current_app as app
 from flask import flash, jsonify, redirect
 from flask import render_template as real_render_template
 from flask import request, url_for
-from flask_login import login_required, login_user, logout_user, current_user
+from flask_bcrypt import Bcrypt
+from flask_login import current_user, login_required, login_user, logout_user
 from flask_wtf import FlaskForm
 from models.crop import CropModel
 from models.mandi import MandiModel
 from models.membership import MembershipPlans, UserMembership, UserWallet
 from models.salesReceipt import SaleReceiptModel
+from models.user import UserModel
 
 # TODO: remove project dependency
 from resources.whatsappBot.mandi_v2 import (
     update_cs_data_mandi_crop,
     update_cs_mandi_data,
 )
-from sqlalchemy import Text, and_, cast, desc, func, or_
+from sqlalchemy import Text, and_, asc, cast, desc, func, or_
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 from wtforms import PasswordField, StringField, SubmitField
@@ -664,12 +660,13 @@ def resource_edit(resource_type, resource_id):
         revision_model = resource_class.revision_model
         revision_pk = resource_class.revision_pk
         existing_record = SaleReceiptModel.query.filter(
-            SaleReceiptModel.booklet_number==resource.booklet_number,
-            SaleReceiptModel.receipt_id==resource.receipt_id,
-            SaleReceiptModel.mandi_id==resource.mandi_id,
-            SaleReceiptModel.crop_id==resource.crop_id,
-            SaleReceiptModel.is_approved==True,
-            func.date(SaleReceiptModel.receipt_date)==func.date(resource.receipt_date)
+            SaleReceiptModel.booklet_number == resource.booklet_number,
+            SaleReceiptModel.receipt_id == resource.receipt_id,
+            SaleReceiptModel.mandi_id == resource.mandi_id,
+            SaleReceiptModel.crop_id == resource.crop_id,
+            SaleReceiptModel.is_approved == True,
+            func.date(SaleReceiptModel.receipt_date)
+            == func.date(resource.receipt_date),
         ).first()
 
         if existing_record and existing_record.id != resource.id:
@@ -996,32 +993,37 @@ def update_approval_status():
         action = data.get("action")
         receipt_id = data.get("receipt_id")
 
-
         sale_receipt = SaleReceiptModel.query.get(receipt_id)
 
-
-        if action == 'approve':
+        if action == "approve":
             existing_record = SaleReceiptModel.query.filter(
-                SaleReceiptModel.booklet_number==sale_receipt.booklet_number,
-                SaleReceiptModel.receipt_id==sale_receipt.receipt_id,
-                SaleReceiptModel.mandi_id==sale_receipt.mandi_id,
-                SaleReceiptModel.crop_id==sale_receipt.crop_id,
-                SaleReceiptModel.is_approved==True,
-                func.date(SaleReceiptModel.receipt_date)==func.date(sale_receipt.receipt_date)
+                SaleReceiptModel.booklet_number == sale_receipt.booklet_number,
+                SaleReceiptModel.receipt_id == sale_receipt.receipt_id,
+                SaleReceiptModel.mandi_id == sale_receipt.mandi_id,
+                SaleReceiptModel.crop_id == sale_receipt.crop_id,
+                SaleReceiptModel.is_approved == True,
+                func.date(SaleReceiptModel.receipt_date)
+                == func.date(sale_receipt.receipt_date),
             ).first()
 
             if existing_record and existing_record.id != sale_receipt.id:
-                return jsonify({"error": "another record already exists with same booklet, receipt and mandi. Please go back and update with correct values."})
+                return jsonify(
+                    {
+                        "error": "another record already exists with same booklet, receipt and mandi. Please go back and update with correct values."
+                    }
+                )
 
             sale_receipt.is_approved = True
             sale_receipt.token_amount = sale_receipt.promised_token
 
-        elif action == 'reject':
+        elif action == "reject":
             sale_receipt.is_approved = False
             sale_receipt.token_amount = 0
 
-        if action in ['approve', 'reject']:
-            sale_receipt.validated_on = datetime.utcnow() + timedelta(hours=5, minutes=30)
+        if action in ["approve", "reject"]:
+            sale_receipt.validated_on = datetime.utcnow() + timedelta(
+                hours=5, minutes=30
+            )
             sale_receipt.validated_by = logged_in_user.id
 
         db.session.commit()
@@ -1069,19 +1071,19 @@ def resource_filter(resource_type, status):
     # per_page = 5
     page = request.args.get("page", default=1, type=int)
     mandi = request.args.get("mandi")
-    crop = request.args.get('crop')
-    date = request.args.get('selected_date')
-    user_id =None
-    
-    user = request.args.get('user_id')
+    crop = request.args.get("crop")
+    date = request.args.get("selected_date")
+    user_id = None
+
+    user = request.args.get("user_id")
     if date:
-        date_object = datetime.strptime(date, '%Y-%m-%d')
-    if(mandi):
+        date_object = datetime.strptime(date, "%Y-%m-%d")
+    if mandi:
         mandi_id = int(mandi)
     if crop:
         crop_id = int(crop)
     if user is not None:
-        user_id = int(user) if user and user != 'None' else None
+        user_id = int(user) if user and user != "None" else None
     # primary_key_column = model.__table__.primary_key.columns.keys()[0]
     # TODO: filter not working
     # pagination = model.query.order_by(primary_key_column).paginate(
@@ -1089,7 +1091,11 @@ def resource_filter(resource_type, status):
     # )
 
     # cs_user_details
-    cs_users = UserModel.query.filter(UserModel.roles=='cs_users').order_by(asc(UserModel.name)).all()
+    cs_users = (
+        UserModel.query.filter(UserModel.roles == "cs_users")
+        .order_by(asc(UserModel.name))
+        .all()
+    )
     list_display = resource_class.list_display
     if is_custom_template:
         filter_conditions = []
@@ -1107,11 +1113,15 @@ def resource_filter(resource_type, status):
             selected_crop = crop_id
         if user_id:
             filter_conditions.append(model.user_id == user_id)
-            selected_user = UserModel.query.filter(UserModel.roles=='cs_users', UserModel.id==user_id).first()
+            selected_user = UserModel.query.filter(
+                UserModel.roles == "cs_users", UserModel.id == user_id
+            ).first()
             selected_user_mobile_number = selected_user.mobile_number
             selected_user_id = user_id
         if date:
-            filter_conditions.append(func.date(model.receipt_date)==func.date(date_object))
+            filter_conditions.append(
+                func.date(model.receipt_date) == func.date(date_object)
+            )
             selected_date = date
 
         if not filter_conditions:
@@ -1119,15 +1129,36 @@ def resource_filter(resource_type, status):
             rejected_filter = (model.is_approved == False,)
             approved_filter = (model.is_approved == True,)
         else:
-            pending_filter = and_(*(model.is_approved == None, *filter_conditions))
-            rejected_filter = and_(*(model.is_approved == False, *filter_conditions))
-            approved_filter = and_(*(model.is_approved == True, *filter_conditions))
-        pending_pagination = model.query.filter(*pending_filter).order_by(SaleReceiptModel.id).paginate(page=page, per_page=1, error_out=False)
-        rejected_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(*rejected_filter).order_by(desc(SaleReceiptModel.receipt_date)).paginate(page=page, per_page=10, error_out=False)
-        approved_pagination = model.query.options(joinedload(SaleReceiptModel.versions)).filter(*approved_filter).order_by(desc(SaleReceiptModel.receipt_date)).paginate(page=page, per_page=10, error_out=False)
-        if status == 'pending':
+            pending_filter = and_(
+                *(model.is_approved == None, *filter_conditions)
+            )
+            rejected_filter = and_(
+                *(model.is_approved == False, *filter_conditions)
+            )
+            approved_filter = and_(
+                *(model.is_approved == True, *filter_conditions)
+            )
+        pending_pagination = (
+            model.query.filter(*pending_filter)
+            .order_by(SaleReceiptModel.id)
+            .paginate(page=page, per_page=1, error_out=False)
+        )
+        rejected_pagination = (
+            model.query.options(joinedload(SaleReceiptModel.versions))
+            .filter(*rejected_filter)
+            .order_by(desc(SaleReceiptModel.receipt_date))
+            .paginate(page=page, per_page=10, error_out=False)
+        )
+        approved_pagination = (
+            model.query.options(joinedload(SaleReceiptModel.versions))
+            .filter(*approved_filter)
+            .order_by(desc(SaleReceiptModel.receipt_date))
+            .paginate(page=page, per_page=10, error_out=False)
+        )
+
+        if status == "pending":
             pagination = pending_pagination
-        elif status == 'rejected':
+        elif status == "rejected":
             pagination = rejected_pagination
         else:
             pagination = approved_pagination
@@ -1150,5 +1181,5 @@ def resource_filter(resource_type, status):
             selected_user_mobile_number=selected_user_mobile_number,
             selected_user_id=selected_user_id,
             selected_date=selected_date,
-            cs_users=cs_users
+            cs_users=cs_users,
         )
