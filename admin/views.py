@@ -1011,6 +1011,7 @@ def resource_filter(resource_type, status):
 
         selected_mandi = None
         selected_crop = None
+        selected_user_mobile_number = None
         selected_user_id = None
         selected_date = None
         if mandi:
@@ -1021,6 +1022,8 @@ def resource_filter(resource_type, status):
             selected_crop = crop_id
         if user_id:
             filter_conditions.append(model.user_id == user_id)
+            selected_user = UserModel.query.filter(UserModel.roles=='cs_users', UserModel.id==user_id).first()
+            selected_user_mobile_number = selected_user.mobile_number
             selected_user_id = user_id
         if date:
             filter_conditions.append(func.date(model.receipt_date)==func.date(date_object))
@@ -1059,6 +1062,7 @@ def resource_filter(resource_type, status):
             crops=crops,
             selected_mandi=selected_mandi,
             selected_crop=selected_crop,
+            selected_user_mobile_number=selected_user_mobile_number,
             selected_user_id=selected_user_id,
             selected_date=selected_date,
             cs_users=cs_users

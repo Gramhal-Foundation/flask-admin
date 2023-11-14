@@ -32,11 +32,10 @@
                 <div class="relative">
                     <input
                         id="autocompleteInput"
-                        placeholder="Select User"
+                        placeholder="{% if selected_user_mobile_number %}{{ selected_user_mobile_number }} {% else %}Search Number{% endif %}"
                         class="ml-2 border px-2 py-2 rounded w-40"
                         onkeyup="onkeyUp(event)"
                         name="user_id"
-                        value="{% if selected_user_id %}{{ selected_user_id }}{% endif %}"
                     />
                     <div
                         id="dropdown"
@@ -259,7 +258,7 @@
                                 <th scope="col" class="px-6 py-3">Submission On</th>
                             {% elif item == "receipt_image_url" %}
                                 <th scope="col" class="px-6 py-3">Receipt Image</th>
-                            {% elif item == "updated_at" %}
+                            {% elif item == "validated_on" %}
                                 <th scope="col" class="px-6 py-3">Validation On</th>
                             {% elif item == "is_approved" %}
                                 <th scope="col" class="px-6 py-3">Status</th>
@@ -671,9 +670,9 @@
     options.forEach((user) => {
         newHtml += `<div
         onclick="selectOption('${user.id}')"
-        class="px-5 py-3 border-b border-gray-200 text-stone-600 cursor-pointer hover:bg-slate-100 transition-colors"
+        class="uppercase px-5 py-3 border-b border-gray-200 text-stone-600 cursor-pointer hover:bg-slate-100 transition-colors"
         >
-        ${user.cs_name}
+        ${user.mobile_number}<br>${user.cs_name}
         </div>`;
     });
 
