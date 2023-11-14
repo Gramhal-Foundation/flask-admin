@@ -30,7 +30,7 @@
             {% elif attribute.type == 'DATETIME' %}
               <input type="datetime-local" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border border-gray-300 rounded" {% if resource[attribute.name] %} value="{{ resource[attribute.name] | admin_format_datetime }}" {% endif %} />
             {% elif attribute.type == 'DATE' %}
-              <input type="date" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border border-gray-300 rounded" {% if resource[attribute.name] %} value="{{ resource[attribute.name] | admin_format_date }}" {% endif %} />
+              <input type="date" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border border-gray-300 rounded" {% if resource[attribute.name] %} value="{{ resource[attribute.name] | admin_format_datetime }}" {% endif %} />
             {% endif %}
           </div>
         </div>
