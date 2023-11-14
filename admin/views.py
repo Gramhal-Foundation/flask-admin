@@ -71,7 +71,7 @@ from db import db
 from flask import Response, flash, redirect, jsonify
 from flask import render_template as real_render_template
 from flask import request, url_for
-from flask_login import login_required, login_user, logout_user
+from flask_login import login_required, login_user, logout_user, current_user
 from flask_wtf import FlaskForm
 from werkzeug.utils import secure_filename
 from wtforms import PasswordField, StringField, SubmitField
@@ -914,7 +914,7 @@ def update_approval_status():
         data = request.json
         action = data.get('action')
         receipt_id = data.get('receipt_id')
-
+        logged_in_user = current_user
 
         sale_receipt = SaleReceiptModel.query.get(receipt_id)
 
@@ -938,6 +938,10 @@ def update_approval_status():
         elif action == 'reject':
             sale_receipt.is_approved = False
             sale_receipt.token_amount = 0
+
+        if action in ['approve', 'reject']:
+            sale_receipt.validated_on = datetime.utcnow() + timedelta(hours=5, minutes=30)
+            sale_receipt.validated_by = logged_in_user.id
 
         db.session.commit()
 
