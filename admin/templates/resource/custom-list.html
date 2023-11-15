@@ -30,24 +30,23 @@
             </div>
             <div>
                 <div class="relative">
+                    <input type="hidden" id='user_id' name="user_id" value={{selected_user_id}}>
                     <input
                         id="autocompleteInput"
                         placeholder="{% if selected_user_mobile_number %}{{ selected_user_mobile_number }} {% else %}Search Number{% endif %}"
                         class="ml-2 border px-2 py-2 rounded w-40"
                         onkeyup="onkeyUp(event)"
-                        name="user_id"
+                        value="{% if selected_user_mobile_number %}{{selected_user_mobile_number}}{% endif %}"
                     />
                     <div
                         id="dropdown"
                         class="ml-2 w-40 border border-gray-300 rounded-md bg-white absolute overflow-y-auto hidden"
                         style="z-index: 1;"
                     >
-                    <input type="hidden" name="page" value={{pagination.page}}>
                     </div>
                 </div>
             </div>
             <div class="flex items-center space-x-4">
-                <input type="hidden" name="page" value="{{ pagination.page }}">
                 <label for="fromperiod" class="text-gray-700">From</label>
                 <input type="date" id="fromDateInput" name="from_date" class="border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Select Date" value="{{ selected_from_date }}">
                 <label for="toperiod" class="text-gray-700">To</label>
@@ -344,7 +343,7 @@
         <div class="mt-4 flex items-end">
             {% if pagination.has_prev %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('approved', '{{ pagination.prev_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %},{% if selected_date %}'{{ selected_date }}'{% else %}null{% endif %})"
+            onclick="displayReceipts('approved', '{{ pagination.prev_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %},{% if selected_from_date %}'{{ selected_from_date }}'{% else %}null{% endif %}, {% if selected_to_date %}'{{ selected_to_date }}'{% else %}null{% endif %})"
             class="mx-1 px-3 py-1 rounded border text-blue-500">
                 {{ 'Prev' }}
             </a>
@@ -353,7 +352,7 @@
             {% if num %}
             {% if num != pagination.page %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('approved', '{{ num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %},{% if selected_date %}'{{ selected_date }}'{% else %}null{% endif %})"
+            onclick="displayReceipts('approved', '{{ num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %},{% if selected_from_date %}'{{ selected_from_date }}'{% else %}null{% endif %}, {% if selected_to_date %}'{{ selected_to_date }}'{% else %}null{% endif %})"
             class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
             {% else %}
             <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
@@ -364,7 +363,7 @@
             {% endfor %}
             {% if pagination.has_next %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('approved', '{{ pagination.next_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %}, {% if selected_date %}'{{ selected_date }}'{% else %}null{% endif %})"
+            onclick="displayReceipts('approved', '{{ pagination.next_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %},{% if selected_from_date %}'{{ selected_from_date }}'{% else %}null{% endif %}, {% if selected_to_date %}'{{ selected_to_date }}'{% else %}null{% endif %})"
             class="mx-1 px-3 py-1 rounded border text-blue-500">
                 {{ 'Next' }}
             </a>
@@ -567,7 +566,7 @@
         modal.classList.add('hidden');
     }
 
-    function displayReceipts(buttonValue, page=1, selectedMandi=null, selectedCrop=null, selectedUserId=null, selectedDate=null) {
+    function displayReceipts(buttonValue, page=1, selectedMandi=null, selectedCrop=null, selectedUserId=null, selected_from_date=null, selected_to_date=null) {
         let pendingButton = document.getElementById('pendingButton');
         let rejectedReceiptButton = document.getElementById('rejectedReceiptButton');
         let resourceType = "{{ resource_type }}";
@@ -582,9 +581,11 @@
         if (selectedUserId) {
             url += `&user_id=${selectedUserId}`
         }
-        if(selectedDate) {
-            console.log(selectedDate)
-            url+= `&selected_date=${selectedDate}`
+        if(selected_from_date) {
+            url+= `&from_date=${selected_from_date}`
+        }
+        if(selected_to_date) {
+            url+= `&to_date=${selected_to_date}`
         }
 
         window.location.href = url;
@@ -713,6 +714,11 @@
         hideDropdown();
         let input = document.querySelector("#autocompleteInput");
         input.value = selectedOption;
+
+        // Set the user_id value before form submission
+        let userIdInput = document.querySelector("#user_id");
+        userIdInput.value = selectedOption;
+
         var form = document.getElementById('filterForm');
         form.submit();
     }
