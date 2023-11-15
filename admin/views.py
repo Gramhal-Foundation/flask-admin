@@ -1172,7 +1172,11 @@ def resource_filter(resource_type, status):
         else:
             pagination = approved_pagination
 
-        mandis = MandiModel.query.filter(MandiModel.is_bolbhav_plus==True).order_by(MandiModel.mandi_name).all()
+        mandis = (
+            MandiModel.query.filter(MandiModel.is_bolbhav_plus == True)
+            .order_by(MandiModel.mandi_name)
+            .all()
+        )
         crops = CropModel.get_all_mandi_crops()
 
         return render_template(
