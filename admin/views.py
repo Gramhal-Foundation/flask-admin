@@ -52,7 +52,7 @@ import ast
 import csv
 import io
 import string
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 import boto3
 import inflect
@@ -68,19 +68,20 @@ from flask import flash, jsonify, redirect
 from flask import render_template as real_render_template
 from flask import request, url_for
 from flask_bcrypt import Bcrypt
-from flask_login import login_required, login_user, logout_user
+from flask_login import current_user, login_required, login_user, logout_user
 from flask_wtf import FlaskForm
 from models.crop import CropModel
 from models.mandi import MandiModel
 from models.membership import MembershipPlans, UserMembership, UserWallet
 from models.salesReceipt import SaleReceiptModel
+from models.user import UserModel
 
 # TODO: remove project dependency
 from resources.whatsappBot.mandi_v2 import (
     update_cs_data_mandi_crop,
     update_cs_mandi_data,
 )
-from sqlalchemy import Text, and_, cast, desc, func, or_
+from sqlalchemy import Text, and_, asc, cast, desc, func, or_
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 from wtforms import PasswordField, StringField, SubmitField
@@ -663,9 +664,9 @@ def resource_edit(resource_type, resource_id):
             SaleReceiptModel.receipt_id == resource.receipt_id,
             SaleReceiptModel.mandi_id == resource.mandi_id,
             SaleReceiptModel.crop_id == resource.crop_id,
+            SaleReceiptModel.is_approved == True,
             func.date(SaleReceiptModel.receipt_date)
             == func.date(resource.receipt_date),
-            SaleReceiptModel.is_approved is True,
         ).first()
 
         if existing_record and existing_record.id != resource.id:
@@ -987,17 +988,43 @@ def get_preprocess_data(pagination, list_display):
 @admin.route("/update_approval_status", methods=["POST"])
 def update_approval_status():
     try:
+        logged_in_user = current_user
         data = request.json
         action = data.get("action")
         receipt_id = data.get("receipt_id")
 
         sale_receipt = SaleReceiptModel.query.get(receipt_id)
+
         if action == "approve":
+            existing_record = SaleReceiptModel.query.filter(
+                SaleReceiptModel.booklet_number == sale_receipt.booklet_number,
+                SaleReceiptModel.receipt_id == sale_receipt.receipt_id,
+                SaleReceiptModel.mandi_id == sale_receipt.mandi_id,
+                SaleReceiptModel.crop_id == sale_receipt.crop_id,
+                SaleReceiptModel.is_approved == True,
+                func.date(SaleReceiptModel.receipt_date)
+                == func.date(sale_receipt.receipt_date),
+            ).first()
+
+            if existing_record and existing_record.id != sale_receipt.id:
+                return jsonify(
+                    {
+                        "error": "another record already exists with same booklet, receipt and mandi. Please go back and update with correct values."
+                    }
+                )
+
             sale_receipt.is_approved = True
             sale_receipt.token_amount = sale_receipt.promised_token
+
         elif action == "reject":
             sale_receipt.is_approved = False
             sale_receipt.token_amount = 0
+
+        if action in ["approve", "reject"]:
+            sale_receipt.validated_on = datetime.utcnow() + timedelta(
+                hours=5, minutes=30
+            )
+            sale_receipt.validated_by = logged_in_user.id
 
         db.session.commit()
 
@@ -1045,68 +1072,128 @@ def resource_filter(resource_type, status):
     page = request.args.get("page", default=1, type=int)
     mandi = request.args.get("mandi")
     crop = request.args.get("crop")
+    from_date = request.args.get("from_date")
+    to_date = request.args.get("to_date")
+    user_id = None
+
+    user = request.args.get("user_id")
+    if from_date:
+        from_date_object = datetime.strptime(from_date, "%Y-%m-%d")
+    if to_date:
+        to_date_object = datetime.strptime(to_date, "%Y-%m-%d")
     if mandi:
         mandi_id = int(mandi)
     if crop:
         crop_id = int(crop)
+    if user is not None:
+        user_id = int(user) if user and user != "None" else None
     # primary_key_column = model.__table__.primary_key.columns.keys()[0]
     # TODO: filter not working
     # pagination = model.query.order_by(primary_key_column).paginate(
     #     page=page, per_page=per_page, error_out=False
     # )
+
+    # cs_user_details
+    cs_users = (
+        UserModel.query.filter(UserModel.roles == "cs_users")
+        .order_by(asc(UserModel.name))
+        .all()
+    )
     list_display = resource_class.list_display
     if is_custom_template:
         filter_conditions = []
 
         selected_mandi = None
         selected_crop = None
+        selected_user_mobile_number = None
+        selected_user_id = None
+        selected_from_date = None
+        selected_to_date = None
         if mandi:
             filter_conditions.append(model.mandi_id == mandi_id)
             selected_mandi = mandi_id
         if crop:
             filter_conditions.append(model.crop_id == crop_id)
             selected_crop = crop_id
+        if user_id:
+            filter_conditions.append(model.user_id == user_id)
+            selected_user = UserModel.query.filter(
+                UserModel.roles == "cs_users", UserModel.id == user_id
+            ).first()
+            selected_user_mobile_number = selected_user.mobile_number
+            selected_user_id = user_id
+        if from_date:
+            filter_conditions.append(
+                func.date(model.receipt_date) >= func.date(from_date_object)
+            )
+            selected_from_date = from_date
+        if to_date:
+            filter_conditions.append(
+                func.date(model.receipt_date) <= func.date(to_date_object)
+            )
+            selected_to_date = to_date
 
         if not filter_conditions:
-            pending_filter = (model.is_approved is None,)
-            all_filter = (model.is_approved is not None,)
+            pending_filter = (model.is_approved == None,)
+            rejected_filter = (model.is_approved == False,)
+            approved_filter = (model.is_approved == True,)
         else:
             pending_filter = and_(
-                *(model.is_approved is None, *filter_conditions)
+                *(model.is_approved == None, *filter_conditions)
             )
-            all_filter = and_(
-                *(model.is_approved is not None, *filter_conditions)
+            rejected_filter = and_(
+                *(model.is_approved == False, *filter_conditions)
             )
-
+            approved_filter = and_(
+                *(model.is_approved == True, *filter_conditions)
+            )
         pending_pagination = (
             model.query.filter(*pending_filter)
             .order_by(SaleReceiptModel.id)
             .paginate(page=page, per_page=1, error_out=False)
         )
-        all_pagination = (
+        rejected_pagination = (
             model.query.options(joinedload(SaleReceiptModel.versions))
-            .filter(*all_filter)
+            .filter(*rejected_filter)
+            .order_by(desc(SaleReceiptModel.receipt_date))
+            .paginate(page=page, per_page=10, error_out=False)
+        )
+        approved_pagination = (
+            model.query.options(joinedload(SaleReceiptModel.versions))
+            .filter(*approved_filter)
             .order_by(desc(SaleReceiptModel.receipt_date))
             .paginate(page=page, per_page=10, error_out=False)
         )
 
         if status == "pending":
             pagination = pending_pagination
+        elif status == "rejected":
+            pagination = rejected_pagination
         else:
-            pagination = all_pagination
+            pagination = approved_pagination
 
-        mandis = MandiModel.query.order_by(MandiModel.mandi_name).all()
-        crops = CropModel.query.order_by(CropModel.crop_name).all()
+        mandis = (
+            MandiModel.query.filter(MandiModel.is_bolbhav_plus == True)
+            .order_by(MandiModel.mandi_name)
+            .all()
+        )
+        crops = CropModel.get_all_mandi_crops()
 
         return render_template(
             "resource/custom-list.html",
             pagination=pagination,
             pending_pagination=pending_pagination,
-            all_pagination=all_pagination,
+            rejected_pagination=rejected_pagination,
+            approved_pagination=approved_pagination,
             resource_type=resource_type,
             list_display=list_display,
             mandis=mandis,
             crops=crops,
             selected_mandi=selected_mandi,
             selected_crop=selected_crop,
+            selected_user_mobile_number=selected_user_mobile_number,
+            selected_user_id=selected_user_id,
+            selected_from_date=selected_from_date,
+            selected_to_date=selected_to_date,
+            cs_users=cs_users,
         )
