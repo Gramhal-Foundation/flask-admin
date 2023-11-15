@@ -681,8 +681,21 @@
         let keyword = e.target.value;
         let dropdownEl = document.querySelector("#dropdown");
         dropdownEl.classList.remove("hidden");
-        let filteredUsers = users.filter((c) =>
-        c.mobile_number.toLowerCase().includes(keyword.toLowerCase())
+        let filteredUsers;
+
+        if (keyword.trim() === '') {
+            let input = document.querySelector("#autocompleteInput");
+            input.value = '';
+
+            let userIdInput = document.querySelector("#user_id");
+            userIdInput.value = ''; // Clear user_id
+
+            dropdownEl.classList.add("hidden"); // Hide the dropdown
+            return;
+        }
+
+        filteredUsers = users.filter((c) =>
+            c.mobile_number.toLowerCase().includes(keyword.toLowerCase())
         );
 
         renderOptions(filteredUsers);
