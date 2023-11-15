@@ -1072,12 +1072,15 @@ def resource_filter(resource_type, status):
     page = request.args.get("page", default=1, type=int)
     mandi = request.args.get("mandi")
     crop = request.args.get("crop")
-    date = request.args.get("selected_date")
+    from_date = request.args.get("from_date")
+    to_date = request.args.get("to_date")
     user_id = None
 
     user = request.args.get("user_id")
-    if date:
-        date_object = datetime.strptime(date, "%Y-%m-%d")
+    if from_date:
+        from_date_object = datetime.strptime(from_date, "%Y-%m-%d")
+    if to_date:
+        to_date_object = datetime.strptime(to_date, "%Y-%m-%d")
     if mandi:
         mandi_id = int(mandi)
     if crop:
@@ -1104,7 +1107,8 @@ def resource_filter(resource_type, status):
         selected_crop = None
         selected_user_mobile_number = None
         selected_user_id = None
-        selected_date = None
+        selected_from_date = None
+        selected_to_date = None
         if mandi:
             filter_conditions.append(model.mandi_id == mandi_id)
             selected_mandi = mandi_id
@@ -1118,11 +1122,16 @@ def resource_filter(resource_type, status):
             ).first()
             selected_user_mobile_number = selected_user.mobile_number
             selected_user_id = user_id
-        if date:
+        if from_date:
             filter_conditions.append(
-                func.date(model.receipt_date) == func.date(date_object)
+                func.date(model.receipt_date) >= func.date(from_date_object)
             )
-            selected_date = date
+            selected_from_date = from_date
+        if to_date:
+            filter_conditions.append(
+                func.date(model.receipt_date) <= func.date(to_date_object)
+            )
+            selected_to_date = to_date
 
         if not filter_conditions:
             pending_filter = (model.is_approved == None,)
@@ -1163,7 +1172,7 @@ def resource_filter(resource_type, status):
         else:
             pagination = approved_pagination
 
-        mandis = MandiModel.query.order_by(MandiModel.mandi_name).all()
+        mandis = MandiModel.query.filter(MandiModel.is_bolbhav_plus==True).order_by(MandiModel.mandi_name).all()
         crops = CropModel.query.order_by(CropModel.crop_name).all()
 
         return render_template(
@@ -1180,6 +1189,7 @@ def resource_filter(resource_type, status):
             selected_crop=selected_crop,
             selected_user_mobile_number=selected_user_mobile_number,
             selected_user_id=selected_user_id,
-            selected_date=selected_date,
+            selected_from_date=selected_from_date,
+            selected_to_date=selected_to_date,
             cs_users=cs_users,
         )

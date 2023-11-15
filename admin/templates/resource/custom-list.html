@@ -46,10 +46,14 @@
                     </div>
                 </div>
             </div>
-            <div>
-                <input type="hidden" name="page" value={{pagination.page}}>
-                <input type="date" id="dateInput" name="selected_date" class="ml-2 border px-2 py-2 rounded" placeholder="Select Date" value="{{ selected_date }}">
+            <div class="flex items-center space-x-4">
+                <input type="hidden" name="page" value="{{ pagination.page }}">
+                <label for="fromperiod" class="text-gray-700">From</label>
+                <input type="date" id="fromDateInput" name="from_date" class="border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Select Date" value="{{ selected_from_date }}">
+                <label for="toperiod" class="text-gray-700">To</label>
+                <input type="date" id="toDateInput" name="to_date" class="border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Select Date" value="{{ selected_to_date }}">
             </div>
+            
         </div>
     </form>
 
@@ -98,7 +102,7 @@
                     <div class="flex-1">
                         <div class="flex flex-wrap">
                             {% for item in list_display %}
-                                {% if item != 'receipt_image_url' %}
+                                {% if item != 'receipt_image_url' and item != 'validated_by' and item != 'validated_on' %}
                                     <div class="w-1/2 mb-6">
                                         {% if item == 'is_approved' %}
                                             <div class="uppercase text-xs text-gray-500">{{ 'Status' | format_label }}</div>
@@ -174,7 +178,14 @@
                                         <span class="text-red-500">Rejected</span>
                                     {% endif %}
                                 {% elif item == "receipt_image_url" %}
+                                    {% if resource[item] %}
+                                        <a href="{{ resource[item] }}" target="_blank" class="text-blue-500 flex items-center">
+                                            <span class="underline">View</span>
+                                            <i class="fa-solid fa-external-link ml-1"></i>
+                                        </a>
+                                    {% else %}
                                         <span>-</span>
+                                    {% endif %}
                                 {% else %}
                                     {{ resource[item] }}
                                 {% endif %}
@@ -286,7 +297,14 @@
                                         <span class="text-red-500">Rejected</span>
                                     {% endif %}
                                 {% elif item == "receipt_image_url" %}
+                                    {% if resource[item] %}
+                                        <a href="{{ resource[item] }}" target="_blank" class="text-blue-500 flex items-center">
+                                            <span class="underline">View</span>
+                                            <i class="fa-solid fa-external-link ml-1"></i>
+                                        </a>
+                                    {% else %}
                                         <span>-</span>
+                                    {% endif %}
                                 {% else %}
                                     {{ resource[item] }}
                                 {% endif %}
@@ -635,8 +653,16 @@
         form.submit();
     });
 
-    var filterDateSelectElement = document.getElementById('dateInput');
-    filterDateSelectElement.addEventListener('change', function() {
+
+    var fromDateInput = document.getElementById('fromDateInput');
+    var toDateInput = document.getElementById('toDateInput');
+
+    fromDateInput.addEventListener('change', function() {
+        var form = document.getElementById('filterForm');
+        form.submit();
+    });
+
+    toDateInput.addEventListener('change', function() {
         var form = document.getElementById('filterForm');
         form.submit();
     });
