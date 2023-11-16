@@ -111,6 +111,8 @@
                                             <div>Pending</div>
                                         {% elif item == 'receipt_date' %}
                                             <div>{{ resource[item] | admin_format_datetime(format="%d/%m/%Y, %I:%M %p") }}</div>
+                                        {% elif '.' in item %}
+                                            <div>{{ resource | get_nested_value(item) }}</div>
                                         {% else %}
                                             <div>{{resource[item]}}</div>
                                         {% endif %}

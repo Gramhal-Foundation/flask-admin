@@ -170,6 +170,19 @@ def format_label(value):
     return value.replace("_", " ")
 
 
+@admin.app_template_filter("get_nested_value")
+def get_nested_value(resource, key_string):
+    keys = key_string.split(".")
+    current = resource
+
+    try:
+        for key in keys:
+            current = getattr(current, key)
+        return current
+    except (KeyError, TypeError):
+        return None
+
+
 def get_resource_class(resource_type):
     class_names = get_class_names("admin_view.py")
     class_names.remove("FlaskAdmin")
@@ -664,7 +677,7 @@ def resource_edit(resource_type, resource_id):
             SaleReceiptModel.receipt_id == resource.receipt_id,
             SaleReceiptModel.mandi_id == resource.mandi_id,
             SaleReceiptModel.crop_id == resource.crop_id,
-            SaleReceiptModel.is_approved == True,
+            SaleReceiptModel.is_approved is True,
             func.date(SaleReceiptModel.receipt_date)
             == func.date(resource.receipt_date),
         ).first()
@@ -1001,7 +1014,7 @@ def update_approval_status():
                 SaleReceiptModel.receipt_id == sale_receipt.receipt_id,
                 SaleReceiptModel.mandi_id == sale_receipt.mandi_id,
                 SaleReceiptModel.crop_id == sale_receipt.crop_id,
-                SaleReceiptModel.is_approved == True,
+                SaleReceiptModel.is_approved is True,
                 func.date(SaleReceiptModel.receipt_date)
                 == func.date(sale_receipt.receipt_date),
             ).first()
@@ -1134,32 +1147,47 @@ def resource_filter(resource_type, status):
             selected_to_date = to_date
 
         if not filter_conditions:
-            pending_filter = (model.is_approved == None,)
-            rejected_filter = (model.is_approved == False,)
-            approved_filter = (model.is_approved == True,)
+            pending_filter = (model.is_approved is None,)
+            rejected_filter = (model.is_approved is False,)
+            approved_filter = (model.is_approved is True,)
         else:
             pending_filter = and_(
-                *(model.is_approved == None, *filter_conditions)
+                *(model.is_approved is None, *filter_conditions)
             )
             rejected_filter = and_(
-                *(model.is_approved == False, *filter_conditions)
+                *(model.is_approved is False, *filter_conditions)
             )
             approved_filter = and_(
-                *(model.is_approved == True, *filter_conditions)
+                *(model.is_approved is True, *filter_conditions)
             )
         pending_pagination = (
-            model.query.filter(*pending_filter)
+            model.query.options(
+                joinedload(SaleReceiptModel.uploader),
+                joinedload(SaleReceiptModel.owner),
+                joinedload(SaleReceiptModel.validator),
+            )
+            .filter(*pending_filter)
             .order_by(SaleReceiptModel.id)
             .paginate(page=page, per_page=1, error_out=False)
         )
         rejected_pagination = (
-            model.query.options(joinedload(SaleReceiptModel.versions))
+            model.query.options(
+                joinedload(SaleReceiptModel.versions),
+                joinedload(SaleReceiptModel.uploader),
+                joinedload(SaleReceiptModel.owner),
+                joinedload(SaleReceiptModel.validator),
+            )
             .filter(*rejected_filter)
             .order_by(desc(SaleReceiptModel.receipt_date))
             .paginate(page=page, per_page=10, error_out=False)
         )
         approved_pagination = (
-            model.query.options(joinedload(SaleReceiptModel.versions))
+            model.query.options(
+                joinedload(SaleReceiptModel.versions),
+                joinedload(SaleReceiptModel.uploader),
+                joinedload(SaleReceiptModel.owner),
+                joinedload(SaleReceiptModel.validator),
+            )
             .filter(*approved_filter)
             .order_by(desc(SaleReceiptModel.receipt_date))
             .paginate(page=page, per_page=10, error_out=False)
@@ -1173,7 +1201,7 @@ def resource_filter(resource_type, status):
             pagination = approved_pagination
 
         mandis = (
-            MandiModel.query.filter(MandiModel.is_bolbhav_plus == True)
+            MandiModel.query.filter(MandiModel.is_bolbhav_plus is True)
             .order_by(MandiModel.mandi_name)
             .all()
         )
