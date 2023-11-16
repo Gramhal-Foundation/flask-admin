@@ -1095,7 +1095,7 @@ def resource_filter(resource_type, status):
 
     # cs_user_details
     cs_users = (
-        UserModel.query.filter(UserModel.roles == "cs_users")
+        UserModel.query.filter(UserModel.roles == "cs_user")
         .order_by(asc(UserModel.name))
         .all()
     )
