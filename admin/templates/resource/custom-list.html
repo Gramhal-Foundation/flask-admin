@@ -113,6 +113,10 @@
                                             <div>{{ resource[item] | admin_format_datetime(format="%d/%m/%Y, %I:%M %p") }}</div>
                                         {% elif '.' in item %}
                                             <div>{{ resource | get_nested_value(item) }}</div>
+                                        {% elif item == 'user_type' %}
+                                            <div>
+                                                {{ resource['user_id'] | process_user_id }}
+                                            </div>
                                         {% else %}
                                             <div>{{resource[item]}}</div>
                                         {% endif %}
@@ -159,6 +163,12 @@
                                 <th scope="col" class="px-6 py-3">Status</th>
                             {% elif item == "validated_by" %}
                                 <th scope="col" class="px-6 py-3">Validator Id</th>
+                            {% elif item == "uploader.name" %}
+                                <th scope="col" class="px-6 py-3">Uploader Name</th>
+                            {% elif item == "uploader.mobile_number" %}
+                                <th scope="col" class="px-6 py-3">Uploader Mobile Number</th>
+                            {% elif item == 'user_type' %}
+                                <th scope="col" class="px-6 py-3">User Type</th>
                             {% else %}
                                 <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
                             {% endif %}
@@ -179,6 +189,10 @@
                                     {% else %}
                                         <span class="text-red-500">Rejected</span>
                                     {% endif %}
+                                {% elif item == "receipt_date" %}
+                                    {{ resource[item] | admin_round_datetime}}
+                                {% elif item == "validated_on" %}
+                                    {{ resource[item] | admin_round_datetime}}
                                 {% elif item == "receipt_image_url" %}
                                     {% if resource[item] %}
                                         <a href="{{ resource[item] }}" target="_blank" class="text-blue-500 flex items-center">
@@ -188,6 +202,10 @@
                                     {% else %}
                                         <span>-</span>
                                     {% endif %}
+                                {% elif '.' in item %}
+                                    {{ resource | get_nested_value(item) }}
+                                {% elif item == 'user_type' %}
+                                    {{ resource['user_id'] | process_user_id }}
                                 {% else %}
                                     {{ resource[item] }}
                                 {% endif %}
@@ -280,6 +298,12 @@
                                 <th scope="col" class="px-6 py-3">Status</th>
                             {% elif item == "validated_by" %}
                                 <th scope="col" class="px-6 py-3">Validator Id</th>
+                            {% elif item == "uploader.name" %}
+                                <th scope="col" class="px-6 py-3">Uploader Name</th>
+                            {% elif item == "uploader.mobile_number" %}
+                                <th scope="col" class="px-6 py-3">Uploader Mobile Number</th>
+                            {% elif item == 'user_type' %}
+                                <th scope="col" class="px-6 py-3">User Type</th>
                             {% else %}
                                 <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
                             {% endif %}
@@ -300,6 +324,10 @@
                                     {% else %}
                                         <span class="text-red-500">Rejected</span>
                                     {% endif %}
+                                {% elif item == "receipt_date" %}
+                                    {{ resource[item] | admin_round_datetime}}
+                                {% elif item == "validated_on" %}
+                                    {{ resource[item] | admin_round_datetime}}
                                 {% elif item == "receipt_image_url" %}
                                     {% if resource[item] %}
                                         <a href="{{ resource[item] }}" target="_blank" class="text-blue-500 flex items-center">
@@ -309,6 +337,10 @@
                                     {% else %}
                                         <span>-</span>
                                     {% endif %}
+                                {% elif '.' in item %}
+                                    {{ resource | get_nested_value(item) }}
+                                {% elif item == 'user_type' %}
+                                    {{ resource['user_id'] | process_user_id }}
                                 {% else %}
                                     {{ resource[item] }}
                                 {% endif %}

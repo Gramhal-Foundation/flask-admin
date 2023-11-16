@@ -155,6 +155,44 @@ def admin_format_datetime(value, format="%Y-%m-%d"):
     return datetime.strftime(value, format)
 
 
+@admin.app_template_filter("admin_round_datetime")
+def admin_round_datetime(value, round_to="second"):
+    if value is None:
+        return None
+    if round_to == "second":
+        return value.replace(microsecond=0)
+    else:
+        return value
+
+
+@admin.app_template_filter("admin_round_datetime")
+def admin_round_datetime(value, round_to="second"):
+    if value is None:
+        return None 
+    if round_to == "second":
+        return value.replace(microsecond=0)
+    else:
+        return value
+
+
+@admin.app_template_filter("process_user_id")
+def process_user_id(user_id):
+    if user_id is None:
+        return False
+
+    selected_user = UserModel.query.filter(
+        UserModel.roles == "cs_user", UserModel.id == user_id
+    ).first()
+
+    if selected_user is not None:
+        if selected_user.roles == "cs_user":
+            return "Team Member"
+        else:
+            return "Regular User"
+    else:
+        return "Regular User"
+
+
 @admin.app_template_filter("format_label")
 def format_label(value):
     """
@@ -677,7 +715,7 @@ def resource_edit(resource_type, resource_id):
             SaleReceiptModel.receipt_id == resource.receipt_id,
             SaleReceiptModel.mandi_id == resource.mandi_id,
             SaleReceiptModel.crop_id == resource.crop_id,
-            SaleReceiptModel.is_approved is True,
+            SaleReceiptModel.is_approved == True,
             func.date(SaleReceiptModel.receipt_date)
             == func.date(resource.receipt_date),
         ).first()
@@ -1014,7 +1052,7 @@ def update_approval_status():
                 SaleReceiptModel.receipt_id == sale_receipt.receipt_id,
                 SaleReceiptModel.mandi_id == sale_receipt.mandi_id,
                 SaleReceiptModel.crop_id == sale_receipt.crop_id,
-                SaleReceiptModel.is_approved is True,
+                SaleReceiptModel.is_approved == True,
                 func.date(SaleReceiptModel.receipt_date)
                 == func.date(sale_receipt.receipt_date),
             ).first()
@@ -1147,18 +1185,18 @@ def resource_filter(resource_type, status):
             selected_to_date = to_date
 
         if not filter_conditions:
-            pending_filter = (model.is_approved is None,)
-            rejected_filter = (model.is_approved is False,)
-            approved_filter = (model.is_approved is True,)
+            pending_filter = (model.is_approved == None,)
+            rejected_filter = (model.is_approved == False,)
+            approved_filter = (model.is_approved == True,)
         else:
             pending_filter = and_(
-                *(model.is_approved is None, *filter_conditions)
+                *(model.is_approved == None, *filter_conditions)
             )
             rejected_filter = and_(
-                *(model.is_approved is False, *filter_conditions)
+                *(model.is_approved == False, *filter_conditions)
             )
             approved_filter = and_(
-                *(model.is_approved is True, *filter_conditions)
+                *(model.is_approved == True, *filter_conditions)
             )
         pending_pagination = (
             model.query.options(
@@ -1201,7 +1239,7 @@ def resource_filter(resource_type, status):
             pagination = approved_pagination
 
         mandis = (
-            MandiModel.query.filter(MandiModel.is_bolbhav_plus is True)
+            MandiModel.query.filter(MandiModel.is_bolbhav_plus == True)
             .order_by(MandiModel.mandi_name)
             .all()
         )
