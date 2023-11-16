@@ -1118,7 +1118,7 @@ def resource_filter(resource_type, status):
         if user_id:
             filter_conditions.append(model.user_id == user_id)
             selected_user = UserModel.query.filter(
-                UserModel.roles == "cs_users", UserModel.id == user_id
+                UserModel.roles == "cs_user", UserModel.id == user_id
             ).first()
             selected_user_mobile_number = selected_user.mobile_number
             selected_user_id = user_id
