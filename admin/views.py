@@ -165,16 +165,6 @@ def admin_round_datetime(value, round_to="second"):
         return value
 
 
-@admin.app_template_filter("admin_round_datetime")
-def admin_round_datetime(value, round_to="second"):
-    if value is None:
-        return None 
-    if round_to == "second":
-        return value.replace(microsecond=0)
-    else:
-        return value
-
-
 @admin.app_template_filter("process_user_id")
 def process_user_id(user_id):
     if user_id is None:
