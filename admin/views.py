@@ -155,6 +155,34 @@ def admin_format_datetime(value, format="%Y-%m-%d"):
     return datetime.strftime(value, format)
 
 
+@admin.app_template_filter("admin_round_datetime")
+def admin_round_datetime(value, round_to="second"):
+    if value is None:
+        return None
+    if round_to == "second":
+        return value.replace(microsecond=0)
+    else:
+        return value
+
+
+@admin.app_template_filter("process_user_id")
+def process_user_id(user_id):
+    if user_id is None:
+        return False
+
+    selected_user = UserModel.query.filter(
+        UserModel.roles == "cs_user", UserModel.id == user_id
+    ).first()
+
+    if selected_user is not None:
+        if selected_user.roles == "cs_user":
+            return "Team Member"
+        else:
+            return "Regular User"
+    else:
+        return "Regular User"
+
+
 @admin.app_template_filter("format_label")
 def format_label(value):
     """
@@ -168,6 +196,19 @@ def format_label(value):
     """
 
     return value.replace("_", " ")
+
+
+@admin.app_template_filter("get_nested_value")
+def get_nested_value(resource, key_string):
+    keys = key_string.split(".")
+    current = resource
+
+    try:
+        for key in keys:
+            current = getattr(current, key)
+        return current
+    except (KeyError, TypeError):
+        return None
 
 
 def get_resource_class(resource_type):
@@ -1148,18 +1189,33 @@ def resource_filter(resource_type, status):
                 *(model.is_approved == True, *filter_conditions)
             )
         pending_pagination = (
-            model.query.filter(*pending_filter)
+            model.query.options(
+                joinedload(SaleReceiptModel.uploader),
+                joinedload(SaleReceiptModel.owner),
+                joinedload(SaleReceiptModel.validator),
+            )
+            .filter(*pending_filter)
             .order_by(SaleReceiptModel.id)
             .paginate(page=page, per_page=1, error_out=False)
         )
         rejected_pagination = (
-            model.query.options(joinedload(SaleReceiptModel.versions))
+            model.query.options(
+                joinedload(SaleReceiptModel.versions),
+                joinedload(SaleReceiptModel.uploader),
+                joinedload(SaleReceiptModel.owner),
+                joinedload(SaleReceiptModel.validator),
+            )
             .filter(*rejected_filter)
             .order_by(desc(SaleReceiptModel.receipt_date))
             .paginate(page=page, per_page=10, error_out=False)
         )
         approved_pagination = (
-            model.query.options(joinedload(SaleReceiptModel.versions))
+            model.query.options(
+                joinedload(SaleReceiptModel.versions),
+                joinedload(SaleReceiptModel.uploader),
+                joinedload(SaleReceiptModel.owner),
+                joinedload(SaleReceiptModel.validator),
+            )
             .filter(*approved_filter)
             .order_by(desc(SaleReceiptModel.receipt_date))
             .paginate(page=page, per_page=10, error_out=False)
