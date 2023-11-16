@@ -155,6 +155,8 @@
                                 <th scope="col" class="px-6 py-3">Validation On</th>
                             {% elif item == "is_approved" %}
                                 <th scope="col" class="px-6 py-3">Status</th>
+                            {% elif item == "validated_by" %}
+                                <th scope="col" class="px-6 py-3">Validator Id</th>
                             {% else %}
                                 <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
                             {% endif %}
@@ -274,6 +276,8 @@
                                 <th scope="col" class="px-6 py-3">Validation On</th>
                             {% elif item == "is_approved" %}
                                 <th scope="col" class="px-6 py-3">Status</th>
+                            {% elif item == "validated_by" %}
+                                <th scope="col" class="px-6 py-3">Validator Id</th>
                             {% else %}
                                 <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
                             {% endif %}
