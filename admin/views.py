@@ -488,9 +488,45 @@ def logout():
     return redirect(url_for(".login"))
 
 
+# def filter_resources(model, list_display, search_query, page, per_page):
+#     print('model',model)
+#     primary_key_column = model.__table__.primary_key.columns.keys()[0]
+#     if search_query:
+#         print('check1')
+#         or_conditions = []
+#         for column_name in list_display:
+#             column = model.__table__.columns.get(column_name)
+#             if column is not None:
+#                 or_conditions.append(
+#                     cast(column, Text).ilike(f"%{search_query}%")
+#                 )
+
+#         if or_conditions:
+#             print('check2')
+#             search_condition = or_(*or_conditions)
+#             pagination = (
+#                 model.query.filter(search_condition)
+#                 .order_by(primary_key_column)
+#                 .paginate(page=page, per_page=per_page, error_out=False)
+#             )
+#         else:
+#             print('check3')
+#             pagination = model.query.order_by(primary_key_column).paginate(
+#                 page=page, per_page=per_page, error_out=False
+#             )
+#     else:
+#         print('check4')
+#         pagination = model.query.order_by(primary_key_column).paginate(
+#             page=page, per_page=per_page, error_out=False
+#         )
+#     return pagination
+
 def filter_resources(model, list_display, search_query, page, per_page):
+    print('model', model)
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
+    
     if search_query:
+        print('check1')
         or_conditions = []
         for column_name in list_display:
             column = model.__table__.columns.get(column_name)
@@ -500,9 +536,30 @@ def filter_resources(model, list_display, search_query, page, per_page):
                 )
 
         if or_conditions:
+            print('check2')
             search_condition = or_(*or_conditions)
+            if model.__name__ == 'UserModel':
+                # Assuming 'role' is a field/column in the UserModel
+                role_condition = model.roles.in_(['cs_user', 'admin', 'user'])
+                search_condition = and_(search_condition, s_condition)
+                
             pagination = (
                 model.query.filter(search_condition)
+                .order_by(primary_key_column)
+                .paginate(page=page, per_page=per_page, error_out=False)
+            )
+        else:
+            print('check3')
+            pagination = model.query.order_by(primary_key_column).paginate(
+                page=page, per_page=per_page, error_out=False
+            )
+    else:
+        print('check4')
+        if model.__name__ == 'UserModel':
+            # Assuming 'role' is a field/column in the UserModel
+            role_condition = model.roles.in_(['cs_user', 'admin', 'user'])
+            pagination = (
+                model.query.filter(role_condition)
                 .order_by(primary_key_column)
                 .paginate(page=page, per_page=per_page, error_out=False)
             )
@@ -510,10 +567,6 @@ def filter_resources(model, list_display, search_query, page, per_page):
             pagination = model.query.order_by(primary_key_column).paginate(
                 page=page, per_page=per_page, error_out=False
             )
-    else:
-        pagination = model.query.order_by(primary_key_column).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
     return pagination
 
 
@@ -573,6 +626,7 @@ def resource_list(resource_type):
             search_query=search_query,
         )
     else:
+        print('pagination', pagination.items)
         return render_template(
             "resource/list.html",
             pagination=pagination,
