@@ -57,6 +57,7 @@ from datetime import datetime, timedelta
 import boto3
 import inflect
 import pandas as pd
+from admin_view import *  # noqa: F401, F403
 from admin_view import admin_configs
 
 # [TODO]: dependency on main repo
