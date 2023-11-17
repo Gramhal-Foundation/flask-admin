@@ -52,12 +52,11 @@ import ast
 import csv
 import io
 import string
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 import boto3
 import inflect
 import pandas as pd
-from admin_view import *
 from admin_view import admin_configs
 
 # [TODO]: dependency on main repo
@@ -72,7 +71,7 @@ from flask_login import current_user, login_required, login_user, logout_user
 from flask_wtf import FlaskForm
 from models.crop import CropModel
 from models.mandi import MandiModel
-from models.membership import MembershipPlans, UserMembership, UserWallet
+from models.membership import UserMembership
 from models.salesReceipt import SaleReceiptModel
 from models.user import UserModel
 
@@ -319,6 +318,7 @@ def render_template(*args, **kwargs):
 
     return real_render_template(*args, **kwargs, **template_attributes)
 
+
 def get_readable_attributes(resource_type):
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
@@ -328,7 +328,8 @@ def get_readable_attributes(resource_type):
     model_attributes = []
     for column in model.__table__.columns:
         model_attributes.append(
-            {"name": str(column.name), "type": str(column.type)})
+            {"name": str(column.name), "type": str(column.type)}
+        )
 
     readable_attributes = []
     for attribute in model_attributes:
@@ -336,6 +337,7 @@ def get_readable_attributes(resource_type):
             readable_attributes.append(attribute)
 
     return readable_attributes
+
 
 def get_editable_attributes(resource_type):
     resource_class = get_resource_class(resource_type)
@@ -565,7 +567,11 @@ def resource_list(resource_type):
 
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
-    is_custom_template = resource_class.is_custom_template if hasattr(resource_class, 'is_custom_template') else False
+    is_custom_template = (
+        resource_class.is_custom_template
+        if hasattr(resource_class, "is_custom_template")
+        else False
+    )
     per_page = 20
     page = request.args.get("page", default=1, type=int)
     search_query = request.args.get("search", default="")
@@ -659,8 +665,9 @@ def resource_create(resource_type):
 
     return redirect(url_for(".resource_list", resource_type=resource_type))
 
+
 @admin.route(
-    "/resource/<string:resource_type>/<string:resource_id>",
+    "/resource/<string:resource_type>/<string:resource_id>/view",
     methods=["GET"],
 )
 @login_required
@@ -684,7 +691,10 @@ def resource_read(resource_type, resource_id):
     resource = model.query.get(resource_id)
 
     if not resource:
-        return redirect(request.referrer or url_for(".resource_list", resource_type=resource_type))
+        return redirect(
+            request.referrer
+            or url_for(".resource_list", resource_type=resource_type)
+        )
 
     readable_attributes = get_readable_attributes(resource_type)
 
@@ -695,7 +705,6 @@ def resource_read(resource_type, resource_id):
         readable_attributes=readable_attributes,
         admin_configs=admin_configs,
     )
-
 
 
 @admin.route(
@@ -1163,7 +1172,11 @@ def update_approval_status():
 def resource_filter(resource_type, status):
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
-    is_custom_template = resource_class.is_custom_template if hasattr(resource_class, 'is_custom_template') else False
+    is_custom_template = (
+        resource_class.is_custom_template
+        if hasattr(resource_class, "is_custom_template")
+        else False
+    )
     # per_page = 5
     page = request.args.get("page", default=1, type=int)
     mandi = request.args.get("mandi")
