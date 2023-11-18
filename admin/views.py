@@ -74,6 +74,7 @@ from models.crop import CropModel
 from models.mandi import MandiModel
 from models.membership import UserMembership
 from models.salesReceipt import SaleReceiptModel
+from models.unique_entry import UniqueEntry
 from models.user import UserModel
 
 # TODO: remove project dependency
@@ -181,6 +182,19 @@ def process_user_id(user_id):
             return "Regular User"
     else:
         return "Regular User"
+
+
+@admin.app_template_filter("check_price_range")
+def check_price_range(price, min_price, max_price):
+    if min_price is None or max_price is None or min_price == 0 or max_price == 0:
+        return "This is first receipt in Mandi"
+
+    if price < min_price:
+        return 'The Rate is below min rate'
+    elif price > max_price:
+        return "The Rate is exceeding the max rate"
+    else:
+        return ""
 
 
 @admin.app_template_filter("format_label")
@@ -597,6 +611,7 @@ def resource_list(resource_type):
             search_query=search_query,
         )
     else:
+
         return render_template(
             "resource/list.html",
             pagination=pagination,
@@ -1267,6 +1282,26 @@ def resource_filter(resource_type, status):
             .order_by(SaleReceiptModel.id)
             .paginate(page=page, per_page=1, error_out=False)
         )
+        max_price = None
+        min_price = None
+        median_price = None
+
+        for item in pending_pagination.items:
+            mandi_id = item.mandi_id
+            crop_id = item.crop_id
+            receipt_date = item.receipt_date
+
+            cs_mandi_crop_data = UniqueEntry.query.get(
+                "cs_mandi_crop__%d_%d_%s"
+                % (mandi_id, crop_id, receipt_date.strftime("%d-%m-%Y"))
+            )
+
+            if cs_mandi_crop_data:
+                max_price_string = cs_mandi_crop_data.payload["max_price"]
+                min_price_string = cs_mandi_crop_data.payload["min_price"]
+                max_price = int(max_price_string)
+                min_price = int(min_price_string)
+
         rejected_pagination = (
             model.query.options(
                 joinedload(SaleReceiptModel.versions),
@@ -1321,4 +1356,6 @@ def resource_filter(resource_type, status):
             selected_from_date=selected_from_date,
             selected_to_date=selected_to_date,
             cs_users=cs_users,
+            max_price=max_price,
+            min_price=min_price,
         )
