@@ -128,9 +128,9 @@
                                         {% elif item == 'price' %}
                                             <div>
                                                 {{ resource['price'] }}
-                                                {% if min_price is not none and max_price is not none and min_price != 0 and max_price != 0 %}
+                                                {% if min_price is not none or max_price is not none or min_price != 0 or max_price != 0 %}
                                                     {% if resource['price'] < min_price or resource['price'] > max_price %}
-                                                        ({{ min_price }}-{{ max_price }})
+                                                        <label  class="text-gray-500">({{ min_price }}-{{ max_price }})</label>
                                                     {% endif %}
                                                 {% endif %}
                                             </div>
