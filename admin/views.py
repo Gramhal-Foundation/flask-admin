@@ -186,7 +186,7 @@ def process_user_id(user_id):
 
 @admin.app_template_filter("check_price_range")
 def check_price_range(price, min_price, max_price):
-    if min_price is None or max_price is None:
+    if min_price is None or max_price is None or min_price == 0 or max_price == 0:
         return "This is first receipt in Mandi"
 
     if price < min_price:
