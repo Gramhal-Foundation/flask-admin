@@ -508,8 +508,11 @@ def logout():
     return redirect(url_for(".login"))
 
 
-def filter_resources(model, list_display, search_query, page, per_page):
+def filter_resources(
+    model, list_display, search_query, page, per_page, sort=None
+):
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
+    filter_query = model.query
     if search_query:
         or_conditions = []
         for column_name in list_display:
@@ -518,23 +521,25 @@ def filter_resources(model, list_display, search_query, page, per_page):
                 or_conditions.append(
                     cast(column, Text).ilike(f"%{search_query}%")
                 )
-
         if or_conditions:
             search_condition = or_(*or_conditions)
-            pagination = (
-                model.query.filter(search_condition)
-                .order_by(primary_key_column)
-                .paginate(page=page, per_page=per_page, error_out=False)
-            )
-        else:
-            pagination = model.query.order_by(primary_key_column).paginate(
-                page=page, per_page=per_page, error_out=False
-            )
+            filter_query = filter_query.filter(search_condition)
+
+    if sort and len(sort):
+        sort_conditions = []
+        for criterion in sort:
+            column_name = criterion["sort_by"]
+            sort_order = criterion["sort_order"].lower()
+            column = getattr(model, column_name)
+            if sort_order == "desc":
+                sort_conditions.append(column.desc())
+            else:
+                sort_conditions.append(column.asc())
+        filter_query = filter_query.order_by(*sort_conditions)
     else:
-        pagination = model.query.order_by(primary_key_column).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
-    return pagination
+        filter_query = filter_query.order_by(primary_key_column)
+
+    return filter_query.paginate(page=page, per_page=per_page, error_out=False)
 
 
 @admin.route("/resource/<string:resource_type>", methods=["GET", "POST"])
@@ -578,8 +583,14 @@ def resource_list(resource_type):
     search_query = request.args.get("search", default="")
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
     list_display = resource_class.list_display
+    sort = resource_class.sort if hasattr(resource_class, "sort") else None
     pagination = filter_resources(
-        model, list_display, search_query, page, per_page
+        model=model,
+        list_display=list_display,
+        search_query=search_query,
+        page=page,
+        per_page=per_page,
+        sort=sort,
     )
     if is_custom_template:
         pagination = (
@@ -905,7 +916,14 @@ def resource_download(resource_type):
     downloadable_attributes = model.__table__.columns.keys()
     search_query = request.args.get("search", default="")
     list_display = resource_class.list_display
-    pagination = filter_resources(model, list_display, search_query, 1, None)
+    pagination = filter_resources(
+        model=model,
+        list_display=list_display,
+        search_query=search_query,
+        page=1,
+        per_page=None,
+        sort=None,
+    )
     resources = pagination.items
 
     writer.writerow(downloadable_attributes)  # csv header
