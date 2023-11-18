@@ -104,6 +104,18 @@
                                     <div class="w-1/2 mb-6">
                                         {% if item == 'is_approved' %}
                                             <div class="uppercase text-xs text-gray-500">{{ 'Status' | format_label }}</div>
+                                        {%elif item == 'quantity' %}
+                                            <div class="uppercase text-xs text-gray-500">{{ 'Approximate Weight' | format_label }}</div>
+                                        {%elif item == 'receipt_id' %}
+                                            <div class="uppercase text-xs text-gray-500">{{ 'Receipt Number' | format_label }}</div>
+                                        {%elif item == 'price' %}
+                                            <div class="uppercase text-xs text-gray-500">{{ 'Rate (Min-Max)' | format_label }}</div>
+                                        {% elif item == 'receipt_date' %}
+                                            <div class="uppercase text-xs text-gray-500">{{ 'Date Of submission' | format_label }}</div>
+                                        {% elif item == 'uploader.name' %}
+                                            <div class="uppercase text-xs text-gray-500">{{ 'Uploader Name' | format_label }}</div>
+                                        {% elif item == 'uploader.mobile_number' %}
+                                            <div class="uppercase text-xs text-gray-500">{{ 'Uploader Mobile Number' | format_label }}</div>
                                         {% else %}
                                             <div class="uppercase text-xs text-gray-500">{{ item | format_label }}</div>
                                         {% endif %}
@@ -113,10 +125,22 @@
                                             <div>{{ resource[item] | admin_format_datetime(format="%d/%m/%Y, %I:%M %p") }}</div>
                                         {% elif '.' in item %}
                                             <div>{{ resource | get_nested_value(item) }}</div>
+                                        {% elif item == 'price' %}
+                                            <div>
+                                                {{ resource['price'] }}
+                                                {%if min_price is not none or max_price is not none%}
+                                                    {% if resource['price'] < min_price or resource['price'] > max_price %}
+                                                        ({{ min_price }}-{{ max_price }})
+                                                    {% endif %}
+                                                {% endif %}
+                                            </div>
+                                            <span class="text-red-500">{{ resource['price'] | check_price_range(min_price, max_price) }}</span>
                                         {% elif item == 'user_type' %}
                                             <div>
                                                 {{ resource['user_id'] | process_user_id }}
                                             </div>
+                                        {% elif item == 'quantity' %}
+                                            <div>{{resource[item]}} Quintal</div>
                                         {% else %}
                                             <div>{{resource[item]}}</div>
                                         {% endif %}

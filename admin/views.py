@@ -75,6 +75,7 @@ from models.mandi import MandiModel
 from models.membership import MembershipPlans, UserMembership, UserWallet
 from models.salesReceipt import SaleReceiptModel
 from models.user import UserModel
+from models.unique_entry import UniqueEntry
 
 # TODO: remove project dependency
 from resources.whatsappBot.mandi_v2 import (
@@ -181,6 +182,20 @@ def process_user_id(user_id):
             return "Regular User"
     else:
         return "Regular User"
+
+
+@admin.app_template_filter("check_price_range")
+def check_price_range(price, min_price, max_price):
+    if min_price is None or max_price is None:
+        return "This is first receipt in Mandi"
+
+    if price < min_price:
+        return 'The Rate is below min rate'
+    elif price > max_price:
+        return 'The Rate is exceeding the max rate'
+    else:
+        return ""
+
 
 
 @admin.app_template_filter("format_label")
@@ -488,45 +503,9 @@ def logout():
     return redirect(url_for(".login"))
 
 
-# def filter_resources(model, list_display, search_query, page, per_page):
-#     print('model',model)
-#     primary_key_column = model.__table__.primary_key.columns.keys()[0]
-#     if search_query:
-#         print('check1')
-#         or_conditions = []
-#         for column_name in list_display:
-#             column = model.__table__.columns.get(column_name)
-#             if column is not None:
-#                 or_conditions.append(
-#                     cast(column, Text).ilike(f"%{search_query}%")
-#                 )
-
-#         if or_conditions:
-#             print('check2')
-#             search_condition = or_(*or_conditions)
-#             pagination = (
-#                 model.query.filter(search_condition)
-#                 .order_by(primary_key_column)
-#                 .paginate(page=page, per_page=per_page, error_out=False)
-#             )
-#         else:
-#             print('check3')
-#             pagination = model.query.order_by(primary_key_column).paginate(
-#                 page=page, per_page=per_page, error_out=False
-#             )
-#     else:
-#         print('check4')
-#         pagination = model.query.order_by(primary_key_column).paginate(
-#             page=page, per_page=per_page, error_out=False
-#         )
-#     return pagination
-
 def filter_resources(model, list_display, search_query, page, per_page):
-    print('model', model)
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
-    
     if search_query:
-        print('check1')
         or_conditions = []
         for column_name in list_display:
             column = model.__table__.columns.get(column_name)
@@ -536,37 +515,20 @@ def filter_resources(model, list_display, search_query, page, per_page):
                 )
 
         if or_conditions:
-            print('check2')
             search_condition = or_(*or_conditions)
-            if model.__name__ == 'UserModel':
-                # Assuming 'role' is a field/column in the UserModel
-                role_condition = model.roles.in_(['cs_user', 'admin', 'user'])
-                search_condition = and_(search_condition, s_condition)
-                
             pagination = (
                 model.query.filter(search_condition)
                 .order_by(primary_key_column)
                 .paginate(page=page, per_page=per_page, error_out=False)
             )
         else:
-            print('check3')
             pagination = model.query.order_by(primary_key_column).paginate(
                 page=page, per_page=per_page, error_out=False
             )
     else:
-        print('check4')
-        if model.__name__ == 'UserModel':
-            # Assuming 'role' is a field/column in the UserModel
-            role_condition = model.roles.in_(['cs_user', 'admin', 'user'])
-            pagination = (
-                model.query.filter(role_condition)
-                .order_by(primary_key_column)
-                .paginate(page=page, per_page=per_page, error_out=False)
-            )
-        else:
-            pagination = model.query.order_by(primary_key_column).paginate(
-                page=page, per_page=per_page, error_out=False
-            )
+        pagination = model.query.order_by(primary_key_column).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
     return pagination
 
 
@@ -1252,6 +1214,25 @@ def resource_filter(resource_type, status):
             .order_by(SaleReceiptModel.id)
             .paginate(page=page, per_page=1, error_out=False)
         )
+        max_price = None
+        min_price = None
+        median_price = None
+
+        for item in pending_pagination.items:
+            mandi_id = item.mandi_id
+            crop_id = item.crop_id
+            receipt_date = item.receipt_date
+
+            cs_mandi_crop_data = UniqueEntry.query.get("cs_mandi_crop__%d_%d_%s" % (mandi_id, crop_id, receipt_date.strftime("%d-%m-%Y")))
+
+            if cs_mandi_crop_data:
+                max_price_string = cs_mandi_crop_data.payload['max_price']
+                min_price_string = cs_mandi_crop_data.payload['min_price']
+                median_price_string = cs_mandi_crop_data.payload['median_price']
+                max_price = int(max_price_string)
+                min_price = int(min_price_string)
+                median_price = int(median_price_string)
+
         rejected_pagination = (
             model.query.options(
                 joinedload(SaleReceiptModel.versions),
@@ -1306,4 +1287,7 @@ def resource_filter(resource_type, status):
             selected_from_date=selected_from_date,
             selected_to_date=selected_to_date,
             cs_users=cs_users,
+            max_price=max_price,
+            min_price=min_price,
+            median_price=median_price
         )
