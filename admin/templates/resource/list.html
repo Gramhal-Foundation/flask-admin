@@ -58,7 +58,11 @@
                         <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                             {% for item in list_display %}
                                 <td class="px-6 py-4">
-                                    {{ resource[item] }}
+                                    {% if '.' in item %}
+                                        <div>{{ resource | get_nested_value(item) }}</div>
+                                    {% else %}
+                                        {{ resource[item] }}
+                                    {% endif %}
                                 </td>
                             {% endfor %}
                             {% if permissions.get(resource_type).get('read') or permissions.get(resource_type).get('update') or permissions.get(resource_type).get('delete'): %}

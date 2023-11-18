@@ -539,6 +539,17 @@ def filter_resources(
     else:
         filter_query = filter_query.order_by(primary_key_column)
 
+    # check for joins
+    join_statements = []
+    for attribute in list_display:
+        if "." not in attribute:
+            continue
+        sub_attributes = attribute.split(".")
+        related_attribute = sub_attributes[0]
+        join_statements.append(joinedload(getattr(model, related_attribute)))
+    if len(join_statements):
+        filter_query = filter_query.options(*join_statements)
+
     return filter_query.paginate(page=page, per_page=per_page, error_out=False)
 
 
