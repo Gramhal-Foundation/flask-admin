@@ -74,8 +74,8 @@ from models.crop import CropModel
 from models.mandi import MandiModel
 from models.membership import MembershipPlans, UserMembership, UserWallet
 from models.salesReceipt import SaleReceiptModel
-from models.user import UserModel
 from models.unique_entry import UniqueEntry
+from models.user import UserModel
 
 # TODO: remove project dependency
 from resources.whatsappBot.mandi_v2 import (
@@ -192,10 +192,9 @@ def check_price_range(price, min_price, max_price):
     if price < min_price:
         return 'The Rate is below min rate'
     elif price > max_price:
-        return 'The Rate is exceeding the max rate'
+        return "The Rate is exceeding the max rate"
     else:
         return ""
-
 
 
 @admin.app_template_filter("format_label")
@@ -588,7 +587,7 @@ def resource_list(resource_type):
             search_query=search_query,
         )
     else:
-        print('pagination', pagination.items)
+
         return render_template(
             "resource/list.html",
             pagination=pagination,
@@ -1223,15 +1222,16 @@ def resource_filter(resource_type, status):
             crop_id = item.crop_id
             receipt_date = item.receipt_date
 
-            cs_mandi_crop_data = UniqueEntry.query.get("cs_mandi_crop__%d_%d_%s" % (mandi_id, crop_id, receipt_date.strftime("%d-%m-%Y")))
+            cs_mandi_crop_data = UniqueEntry.query.get(
+                "cs_mandi_crop__%d_%d_%s"
+                % (mandi_id, crop_id, receipt_date.strftime("%d-%m-%Y"))
+            )
 
             if cs_mandi_crop_data:
-                max_price_string = cs_mandi_crop_data.payload['max_price']
-                min_price_string = cs_mandi_crop_data.payload['min_price']
-                median_price_string = cs_mandi_crop_data.payload['median_price']
+                max_price_string = cs_mandi_crop_data.payload["max_price"]
+                min_price_string = cs_mandi_crop_data.payload["min_price"]
                 max_price = int(max_price_string)
                 min_price = int(min_price_string)
-                median_price = int(median_price_string)
 
         rejected_pagination = (
             model.query.options(
@@ -1289,5 +1289,4 @@ def resource_filter(resource_type, status):
             cs_users=cs_users,
             max_price=max_price,
             min_price=min_price,
-            median_price=median_price
         )
