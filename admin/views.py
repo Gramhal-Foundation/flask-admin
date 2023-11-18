@@ -152,7 +152,7 @@ def admin_label_singular(label):
 
 @admin.app_template_filter("admin_format_datetime")
 def admin_format_datetime(value, format="%Y-%m-%d"):
-    return datetime.strftime(value, format)
+    return datetime.strftime(value, format) if value else value
 
 
 @admin.app_template_filter("admin_round_datetime")

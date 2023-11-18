@@ -25,24 +25,6 @@
                     <p>{{resource[attribute.name]}}</p>
                 {% endif %}
             </div>
-            <!-- {% if attribute["name"] == admin_configs['user']['secret'] %}
-              <input type="password" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border border-gray-300 rounded" />
-            {% elif 'VARCHAR' in attribute.type %}
-              <input type="text" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border border-gray-300 rounded" {% if resource[attribute.name] %} value="{{ resource[attribute.name] }}" {% endif %} />
-            {% elif attribute.type == 'INTEGER' or attribute.type == 'BIGINT' %}
-              <input type="number" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border border-gray-300 rounded" {% if resource[attribute.name] %} value="{{ resource[attribute.name] }}" {% endif %} />
-            {% elif attribute.type == 'BOOLEAN' %}
-              <select name={{ attribute.name }} class="py-2.5 px-3 border border-gray-300 rounded">
-                <option value="True" {% if resource[attribute.name] == True %} selected="selected "{% endif %}>True</option>
-                <option value="False" {% if resource[attribute.name] == False %} selected="selected "{% endif %}>False</option>
-              </select>
-            {% elif attribute.type == 'TEXT' or attribute.type == 'JSON' %}
-              <textarea class="py-2 px-3 border border-gray-300 rounded" rows="5" name="{{ attribute.name }}" id="{{ attribute.name }}">{% if resource[attribute.name] %}{{ resource[attribute.name] }}{% endif %}</textarea>
-            {% elif attribute.type == 'DATETIME' %}
-              <input type="datetime-local" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border border-gray-300 rounded" {% if resource[attribute.name] %} value="{{ resource[attribute.name] | admin_format_datetime }}" {% endif %} />
-            {% elif attribute.type == 'DATE' %}
-              <input type="date" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border border-gray-300 rounded" {% if resource[attribute.name] %} value="{{ resource[attribute.name] | admin_format_date }}" {% endif %} />
-            {% endif %} -->
           </div>
         </div>
         {% endfor %}
