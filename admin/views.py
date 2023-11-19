@@ -377,9 +377,11 @@ def validate_resource_attribute(resource_type, attribute, initial_value):
         attribute_value = initial_value if initial_value else None
     elif attribute["type"] == "BOOLEAN":
         if not isinstance(initial_value, bool):
-            attribute_value = (
-                True if initial_value.lower() == "true" else False
-            )
+            attribute_value = None
+            if initial_value.lower() == "true":
+                attribute_value = True
+            elif initial_value.lower() == "false":
+                attribute_value = False
         else:
             attribute_value = bool(initial_value)
 
