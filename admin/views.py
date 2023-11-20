@@ -49,6 +49,7 @@ Custom Template Filters:
 """
 
 import ast
+import copy
 import csv
 import io
 import string
@@ -186,11 +187,16 @@ def process_user_id(user_id):
 
 @admin.app_template_filter("check_price_range")
 def check_price_range(price, min_price, max_price):
-    if min_price is None or max_price is None or min_price == 0 or max_price == 0:
+    if (
+        min_price is None
+        or max_price is None
+        or min_price == 0
+        or max_price == 0
+    ):
         return "This is first receipt in Mandi"
 
     if price < min_price:
-        return 'The Rate is below min rate'
+        return "The Rate is below min rate"
     elif price > max_price:
         return "The Rate is exceeding the max rate"
     else:
@@ -635,7 +641,6 @@ def resource_list(resource_type):
             search_query=search_query,
         )
     else:
-
         return render_template(
             "resource/list.html",
             pagination=pagination,
@@ -787,6 +792,9 @@ def resource_edit(resource_type, resource_id):
         )
 
     editable_attributes = get_editable_attributes(resource_type)
+    old_resource = copy.copy(
+        resource
+    )  # make a clone before there are any updates
 
     if request.method == "GET":
         return render_template(
@@ -867,7 +875,7 @@ def resource_edit(resource_type, resource_id):
 
     # call after update hook
     if hasattr(resource_class, "after_update_callback"):
-        resource_class.after_update_callback(resource)
+        resource_class.after_update_callback(resource, old_resource)
 
     return redirect(
         request.referrer
@@ -1315,7 +1323,6 @@ def resource_filter(resource_type, status):
         )
         max_price = None
         min_price = None
-        median_price = None
 
         for item in pending_pagination.items:
             mandi_id = item.mandi_id
