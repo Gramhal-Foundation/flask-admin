@@ -860,22 +860,6 @@ def resource_edit(resource_type, resource_id):
     ):
         revision_model = resource_class.revision_model
         revision_pk = resource_class.revision_pk
-        existing_record = SaleReceiptModel.query.filter(
-            SaleReceiptModel.booklet_number == resource.booklet_number,
-            SaleReceiptModel.receipt_id == resource.receipt_id,
-            SaleReceiptModel.mandi_id == resource.mandi_id,
-            SaleReceiptModel.crop_id == resource.crop_id,
-            SaleReceiptModel.is_approved == True,
-            func.date(SaleReceiptModel.receipt_date)
-            == func.date(resource.receipt_date),
-        ).first()
-
-        if existing_record and existing_record.id != resource.id:
-            return jsonify(
-                {
-                    "error": "another record already exists with same booklet, receipt and mandi. Please go back and update with correct values."
-                }
-            )
 
         cloned_attributes_to_save = {}
         for column, value in resource.__dict__.items():
@@ -918,6 +902,23 @@ def resource_edit(resource_type, resource_id):
         setattr(resource, "mandi_name_hi", updated_mandi.mandi_name_hi)
         setattr(resource, "crop_name", updated_crop.crop_name)
         setattr(resource, "crop_name_hi", updated_crop.crop_name_hi)
+
+    if resource_type == "mandi-receipt":
+        existing_sale_receipt = SaleReceiptModel.query.filter(
+            SaleReceiptModel.booklet_number == resource.booklet_number,
+            SaleReceiptModel.receipt_id == resource.receipt_id,
+            SaleReceiptModel.mandi_id == resource.mandi_id,
+            SaleReceiptModel.crop_id == resource.crop_id,
+            SaleReceiptModel.is_approved == True,
+            func.date(SaleReceiptModel.receipt_date)
+            == func.date(resource.receipt_date),
+        ).first()
+        if existing_sale_receipt and existing_sale_receipt.id != resource.id:
+            return jsonify(
+                {
+                    "error": "another record already exists with same booklet, receipt and mandi. Please go back and update with correct values."
+                }
+            )
 
     db.session.commit()
 
