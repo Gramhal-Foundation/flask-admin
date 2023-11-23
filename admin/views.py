@@ -390,7 +390,7 @@ def validate_resource_attribute(resource_type, attribute, initial_value):
         or attribute["type"] == "JSON"
     ):
         attribute_value = initial_value if initial_value else None
-    elif attribute["type"] == "INTEGER" or attribute["type"] == "FLOAT":
+    elif "INT" in attribute["type"] or attribute["type"] == "FLOAT":
         attribute_value = initial_value if initial_value else None
     elif attribute["type"] == "DATE" or attribute["type"] == "DATETIME":
         attribute_value = initial_value if initial_value else None
