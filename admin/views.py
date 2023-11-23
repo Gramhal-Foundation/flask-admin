@@ -530,7 +530,13 @@ def logout():
 
 
 def filter_resources(
-    model, list_display, search_params, page, per_page, sort=None
+    resource_class,
+    model,
+    list_display,
+    search_params,
+    page,
+    per_page,
+    sort=None,
 ):
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
     filter_query = model.query
@@ -560,14 +566,15 @@ def filter_resources(
     from_date = search_params["from_date"]
     to_date = search_params["to_date"]
     date_conditions = []
+    date_field = getattr(resource_class, "searchable_date_field", "created_at")
     if from_date:
         date_conditions.append(
-            func.date(model.created_at)
+            func.date(getattr(model, date_field))
             >= func.date(datetime.strptime(from_date, "%Y-%m-%d"))
         )
     if to_date:
         date_conditions.append(
-            func.date(model.created_at)
+            func.date(getattr(model, date_field))
             <= func.date(datetime.strptime(to_date, "%Y-%m-%d"))
         )
 
@@ -657,6 +664,7 @@ def resource_list(resource_type):
         "to_date": to_date,
     }
     pagination = filter_resources(
+        resource_class=resource_class,
         model=model,
         list_display=list_display,
         search_params=search_params,
@@ -996,6 +1004,7 @@ def resource_download(resource_type):
         "to_date": to_date,
     }
     pagination = filter_resources(
+        resource_class=resource_class,
         model=model,
         list_display=list_display,
         search_params=search_params,
