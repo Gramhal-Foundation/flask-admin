@@ -49,6 +49,7 @@ Custom Template Filters:
 """
 
 import ast
+import copy
 import csv
 import io
 import string
@@ -186,11 +187,16 @@ def process_user_id(user_id):
 
 @admin.app_template_filter("check_price_range")
 def check_price_range(price, min_price, max_price):
-    if min_price is None or max_price is None or min_price == 0 or max_price == 0:
+    if (
+        min_price is None
+        or max_price is None
+        or min_price == 0
+        or max_price == 0
+    ):
         return "This is first receipt in Mandi"
 
     if price < min_price:
-        return 'The Rate is below min rate'
+        return "The Rate is below min rate"
     elif price > max_price:
         return "The Rate is exceeding the max rate"
     else:
@@ -385,7 +391,7 @@ def validate_resource_attribute(resource_type, attribute, initial_value):
         or attribute["type"] == "JSON"
     ):
         attribute_value = initial_value if initial_value else None
-    elif attribute["type"] == "INTEGER" or attribute["type"] == "FLOAT":
+    elif "INT" in attribute["type"] or attribute["type"] == "FLOAT":
         attribute_value = initial_value if initial_value else None
     elif attribute["type"] == "DATE" or attribute["type"] == "DATETIME":
         attribute_value = initial_value if initial_value else None
@@ -525,21 +531,57 @@ def logout():
 
 
 def filter_resources(
-    model, list_display, search_query, page, per_page, sort=None
+    resource_class,
+    model,
+    list_display,
+    search_params,
+    page,
+    per_page,
+    sort=None,
 ):
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
     filter_query = model.query
+    search_query = search_params["search_query"]
+    search_query_conditions = []
     if search_query:
-        or_conditions = []
         for column_name in list_display:
-            column = model.__table__.columns.get(column_name)
-            if column is not None:
-                or_conditions.append(
-                    cast(column, Text).ilike(f"%{search_query}%")
+            if "." in column_name:
+                sub_attributes = column_name.split(".")
+                related_attribute = sub_attributes[0]
+                related_model_column = sub_attributes[1]
+                related_model = getattr(
+                    model, related_attribute
+                ).property.mapper.class_
+                search_query_conditions.append(
+                    cast(
+                        getattr(related_model, related_model_column), Text
+                    ).ilike(f"%{search_query}%")
                 )
-        if or_conditions:
-            search_condition = or_(*or_conditions)
-            filter_query = filter_query.filter(search_condition)
+            else:
+                column = model.__table__.columns.get(column_name)
+                if column is not None:
+                    search_query_conditions.append(
+                        cast(column, Text).ilike(f"%{search_query}%")
+                    )
+
+    from_date = search_params["from_date"]
+    to_date = search_params["to_date"]
+    date_conditions = []
+    date_field = getattr(resource_class, "searchable_date_field", "created_at")
+    if from_date:
+        date_conditions.append(
+            func.date(getattr(model, date_field))
+            >= func.date(datetime.strptime(from_date, "%Y-%m-%d"))
+        )
+    if to_date:
+        date_conditions.append(
+            func.date(getattr(model, date_field))
+            <= func.date(datetime.strptime(to_date, "%Y-%m-%d"))
+        )
+
+    filter_query = filter_query.filter(
+        and_(or_(*search_query_conditions), and_(*date_conditions))
+    )
 
     if sort and len(sort):
         sort_conditions = []
@@ -556,15 +598,19 @@ def filter_resources(
         filter_query = filter_query.order_by(primary_key_column)
 
     # check for joins
-    join_statements = []
+    joinedload_statements = []
     for attribute in list_display:
         if "." not in attribute:
             continue
         sub_attributes = attribute.split(".")
         related_attribute = sub_attributes[0]
-        join_statements.append(joinedload(getattr(model, related_attribute)))
-    if len(join_statements):
-        filter_query = filter_query.options(*join_statements)
+        joinedload_statements.append(
+            joinedload(getattr(model, related_attribute))
+        )
+        filter_query = filter_query.join(getattr(model, related_attribute))
+
+    if len(joinedload_statements):
+        filter_query = filter_query.options(*joinedload_statements)
 
     return filter_query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -608,13 +654,21 @@ def resource_list(resource_type):
     per_page = 20
     page = request.args.get("page", default=1, type=int)
     search_query = request.args.get("search", default="")
+    from_date = request.args.get("from_date", default=None)
+    to_date = request.args.get("to_date", default=None)
     primary_key_column = model.__table__.primary_key.columns.keys()[0]
     list_display = resource_class.list_display
     sort = resource_class.sort if hasattr(resource_class, "sort") else None
+    search_params = {
+        "search_query": search_query,
+        "from_date": from_date,
+        "to_date": to_date,
+    }
     pagination = filter_resources(
+        resource_class=resource_class,
         model=model,
         list_display=list_display,
-        search_query=search_query,
+        search_params=search_params,
         page=page,
         per_page=per_page,
         sort=sort,
@@ -632,16 +686,15 @@ def resource_list(resource_type):
             resource_type=resource_type,
             list_display=list_display,
             processed_data=processed_data,
-            search_query=search_query,
+            search_params=search_params,
         )
     else:
-
         return render_template(
             "resource/list.html",
             pagination=pagination,
             resource_type=resource_type,
             list_display=list_display,
-            search_query=search_query,
+            search_params=search_params,
         )
 
 
@@ -787,6 +840,9 @@ def resource_edit(resource_type, resource_id):
         )
 
     editable_attributes = get_editable_attributes(resource_type)
+    old_resource = copy.copy(
+        resource
+    )  # make a clone before there are any updates
 
     if request.method == "GET":
         return render_template(
@@ -867,7 +923,7 @@ def resource_edit(resource_type, resource_id):
 
     # call after update hook
     if hasattr(resource_class, "after_update_callback"):
-        resource_class.after_update_callback(resource)
+        resource_class.after_update_callback(resource, old_resource)
 
     return redirect(
         request.referrer
@@ -943,11 +999,19 @@ def resource_download(resource_type):
 
     downloadable_attributes = model.__table__.columns.keys()
     search_query = request.args.get("search", default="")
+    from_date = request.args.get("from_date", default=None)
+    to_date = request.args.get("to_date", default=None)
     list_display = resource_class.list_display
+    search_params = {
+        "search_query": search_query,
+        "from_date": from_date,
+        "to_date": to_date,
+    }
     pagination = filter_resources(
+        resource_class=resource_class,
         model=model,
         list_display=list_display,
-        search_query=search_query,
+        search_params=search_params,
         page=1,
         per_page=None,
         sort=None,
@@ -1315,7 +1379,6 @@ def resource_filter(resource_type, status):
         )
         max_price = None
         min_price = None
-        median_price = None
 
         for item in pending_pagination.items:
             mandi_id = item.mandi_id
