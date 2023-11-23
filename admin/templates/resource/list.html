@@ -22,11 +22,13 @@
                             <div class="mr-2 flex">
                                 <input type="text" name="search" id="search" value="{{ search_params.search_query }}" placeholder="Search..." class="border border-gray-300 text-black text-sm py-2 px-4 rounded">
                             </div>
-                            <div class="flex items-center mr-2">
-                                <input type="date" name="from_date" class="border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Select Date" value="{{ search_params.from_date }}">
-                                <label for="toperiod" class="text-gray-700 mx-2">To</label>
-                                <input type="date" name="to_date" class="border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Select Date" value="{{ search_params.to_date }}">
-                            </div>
+                            {% if resource_type != 'faq'  %}
+                                <div class="flex items-center mr-2">
+                                    <input type="date" name="from_date" class="border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Select Date" value="{{ search_params.from_date }}">
+                                    <label for="toperiod" class="text-gray-700 mx-2">To</label>
+                                    <input type="date" name="to_date" class="border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Select Date" value="{{ search_params.to_date }}">
+                                </div>
+                            {% endif %}
                             <div>
                                 <!-- {% if search_query %}
                                     <a href={{ url_for('.resource_list', resource_type=resource_type) }} type="reset" class="bg-white text-red-700 border border-red-700 py-2 px-5 rounded"><i class="fas fa-close"></i></a>
@@ -38,12 +40,12 @@
                 {% endif %}
             </div>
             <div class="flex">
-                {% if permissions.get(resource_type).get('export'): %}
+                {% if permissions.get(resource_type).get('export') and resource_type != 'faq'  %}
                     <a href={{ url_for('.resource_download', resource_type=resource_type, search=search_query) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded flex items-center">
                         Download CSV
                     </a>
                 {% endif %}
-                {% if permissions.get(resource_type).get('import'): %}
+                {% if permissions.get(resource_type).get('import') and resource_type != 'faq'  %}
                     <a href={{ url_for('.resource_upload', resource_type=resource_type) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded ml-2 flex items-center">
                         Bulk Upload
                     </a>
@@ -56,7 +58,15 @@
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
                         {% for item in list_display %}
-                            <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
+                            {% if resource_type == 'faq' and item == 'created_at' %}
+                                <th scope="col" class="px-6 py-3">{{ 'Date Created' | format_label }}</th>
+                            {% elif resource_type == 'faq' and item == 'updated_at' %}
+                                <th scope="col" class="px-6 py-3">{{ 'Date updated' | format_label }}</th>
+                            {% elif resource_type == 'faq' and item == 'is_active' %}
+                                <th scope="col" class="px-6 py-3">{{ 'status' | format_label }}</th>
+                            {% else %}
+                                <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
+                            {% endif %}
                         {% endfor %}
                         {% if permissions.get(resource_type).get('read') or permissions.get(resource_type).get('update') or permissions.get(resource_type).get('delete'): %}
                             <th scope="col" class="px-6 py-3">Actions</th>
@@ -70,6 +80,14 @@
                                 <td class="px-6 py-4">
                                     {% if '.' in item %}
                                         <div>{{ resource | get_nested_value(item) }}</div>
+                                    {% elif resource_type == 'faq' and item == 'is_active' %}
+                                        <div class="{% if resource[item] %}text-green-500{% else %}text-red-500{% endif %}">
+                                            {% if resource[item] %}
+                                                Active
+                                            {% else %}
+                                                Inactive
+                                            {% endif %}
+                                        </div>
                                     {% else %}
                                         {{ resource[item] }}
                                     {% endif %}
