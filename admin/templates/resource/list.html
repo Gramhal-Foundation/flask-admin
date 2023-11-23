@@ -11,30 +11,40 @@
         <div class="text-3xl mb-4">Manage {{ resource_type | admin_label_plural }}</div>
         <div class="flex justify-between">
             {% if permissions.get(resource_type).get('create'): %}
-                <a href={{ url_for('.resource_create', resource_type=resource_type) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded">
+                <a href={{ url_for('.resource_create', resource_type=resource_type) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded flex items-center">
                     Create {{ resource_type | admin_label_singular }}
                 </a>
             {% endif %}
             <div class="flex">
                 {% if permissions.get(resource_type): %}
                     <form action={{ url_for('.resource_list', resource_type=resource_type) }} method="GET">
-                        <div class="mr-2 flex">
-                            <input type="text" name="search" id="search" value="{{ search_query }}" placeholder="Search..." class="border border-r-0 border-gray-300 text-black text-sm py-2 px-4 rounded rounded-r-none focus:rounded-r-none" required>
-                            {% if search_query %}
-                                <a href={{ url_for('.resource_list', resource_type=resource_type) }} type="reset" class=" text-white bg-red-700 border border-red-700 py-2 px-5 rounded rounded-l-none"><i class="fas fa-close"></i></a>
-                            {% else %}
-                                <button class="border border-gray-300 bg-gray-300 py-2 px-4 rounded rounded-l-none" type="submit"><i class="fas fa-search"></i></button>
-                            {% endif %}
+                        <div class="flex">
+                            <div class="mr-2 flex">
+                                <input type="text" name="search" id="search" value="{{ search_params.search_query }}" placeholder="Search..." class="border border-gray-300 text-black text-sm py-2 px-4 rounded">
+                            </div>
+                            <div class="flex items-center mr-2">
+                                <input type="date" name="from_date" class="border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Select Date" value="{{ search_params.from_date }}">
+                                <label for="toperiod" class="text-gray-700 mx-2">To</label>
+                                <input type="date" name="to_date" class="border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Select Date" value="{{ search_params.to_date }}">
+                            </div>
+                            <div>
+                                <!-- {% if search_query %}
+                                    <a href={{ url_for('.resource_list', resource_type=resource_type) }} type="reset" class="bg-white text-red-700 border border-red-700 py-2 px-5 rounded"><i class="fas fa-close"></i></a>
+                                {% endif %} -->
+                                <button class="border border-gray-300 bg-gray-300 py-2 px-4 rounded" type="submit"><i class="fas fa-search"></i></button>
+                            </div>
                         </div>
                     </form>
                 {% endif %}
+            </div>
+            <div class="flex">
                 {% if permissions.get(resource_type).get('export'): %}
-                    <a href={{ url_for('.resource_download', resource_type=resource_type, search=search_query) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded">
+                    <a href={{ url_for('.resource_download', resource_type=resource_type, search=search_query) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded flex items-center">
                         Download CSV
                     </a>
                 {% endif %}
                 {% if permissions.get(resource_type).get('import'): %}
-                    <a href={{ url_for('.resource_upload', resource_type=resource_type) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded ml-2">
+                    <a href={{ url_for('.resource_upload', resource_type=resource_type) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded ml-2 flex items-center">
                         Bulk Upload
                     </a>
                 {% endif %}
@@ -72,6 +82,16 @@
                                             <a href={{ url_for('.resource_read', resource_type=resource_type, resource_id=resource.pk) }} class="font-bold py-2 pr-4 rounded text-black">
                                                 <i class="fas fa-eye"></i>
                                             </a>
+                                        </div>
+                                    {% endif %}
+                                    {% if resource_type == 'payment-transaction' and resource['status'] not in ['completed', 'failed']: %}
+                                        <div>
+                                            <form action="{{url_for('bolbhav_plus.check_payment_status')}}" method="POST">
+                                                <input type="hidden" name="payment_transaction_id" value="{{resource.pk}}">
+                                                <button class="font-bold text-black">
+                                                    <i class="fas fa-refresh"></i>
+                                                </button>
+                                            </form>
                                         </div>
                                     {% endif %}
                                     {% if permissions.get(resource_type).get('update'): %}
