@@ -102,16 +102,6 @@
                                             </a>
                                         </div>
                                     {% endif %}
-                                    {% if resource_type == 'payment-transaction' and resource['status'] not in ['completed', 'failed']: %}
-                                        <div>
-                                            <form action="{{url_for('bolbhav_plus.check_payment_status')}}" method="POST">
-                                                <input type="hidden" name="payment_transaction_id" value="{{resource.pk}}">
-                                                <button class="font-bold text-black">
-                                                    <i class="fas fa-refresh"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    {% endif %}
                                     {% if permissions.get(resource_type).get('update'): %}
                                         <div>
                                             <a href={{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource.pk) }} class="font-bold py-2 pr-4 rounded text-black">
