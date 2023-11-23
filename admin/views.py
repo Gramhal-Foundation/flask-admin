@@ -49,6 +49,7 @@ Custom Template Filters:
 """
 
 import ast
+import copy
 import csv
 import io
 import string
@@ -839,6 +840,9 @@ def resource_edit(resource_type, resource_id):
         )
 
     editable_attributes = get_editable_attributes(resource_type)
+    old_resource = copy.copy(
+        resource
+    )  # make a clone before there are any updates
 
     if request.method == "GET":
         return render_template(
@@ -919,7 +923,7 @@ def resource_edit(resource_type, resource_id):
 
     # call after update hook
     if hasattr(resource_class, "after_update_callback"):
-        resource_class.after_update_callback(resource)
+        resource_class.after_update_callback(resource, old_resource)
 
     return redirect(
         request.referrer
