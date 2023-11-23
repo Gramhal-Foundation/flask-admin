@@ -186,11 +186,16 @@ def process_user_id(user_id):
 
 @admin.app_template_filter("check_price_range")
 def check_price_range(price, min_price, max_price):
-    if min_price is None or max_price is None or min_price == 0 or max_price == 0:
+    if (
+        min_price is None
+        or max_price is None
+        or min_price == 0
+        or max_price == 0
+    ):
         return "This is first receipt in Mandi"
 
     if price < min_price:
-        return 'The Rate is below min rate'
+        return "The Rate is below min rate"
     elif price > max_price:
         return "The Rate is exceeding the max rate"
     else:
@@ -532,11 +537,24 @@ def filter_resources(
     if search_query:
         or_conditions = []
         for column_name in list_display:
-            column = model.__table__.columns.get(column_name)
-            if column is not None:
+            if "." in column_name:
+                sub_attributes = column_name.split(".")
+                related_attribute = sub_attributes[0]
+                related_model_column = sub_attributes[1]
+                related_model = getattr(
+                    model, related_attribute
+                ).property.mapper.class_
                 or_conditions.append(
-                    cast(column, Text).ilike(f"%{search_query}%")
+                    cast(
+                        getattr(related_model, related_model_column), Text
+                    ).ilike(f"%{search_query}%")
                 )
+            else:
+                column = model.__table__.columns.get(column_name)
+                if column is not None:
+                    or_conditions.append(
+                        cast(column, Text).ilike(f"%{search_query}%")
+                    )
         if or_conditions:
             search_condition = or_(*or_conditions)
             filter_query = filter_query.filter(search_condition)
@@ -556,15 +574,19 @@ def filter_resources(
         filter_query = filter_query.order_by(primary_key_column)
 
     # check for joins
-    join_statements = []
+    joinedload_statements = []
     for attribute in list_display:
         if "." not in attribute:
             continue
         sub_attributes = attribute.split(".")
         related_attribute = sub_attributes[0]
-        join_statements.append(joinedload(getattr(model, related_attribute)))
-    if len(join_statements):
-        filter_query = filter_query.options(*join_statements)
+        joinedload_statements.append(
+            joinedload(getattr(model, related_attribute))
+        )
+        filter_query = filter_query.join(getattr(model, related_attribute))
+
+    if len(joinedload_statements):
+        filter_query = filter_query.options(*joinedload_statements)
 
     return filter_query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -635,7 +657,6 @@ def resource_list(resource_type):
             search_query=search_query,
         )
     else:
-
         return render_template(
             "resource/list.html",
             pagination=pagination,
@@ -1315,7 +1336,6 @@ def resource_filter(resource_type, status):
         )
         max_price = None
         min_price = None
-        median_price = None
 
         for item in pending_pagination.items:
             mandi_id = item.mandi_id
