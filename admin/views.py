@@ -60,6 +60,7 @@ import inflect
 import pandas as pd
 from admin_view import *  # noqa: F401, F403
 from admin_view import admin_configs
+from bolbhavPlus.utils.sale_receipt import calculate_eligible_tokens
 
 # [TODO]: dependency on main repo
 from db import db
@@ -71,14 +72,14 @@ from flask import request, url_for
 from flask_bcrypt import Bcrypt
 from flask_login import current_user, login_required, login_user, logout_user
 from flask_wtf import FlaskForm
+
+# TODO: remove project dependency
 from models.crop import CropModel
 from models.mandi import MandiModel
 from models.membership import UserMembership
 from models.salesReceipt import SaleReceiptModel
 from models.unique_entry import UniqueEntry
 from models.user import UserModel
-
-# TODO: remove project dependency
 from resources.whatsappBot.mandi_v2 import (
     update_cs_data_mandi_crop,
     update_cs_mandi_data,
@@ -1231,7 +1232,11 @@ def update_approval_status():
                 )
 
             sale_receipt.is_approved = True
-            sale_receipt.token_amount = sale_receipt.promised_token
+            sale_receipt.token_amount = calculate_eligible_tokens(
+                mandi_id=sale_receipt.mandi_id,
+                crop_id=sale_receipt.crop_id,
+                token_type="actual",
+            )
 
         elif action == "reject":
             sale_receipt.is_approved = False
@@ -1243,7 +1248,7 @@ def update_approval_status():
             )
             sale_receipt.validated_by = logged_in_user.id
 
-        db.session.commit()
+        sale_receipt.commit()
 
         if sale_receipt.is_approved is True:
             # Add earning wallet plan to user membership start
@@ -1258,12 +1263,13 @@ def update_approval_status():
             elif sale_receipt.token_amount == 2:
                 membership_plan_id = "earned_days_04"
 
-            UserMembership(
-                user_id=sale_receipt.user_id,
-                membership_plan_id=membership_plan_id,
-                payment_src_id="earned_days",
-                notes="earned via sale receipt",
-            ).commit()
+            if membership_plan_id:
+                UserMembership(
+                    user_id=sale_receipt.user_id,
+                    membership_plan_id=membership_plan_id,
+                    payment_src_id="earned_days",
+                    notes="earned via sale receipt",
+                ).commit()
 
         if action == "approve":
             update_cs_mandi_data(sale_receipt=sale_receipt)
