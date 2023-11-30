@@ -584,9 +584,13 @@ def filter_resources(
         and_(or_(*search_query_conditions), and_(*date_conditions))
     )
 
-    if model.__name__ == 'UserModel':
-        role_condition = model.roles.in_(['cs_user', 'admin', 'user', 'superadmin'])
-        filter_query = filter_query.filter(or_(role_condition, model.roles.isnot(None)))
+    if model.__name__ == "UserModel":
+        role_condition = model.roles.in_(
+            ["cs_user", "admin", "user", "superadmin"]
+        )
+        filter_query = filter_query.filter(
+            or_(role_condition, model.roles.isnot(None))
+        )
 
     if sort and len(sort):
         sort_conditions = []
