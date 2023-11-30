@@ -903,7 +903,6 @@ def resource_edit(resource_type, resource_id):
         setattr(resource, "crop_name", updated_crop.crop_name)
         setattr(resource, "crop_name_hi", updated_crop.crop_name_hi)
 
-    # test
     if resource_type == "mandi-receipt":
         existing_sale_receipt = SaleReceiptModel.query.filter(
             SaleReceiptModel.booklet_number == resource.booklet_number,
