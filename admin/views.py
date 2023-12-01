@@ -173,9 +173,7 @@ def process_user_id(user_id):
     if user_id is None:
         return False
 
-    selected_user = UserModel.query.filter(
-        UserModel.roles == "cs_user", UserModel.id == user_id
-    ).first()
+    selected_user = UserModel.query.filter(UserModel.roles == "cs_user", UserModel.id == user_id).first()
 
     if selected_user is not None:
         if selected_user.roles == "cs_user":
@@ -584,9 +582,13 @@ def filter_resources(
         and_(or_(*search_query_conditions), and_(*date_conditions))
     )
 
-    if model.__name__ == 'UserModel':
-        role_condition = model.roles.in_(['cs_user', 'admin', 'user', 'superadmin'])
-        filter_query = filter_query.filter(or_(role_condition, model.roles.isnot(None)))
+    if model.__name__ == "UserModel":
+        role_condition = model.roles.in_(
+            ["cs_user", "admin", "user", "superadmin"]
+        )
+        filter_query = filter_query.filter(
+            or_(role_condition, model.roles.isnot(None))
+        )
 
     if sort and len(sort):
         sort_conditions = []
