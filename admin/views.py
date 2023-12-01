@@ -173,7 +173,9 @@ def process_user_id(user_id):
     if user_id is None:
         return False
 
-    selected_user = UserModel.query.filter(UserModel.roles == "cs_user", UserModel.id == user_id).first()
+    selected_user = UserModel.query.filter(
+        UserModel.roles == "cs_user", UserModel.id == user_id
+    ).first()
 
     if selected_user is not None:
         if selected_user.roles == "cs_user":
