@@ -1,18 +1,18 @@
 from flask_login import current_user
-from models import User, Post, Category, Organization
+from models import Category, Post, User
 
 admin_configs = {
-    'user': {
-        'model': User,  # the user model, should be imported above
-        'identifier': 'mobile',  # column name from user table
-        'secret': 'password'  # column name from user table
+    "user": {
+        "model": User,  # the user model, should be imported above
+        "identifier": "mobile",  # column name from user table
+        "secret": "password",  # column name from user table
     }
 }
 
 
 def get_user_roles():
     # current_user is an instance of the User model
-    if not hasattr(current_user, 'roles'):
+    if not hasattr(current_user, "roles"):
         return None
     return current_user.roles
 
@@ -45,16 +45,16 @@ def get_user_permissions(resource_model):
     return user_permissions
 
 
-class FlaskAdmin():
+class FlaskAdmin:
     def __init__(self):
         super().__init__()
 
 
 class UserAdmin(FlaskAdmin):
     model = User
-    name = 'user'
-    list_display = ('name', 'phone_number')
-    pk = '_id'
+    name = "user"
+    list_display = ("name", "phone_number")
+    pk = "_id"
 
     def __init__(self):
         super().__init__()
@@ -63,9 +63,9 @@ class UserAdmin(FlaskAdmin):
 
 class PostAdmin(FlaskAdmin):
     model = Post
-    name = 'post'
-    list_display = ('text', 'user_id', 'is_active')
-    pk = '_id'
+    name = "post"
+    list_display = ("text", "user_id", "is_active")
+    pk = "_id"
 
     def __init__(self):
         super().__init__()
@@ -74,9 +74,9 @@ class PostAdmin(FlaskAdmin):
 
 class CategoryAdmin(FlaskAdmin):
     model = Category
-    name = 'category'
-    list_display = ('parent_category_id', 'title', 'is_active')
-    pk = '_id'
+    name = "category"
+    list_display = ("parent_category_id", "title", "is_active")
+    pk = "_id"
 
     def __init__(self):
         super().__init__()
