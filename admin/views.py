@@ -73,6 +73,7 @@ from flask_bcrypt import Bcrypt
 from flask_login import current_user, login_required, login_user, logout_user
 from flask_wtf import FlaskForm
 from models.admin_portal_user import AdminPortalUser
+
 # TODO: remove project dependency
 from models.crop import CropModel
 from models.mandi import MandiModel
@@ -984,6 +985,7 @@ def resource_delete(resource_type, resource_id):
         request.referrer
         or url_for(".resource_list", resource_type=resource_type)
     )
+
 
 def update_roles_in_admin_portal_users(user_id, roles):
     admin_user = AdminPortalUser.query.filter_by(id=user_id).first()
