@@ -72,7 +72,7 @@ from flask import request, url_for
 from flask_bcrypt import Bcrypt
 from flask_login import current_user, login_required, login_user, logout_user
 from flask_wtf import FlaskForm
-
+from models.admin_portal_user import AdminPortalUser
 # TODO: remove project dependency
 from models.crop import CropModel
 from models.mandi import MandiModel
@@ -80,7 +80,6 @@ from models.membership import UserMembership
 from models.salesReceipt import SaleReceiptModel
 from models.unique_entry import UniqueEntry
 from models.user import UserModel
-from models.admin_portal_user import AdminPortalUser
 from resources.whatsappBot.mandi_v2 import (
     update_cs_data_mandi_crop,
     update_cs_mandi_data,
@@ -741,7 +740,7 @@ def resource_create(resource_type):
             "resource/create.html",
             resource_type=resource_type,
             editable_attributes=editable_attributes,
-            roles_list=roles_list
+            roles_list=roles_list,
         )
 
     attributes_to_save = {}
@@ -905,7 +904,9 @@ def resource_edit(resource_type, resource_id):
             )
             setattr(resource, attribute["name"], validated_attribute_value)
 
-            update_roles_in_admin_portal_users(resource.id, validated_attribute_value)
+            update_roles_in_admin_portal_users(
+                resource.id, validated_attribute_value
+            )
 
     if resource_type == "mandi-receipt":
         updated_mandi = MandiModel.query.get(resource.mandi_id)
