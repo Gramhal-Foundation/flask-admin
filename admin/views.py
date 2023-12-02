@@ -72,6 +72,7 @@ from flask import request, url_for
 from flask_bcrypt import Bcrypt
 from flask_login import current_user, login_required, login_user, logout_user
 from flask_wtf import FlaskForm
+from models.admin_portal_user import AdminPortalUser
 
 # TODO: remove project dependency
 from models.crop import CropModel
@@ -737,12 +738,14 @@ def resource_create(resource_type):
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
     editable_attributes = get_editable_attributes(resource_type)
+    roles_list = ["Super Admin", "Data Validator", "Data Collector", "Admin"]
 
     if request.method == "GET":
         return render_template(
             "resource/create.html",
             resource_type=resource_type,
             editable_attributes=editable_attributes,
+            roles_list=roles_list,
         )
 
     attributes_to_save = {}
@@ -849,6 +852,7 @@ def resource_edit(resource_type, resource_id):
         )
 
     editable_attributes = get_editable_attributes(resource_type)
+    roles_list = ["Super Admin", "Data Validator", "Data Collector", "Admin"]
     old_resource = copy.copy(
         resource
     )  # make a clone before there are any updates
@@ -860,6 +864,7 @@ def resource_edit(resource_type, resource_id):
             resource=resource,
             editable_attributes=editable_attributes,
             admin_configs=admin_configs,
+            roles_list=roles_list,
         )
 
     if (
@@ -903,6 +908,10 @@ def resource_edit(resource_type, resource_id):
                 resource_type, attribute, attribute_value
             )
             setattr(resource, attribute["name"], validated_attribute_value)
+
+            update_roles_in_admin_portal_users(
+                resource.id, validated_attribute_value
+            )
 
     if resource_type == "mandi-receipt":
         updated_mandi = MandiModel.query.get(resource.mandi_id)
@@ -980,6 +989,16 @@ def resource_delete(resource_type, resource_id):
         request.referrer
         or url_for(".resource_list", resource_type=resource_type)
     )
+
+
+def update_roles_in_admin_portal_users(user_id, roles):
+    admin_user = AdminPortalUser.query.filter_by(id=user_id).first()
+
+    if admin_user:
+        admin_user.roles = roles
+
+        db.session.add(admin_user)
+        db.session.commit()
 
 
 @admin.route("/resource/<string:resource_type>/download", methods=["GET"])
