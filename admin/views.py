@@ -174,12 +174,12 @@ def process_user_id(user_id):
     if user_id is None:
         return False
 
-    selected_user = UserModel.query.filter(
-        UserModel.roles == "cs_user", UserModel.id == user_id
+    selected_user = AdminPortalUser.query.filter(
+        AdminPortalUser.roles == "Data Collector", AdminPortalUser.id == user_id
     ).first()
 
     if selected_user is not None:
-        if selected_user.roles == "cs_user":
+        if selected_user.roles == "Data Collector":
             return "Team Member"
         else:
             return "Regular User"
@@ -584,10 +584,6 @@ def filter_resources(
     filter_query = filter_query.filter(
         and_(or_(*search_query_conditions), and_(*date_conditions))
     )
-
-    if model.__name__ == 'UserModel':
-        role_condition = model.roles.in_(['cs_user', 'admin', 'user', 'superadmin'])
-        filter_query = filter_query.filter(or_(role_condition, model.roles.isnot(None)))
 
     if sort and len(sort):
         sort_conditions = []
@@ -1345,8 +1341,8 @@ def resource_filter(resource_type, status):
 
     # cs_user_details
     cs_users = (
-        UserModel.query.filter(UserModel.roles == "cs_user")
-        .order_by(asc(UserModel.name))
+        AdminPortalUser.query.filter(AdminPortalUser.roles == "Data Collector")
+        .order_by(asc(AdminPortalUser.name))
         .all()
     )
     list_display = resource_class.list_display
@@ -1367,8 +1363,8 @@ def resource_filter(resource_type, status):
             selected_crop = crop_id
         if user_id:
             filter_conditions.append(model.user_id == user_id)
-            selected_user = UserModel.query.filter(
-                UserModel.roles == "cs_user", UserModel.id == user_id
+            selected_user = AdminPortalUser.query.filter(
+                AdminPortalUser.roles == "Data Collector", AdminPortalUser.id == user_id
             ).first()
             selected_user_mobile_number = selected_user.mobile_number
             selected_user_id = user_id
