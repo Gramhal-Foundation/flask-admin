@@ -53,14 +53,14 @@ import copy
 import csv
 import io
 import string
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import boto3
 import inflect
 import pandas as pd
 from admin_view import *  # noqa: F401, F403
 from admin_view import admin_configs
-from bolbhavPlus.utils.sale_receipt import calculate_eligible_tokens
+from bolbhavPlus.utils.sale_receipt_controller import update_approval_status
 
 # [TODO]: dependency on main repo
 from db import db
@@ -76,15 +76,9 @@ from flask_wtf import FlaskForm
 # TODO: remove project dependency
 from models.crop import CropModel
 from models.mandi import MandiModel
-from models.membership import UserMembership
 from models.salesReceipt import SaleReceiptModel
-from models.unique_entry import UniqueEntry
 from models.user import UserModel
-from resources.whatsappBot.mandi_v2 import (
-    update_cs_data_mandi_crop,
-    update_cs_mandi_data,
-)
-from sqlalchemy import Text, and_, asc, cast, desc, func, or_
+from sqlalchemy import Text, and_, cast, func, or_
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 from wtforms import PasswordField, StringField, SubmitField
@@ -643,29 +637,22 @@ def resource_list(resource_type):
         of resources, including the pagination controls and relevant
         information about the resource type and list display attributes.
     """
-    # TODO: hardcoding to be removed
-    if resource_type == "mandi-receipt":
-        return redirect(
-            url_for(
-                ".resource_filter",
-                resource_type=resource_type,
-                status="pending",
-            )
-        )
 
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
-    is_custom_template = (
-        resource_class.is_custom_template
-        if hasattr(resource_class, "is_custom_template")
-        else False
-    )
+
+    if hasattr(resource_class, "admin_sale_receipt_controller"):
+        status = request.args.get("status", default="pending")
+        print("status", status)
+        return resource_class.admin_sale_receipt_controller(
+            resource_type, status
+        )
+
     per_page = 20
     page = request.args.get("page", default=1, type=int)
     search_query = request.args.get("search", default="")
     from_date = request.args.get("from_date", default=None)
     to_date = request.args.get("to_date", default=None)
-    primary_key_column = model.__table__.primary_key.columns.keys()[0]
     list_display = resource_class.list_display
     sort = resource_class.sort if hasattr(resource_class, "sort") else None
     search_params = {
@@ -682,29 +669,14 @@ def resource_list(resource_type):
         per_page=per_page,
         sort=sort,
     )
-    if is_custom_template:
-        pagination = (
-            model.query.filter(model.is_approved is None)
-            .order_by(primary_key_column)
-            .paginate(page=page, per_page=1, error_out=False)
-        )
-        processed_data = get_preprocess_data(pagination, list_display)
-        return render_template(
-            "resource/custom-list.html",
-            pagination=pagination,
-            resource_type=resource_type,
-            list_display=list_display,
-            processed_data=processed_data,
-            search_params=search_params,
-        )
-    else:
-        return render_template(
-            "resource/list.html",
-            pagination=pagination,
-            resource_type=resource_type,
-            list_display=list_display,
-            search_params=search_params,
-        )
+
+    return render_template(
+        "resource/list.html",
+        pagination=pagination,
+        resource_type=resource_type,
+        list_display=list_display,
+        search_params=search_params,
+    )
 
 
 @admin.route(
@@ -1212,259 +1184,7 @@ def get_preprocess_data(pagination, list_display):
 
 
 @admin.route("/update_approval_status", methods=["POST"])
-def update_approval_status():
-    try:
-        logged_in_user = current_user
-        data = request.json
-        action = data.get("action")
-        receipt_id = data.get("receipt_id")
+def update_receipt_status():
+    response = update_approval_status(current_user)
 
-        sale_receipt = SaleReceiptModel.query.get(receipt_id)
-
-        if action == "approve":
-            existing_record = SaleReceiptModel.query.filter(
-                SaleReceiptModel.booklet_number == sale_receipt.booklet_number,
-                SaleReceiptModel.receipt_id == sale_receipt.receipt_id,
-                SaleReceiptModel.mandi_id == sale_receipt.mandi_id,
-                SaleReceiptModel.crop_id == sale_receipt.crop_id,
-                SaleReceiptModel.is_approved == True,
-                func.date(SaleReceiptModel.receipt_date)
-                == func.date(sale_receipt.receipt_date),
-            ).first()
-
-            if existing_record and existing_record.id != sale_receipt.id:
-                return jsonify(
-                    {
-                        "error": "another record already exists with same booklet, receipt and mandi. Please go back and update with correct values."
-                    }
-                )
-
-            sale_receipt.is_approved = True
-            sale_receipt.token_amount = calculate_eligible_tokens(
-                mandi_id=sale_receipt.mandi_id,
-                crop_id=sale_receipt.crop_id,
-                token_type="actual",
-            )
-
-        elif action == "reject":
-            sale_receipt.is_approved = False
-            sale_receipt.token_amount = 0
-
-        if action in ["approve", "reject"]:
-            sale_receipt.validated_on = datetime.utcnow() + timedelta(
-                hours=5, minutes=30
-            )
-            sale_receipt.validated_by = logged_in_user.id
-
-        sale_receipt.commit()
-
-        if sale_receipt.is_approved is True:
-            # Add earning wallet plan to user membership start
-            membership_plan_id = ""
-
-            if sale_receipt.token_amount == 10:
-                membership_plan_id = "earned_days_01"
-            elif sale_receipt.token_amount == 8:
-                membership_plan_id = "earned_days_02"
-            elif sale_receipt.token_amount == 6:
-                membership_plan_id = "earned_days_03"
-            elif sale_receipt.token_amount == 2:
-                membership_plan_id = "earned_days_04"
-
-            if membership_plan_id:
-                UserMembership(
-                    user_id=sale_receipt.user_id,
-                    membership_plan_id=membership_plan_id,
-                    payment_src_id="earned_days",
-                    notes="earned via sale receipt",
-                ).commit()
-
-        if action == "approve":
-            update_cs_mandi_data(sale_receipt=sale_receipt)
-            update_cs_data_mandi_crop(sale_receipt=sale_receipt)
-
-        return jsonify(
-            {
-                "success": True,
-                "message": "Approval status updated successfully",
-            }
-        )
-    except Exception as e:
-        return jsonify({"success": False, "message": str(e)})
-
-
-@admin.route("/resource/<string:resource_type>/<string:status>")
-@login_required
-def resource_filter(resource_type, status):
-    resource_class = get_resource_class(resource_type)
-    model = resource_class.model
-    is_custom_template = (
-        resource_class.is_custom_template
-        if hasattr(resource_class, "is_custom_template")
-        else False
-    )
-    # per_page = 5
-    page = request.args.get("page", default=1, type=int)
-    mandi = request.args.get("mandi")
-    crop = request.args.get("crop")
-    from_date = request.args.get("from_date")
-    to_date = request.args.get("to_date")
-    user_id = None
-
-    user = request.args.get("user_id")
-    if from_date:
-        from_date_object = datetime.strptime(from_date, "%Y-%m-%d")
-    if to_date:
-        to_date_object = datetime.strptime(to_date, "%Y-%m-%d")
-    if mandi:
-        mandi_id = int(mandi)
-    if crop:
-        crop_id = int(crop)
-    if user is not None:
-        user_id = int(user) if user and user != "None" else None
-    # primary_key_column = model.__table__.primary_key.columns.keys()[0]
-    # TODO: filter not working
-    # pagination = model.query.order_by(primary_key_column).paginate(
-    #     page=page, per_page=per_page, error_out=False
-    # )
-
-    # cs_user_details
-    cs_users = (
-        UserModel.query.filter(UserModel.roles == "cs_user")
-        .order_by(asc(UserModel.name))
-        .all()
-    )
-    list_display = resource_class.list_display
-    if is_custom_template:
-        filter_conditions = []
-
-        selected_mandi = None
-        selected_crop = None
-        selected_user_mobile_number = None
-        selected_user_id = None
-        selected_from_date = None
-        selected_to_date = None
-        if mandi:
-            filter_conditions.append(model.mandi_id == mandi_id)
-            selected_mandi = mandi_id
-        if crop:
-            filter_conditions.append(model.crop_id == crop_id)
-            selected_crop = crop_id
-        if user_id:
-            filter_conditions.append(model.user_id == user_id)
-            selected_user = UserModel.query.filter(
-                UserModel.roles == "cs_user", UserModel.id == user_id
-            ).first()
-            selected_user_mobile_number = selected_user.mobile_number
-            selected_user_id = user_id
-        if from_date:
-            filter_conditions.append(
-                func.date(model.receipt_date) >= func.date(from_date_object)
-            )
-            selected_from_date = from_date
-        if to_date:
-            filter_conditions.append(
-                func.date(model.receipt_date) <= func.date(to_date_object)
-            )
-            selected_to_date = to_date
-
-        if not filter_conditions:
-            pending_filter = (model.is_approved == None,)
-            rejected_filter = (model.is_approved == False,)
-            approved_filter = (model.is_approved == True,)
-        else:
-            pending_filter = and_(
-                *(model.is_approved == None, *filter_conditions)
-            )
-            rejected_filter = and_(
-                *(model.is_approved == False, *filter_conditions)
-            )
-            approved_filter = and_(
-                *(model.is_approved == True, *filter_conditions)
-            )
-        pending_pagination = (
-            model.query.options(
-                joinedload(SaleReceiptModel.uploader),
-                joinedload(SaleReceiptModel.owner),
-                joinedload(SaleReceiptModel.validator),
-            )
-            .filter(*pending_filter)
-            .order_by(SaleReceiptModel.id)
-            .paginate(page=page, per_page=1, error_out=False)
-        )
-        max_price = None
-        min_price = None
-
-        for item in pending_pagination.items:
-            mandi_id = item.mandi_id
-            crop_id = item.crop_id
-            receipt_date = item.receipt_date
-
-            cs_mandi_crop_data = UniqueEntry.query.get(
-                "cs_mandi_crop__%d_%d_%s"
-                % (mandi_id, crop_id, receipt_date.strftime("%d-%m-%Y"))
-            )
-
-            if cs_mandi_crop_data:
-                max_price_string = cs_mandi_crop_data.payload["max_price"]
-                min_price_string = cs_mandi_crop_data.payload["min_price"]
-                max_price = int(max_price_string)
-                min_price = int(min_price_string)
-
-        rejected_pagination = (
-            model.query.options(
-                joinedload(SaleReceiptModel.versions),
-                joinedload(SaleReceiptModel.uploader),
-                joinedload(SaleReceiptModel.owner),
-                joinedload(SaleReceiptModel.validator),
-            )
-            .filter(*rejected_filter)
-            .order_by(desc(SaleReceiptModel.receipt_date))
-            .paginate(page=page, per_page=10, error_out=False)
-        )
-        approved_pagination = (
-            model.query.options(
-                joinedload(SaleReceiptModel.versions),
-                joinedload(SaleReceiptModel.uploader),
-                joinedload(SaleReceiptModel.owner),
-                joinedload(SaleReceiptModel.validator),
-            )
-            .filter(*approved_filter)
-            .order_by(desc(SaleReceiptModel.receipt_date))
-            .paginate(page=page, per_page=10, error_out=False)
-        )
-
-        if status == "pending":
-            pagination = pending_pagination
-        elif status == "rejected":
-            pagination = rejected_pagination
-        else:
-            pagination = approved_pagination
-
-        mandis = (
-            MandiModel.query.filter(MandiModel.is_bolbhav_plus == True)
-            .order_by(MandiModel.mandi_name)
-            .all()
-        )
-        crops = CropModel.get_all_mandi_crops()
-
-        return render_template(
-            "resource/custom-list.html",
-            pagination=pagination,
-            pending_pagination=pending_pagination,
-            rejected_pagination=rejected_pagination,
-            approved_pagination=approved_pagination,
-            resource_type=resource_type,
-            list_display=list_display,
-            mandis=mandis,
-            crops=crops,
-            selected_mandi=selected_mandi,
-            selected_crop=selected_crop,
-            selected_user_mobile_number=selected_user_mobile_number,
-            selected_user_id=selected_user_id,
-            selected_from_date=selected_from_date,
-            selected_to_date=selected_to_date,
-            cs_users=cs_users,
-            max_price=max_price,
-            min_price=min_price,
-        )
+    return response

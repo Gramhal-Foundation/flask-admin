@@ -19,6 +19,7 @@
                     {% endfor %}
                 </select>
                 <input type="hidden" name="page" value={{pagination.page}}>
+                <input type="hidden" name="status" value={{button_value}}>
             </div>
             <div>
                 <select name="crop" id="crop" class="ml-2 border px-2 py-2 rounded w-40">
@@ -61,7 +62,7 @@
                 <button
                     type="button"
                     id="pendingButton"
-                    class="font-light text-sm px-2 py-2.5 text-black border-b-2 {% if 'pending' in request.path %} border-blue-500 {% endif %}"
+                    class="font-light text-sm px-2 py-2.5 text-black border-b-2 {% if button_value == 'pending' %} border-blue-500 {% endif %}"
                     onclick="displayReceipts('pending')"
                 >
                     <span class="{% if 'pending' in request.path %} font-bold {% endif %}">Pending Receipts</span>
@@ -72,7 +73,7 @@
                 <button
                     type="button"
                     id="rejectedReceiptButton"
-                    class="font-light text-sm px-2 py-2.5 text-black border-b-2 {% if 'rejected' in request.path %} border-blue-500 {% endif %}"
+                    class="font-light text-sm px-2 py-2.5 text-black border-b-2 {% if button_value == 'rejected' %} border-blue-500 {% endif %}"
                     onclick="displayReceipts('rejected')"
                 >
                     <span class="{% if 'rejected' in request.path %} font-bold {% endif %}">Rejected Receipts</span>
@@ -83,7 +84,7 @@
                 <button
                     type="button"
                     id="rejectedReceiptButton"
-                    class="font-light text-sm px-2 py-2.5 text-black border-b-2 {% if 'approved' in request.path %} border-blue-500 {% endif %}"
+                    class="font-light text-sm px-2 py-2.5 text-black border-b-2 {% if button_value == 'approved' %} border-blue-500 {% endif %}"
                     onclick="displayReceipts('approved')"
                 >
                     <span class="{% if 'approved' in request.path %} font-bold {% endif %}">Approved Receipts</span>
@@ -93,7 +94,7 @@
         </ul>
     </div>
 
-    {% if 'pending' in request.path %}
+    {% if button_value == 'pending' %}
         <div class="mx-4">
             {% for resource in pagination.items %}
                 <div class="flex">
@@ -159,143 +160,6 @@
                     </div>
                 </div>
             {% endfor %}
-        </div>
-    {% elif 'rejected' in request.path %}
-    <div class="flex-grow overflow-x-auto">
-        <div class="relative  my-8">
-            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                    <tr>
-                        {% for item in list_display %}
-                            {% if item == "mandi_name" %}
-                                <th scope="col" class="px-6 py-3">Mandi</th>
-                            {% elif item == "crop_name" %}
-                                <th scope="col" class="px-6 py-3">Crop</th>
-                            {% elif item == "receipt_id" %}
-                                <th scope="col" class="px-6 py-3">Receipt Number</th>
-                            {% elif item == "quantity" %}
-                                <th scope="col" class="px-6 py-3">Weight (Quintal)</th>
-                            {% elif item == "price" %}
-                                <th scope="col" class="px-6 py-3">Rate</th>
-                            {% elif item == "receipt_date" %}
-                                <th scope="col" class="px-6 py-3">Submission On</th>
-                            {% elif item == "receipt_image_url" %}
-                                <th scope="col" class="px-6 py-3">Receipt Image</th>
-                            {% elif item == "validated_on" %}
-                                <th scope="col" class="px-6 py-3">Validation On</th>
-                            {% elif item == "is_approved" %}
-                                <th scope="col" class="px-6 py-3">Status</th>
-                            {% elif item == "validated_by" %}
-                                <th scope="col" class="px-6 py-3">Validator Id</th>
-                            {% elif item == "uploader.name" %}
-                                <th scope="col" class="px-6 py-3">Uploader Name</th>
-                            {% elif item == "uploader.mobile_number" %}
-                                <th scope="col" class="px-6 py-3">Uploader Mobile Number</th>
-                            {% elif item == 'user_type' %}
-                                <th scope="col" class="px-6 py-3">User Type</th>
-                            {% else %}
-                                <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
-                            {% endif %}
-                        {% endfor %}
-                        {% if permissions.get(resource_type).get('update') or permissions.get(resource_type).get('delete'): %}
-                            <th scope="col" class="px-6 py-3">Actions</th>
-                        {% endif %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for resource in pagination.items %}
-                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                        {% for item in list_display %}
-                            <td class="px-6 py-4">
-                                {% if item == "is_approved" %}
-                                    {% if resource[item] %}
-                                        <span class="text-green-500">Approved</span>
-                                    {% else %}
-                                        <span class="text-red-500">Rejected</span>
-                                    {% endif %}
-                                {% elif item == "receipt_date" %}
-                                    {{ resource[item] | admin_round_datetime}}
-                                {% elif item == "validated_on" %}
-                                    {{ resource[item] | admin_round_datetime}}
-                                {% elif item == "receipt_image_url" %}
-                                    {% if resource[item] %}
-                                        <a href="{{ resource[item] }}" target="_blank" class="text-blue-500 flex items-center">
-                                            <span class="underline">View</span>
-                                            <i class="fa-solid fa-external-link ml-1"></i>
-                                        </a>
-                                    {% else %}
-                                        <span>-</span>
-                                    {% endif %}
-                                {% elif '.' in item %}
-                                    {{ resource | get_nested_value(item) }}
-                                {% elif item == 'user_type' %}
-                                    {{ resource['user_id'] | process_user_id }}
-                                {% else %}
-                                    {{ resource[item] }}
-                                {% endif %}
-                            </td>
-                        {% endfor %}
-                        <td class="px-6 py-4">
-                            <div class="flex items-center h-full">
-                                <div>
-                                    <a href="#" onclick="openEditModal('{{ resource.pk }}')" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
-                                        <i class="fa-solid fa-receipt"></i>
-                                    </a>
-                                </div>
-                                {% if permissions.get(resource_type).get('update') and resource.versions: %}
-                                    <div>
-                                        <a href="#" onclick="openEditHistoryModal('{{ resource.pk }}')" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
-                                            <i class="fas fa-history"></i>
-                                        </a>
-                                    </div>
-                                {% endif %}
-                                {% if permissions.get(resource_type).get('delete'): %}
-                                    <div>
-                                        <form action={{ url_for('.resource_delete', resource_type=resource_type, resource_id=resource.pk)}} method="POST" onsubmit="return confirm('Do you really want to delete this {{ resource_type }}?');">
-                                            <button type="submit">
-                                                <div class="inline font-bold py-2 pr-4 rounded text-red-600 h-4 w-4">
-                                                    <i class="fas fa-trash"></i>
-                                                </div>
-                                            </button>
-                                        </form>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-        <div class="mt-4 flex items-end">
-            {% if pagination.has_prev %}
-            <a href="javascript:void(0);"
-            onclick="displayReceipts('rejected', '{{ pagination.prev_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %},{% if selected_date %}'{{ selected_date }}'{% else %}null{% endif %})"
-            class="mx-1 px-3 py-1 rounded border text-blue-500">
-                {{ 'Prev' }}
-            </a>
-            {% endif %}
-            {% for num in pagination.iter_pages() %}
-            {% if num %}
-            {% if num != pagination.page %}
-            <a href="javascript:void(0);"
-            onclick="displayReceipts('rejected', '{{ num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %},{% if selected_date %}'{{ selected_date }}'{% else %}null{% endif %})"
-            class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
-            {% else %}
-            <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
-            {% endif %}
-            {% else %}
-            ...
-            {% endif %}
-            {% endfor %}
-            {% if pagination.has_next %}
-            <a href="javascript:void(0);"
-            onclick="displayReceipts('rejected', '{{ pagination.next_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %},{% if selected_date %}'{{ selected_date }}'{% else %}null{% endif %})"
-            class="mx-1 px-3 py-1 rounded border text-blue-500">
-                {{ 'Next' }}
-            </a>
-            {% endif %}
         </div>
     {% else %}
     <div class="flex-grow overflow-x-auto">
@@ -408,7 +272,7 @@
         <div class="mt-4 flex items-end">
             {% if pagination.has_prev %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('approved', '{{ pagination.prev_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %},{% if selected_from_date %}'{{ selected_from_date }}'{% else %}null{% endif %}, {% if selected_to_date %}'{{ selected_to_date }}'{% else %}null{% endif %})"
+            onclick="displayReceipts('{{button_value}}', '{{ pagination.prev_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %},{% if selected_from_date %}'{{ selected_from_date }}'{% else %}null{% endif %}, {% if selected_to_date %}'{{ selected_to_date }}'{% else %}null{% endif %})"
             class="mx-1 px-3 py-1 rounded border text-blue-500">
                 {{ 'Prev' }}
             </a>
@@ -417,7 +281,7 @@
             {% if num %}
             {% if num != pagination.page %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('approved', '{{ num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %},{% if selected_from_date %}'{{ selected_from_date }}'{% else %}null{% endif %}, {% if selected_to_date %}'{{ selected_to_date }}'{% else %}null{% endif %})"
+            onclick="displayReceipts('{{button_value}}', '{{ num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %},{% if selected_from_date %}'{{ selected_from_date }}'{% else %}null{% endif %}, {% if selected_to_date %}'{{ selected_to_date }}'{% else %}null{% endif %})"
             class="mx-1 px-3 py-1 rounded bg-white border text-blue-500">{{ num }}</a>
             {% else %}
             <span class="mx-1 px-3 py-1 bg-blue-500 text-white rounded">{{ num }}</span>
@@ -428,7 +292,7 @@
             {% endfor %}
             {% if pagination.has_next %}
             <a href="javascript:void(0);"
-            onclick="displayReceipts('approved', '{{ pagination.next_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %},{% if selected_from_date %}'{{ selected_from_date }}'{% else %}null{% endif %}, {% if selected_to_date %}'{{ selected_to_date }}'{% else %}null{% endif %})"
+            onclick="displayReceipts('{{button_value}}', '{{ pagination.next_num }}', {% if selected_mandi %}'{{ selected_mandi }}'{% else %}null{% endif %}, {% if selected_crop %}'{{ selected_crop }}'{% else %}null{% endif %},{% if selected_user_id %}'{{ selected_user_id }}'{% else %}null{% endif %},{% if selected_from_date %}'{{ selected_from_date }}'{% else %}null{% endif %}, {% if selected_to_date %}'{{ selected_to_date }}'{% else %}null{% endif %})"
             class="mx-1 px-3 py-1 rounded border text-blue-500">
                 {{ 'Next' }}
             </a>
@@ -651,7 +515,7 @@
         let rejectedReceiptButton = document.getElementById('rejectedReceiptButton');
         let resourceType = "{{ resource_type }}";
 
-        let url = `/admin/resource/${resourceType}/${buttonValue}?page=${page}`;
+        let url = `/admin/resource/${resourceType}?status=${buttonValue}&page=${page}`;
         if (selectedMandi) {
             url += `&mandi=${selectedMandi}`
         }
