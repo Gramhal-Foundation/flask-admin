@@ -19,9 +19,11 @@
                 {% if permissions.get(resource_type): %}
                     <form action={{ url_for('.resource_list', resource_type=resource_type) }} method="GET">
                         <div class="flex">
+                            {% if resource_type != 'receipt_rejection_reasons'  %}
                             <div class="mr-2 flex">
                                 <input type="text" name="search" id="search" value="{{ search_params.search_query }}" placeholder="Search..." class="border border-gray-300 text-black text-sm py-2 px-4 rounded">
                             </div>
+                            {% endif %}
                             {% if resource_type != 'faq'  %}
                                 <div class="flex items-center mr-2">
                                     <input type="date" name="from_date" class="border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Select Date" value="{{ search_params.from_date }}">
@@ -40,12 +42,12 @@
                 {% endif %}
             </div>
             <div class="flex">
-                {% if permissions.get(resource_type).get('export') and resource_type != 'faq'  %}
+                {% if permissions.get(resource_type).get('export') and resource_type != 'faq' and resource_type != 'receipt_rejection_reasons'  %}
                     <a href={{ url_for('.resource_download', resource_type=resource_type, search=search_query) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded flex items-center">
                         Download CSV
                     </a>
                 {% endif %}
-                {% if permissions.get(resource_type).get('import') and resource_type != 'faq'  %}
+                {% if permissions.get(resource_type).get('import') and resource_type != 'faq' and resource_type != 'receipt_rejection_reasons'  %}
                     <a href={{ url_for('.resource_upload', resource_type=resource_type) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded ml-2 flex items-center">
                         Bulk Upload
                     </a>
