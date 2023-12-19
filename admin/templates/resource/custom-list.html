@@ -150,7 +150,7 @@
                             {% endfor %}
                         </div>
                         <div class="mt-6">
-                            <button type="button" onclick="openEditModal('{{ resource.pk }}')" class="rounded-lg border border-black text-black px-6 py-2">Edit</button>
+                            <button type="button" onclick="openEditModal('{{ resource.pk }}', '{{ resource.reasons}}')" class="rounded-lg border border-black text-black px-6 py-2">Edit</button>
                             <button type="button" onclick="handleButtonClick(this, 'approve', '{{ resource.pk }}')" class="bg-green-500 rounded-lg text-white px-6 py-2 ml-2">Approve</button>
                             <!-- <button type="button" onclick="handleButtonClick(this, 'reject', '{{ resource.pk }}')" class="bg-red-500 rounded-lg text-white px-6 py-2 ml-2">Reject</button> -->
                             <button type="button" onclick="openReasonModal('{{ resource.pk }}')" class="bg-red-500 rounded-lg text-white px-6 py-2 ml-2">Reject</button>
@@ -240,7 +240,7 @@
                         <td class="px-6 py-4">
                             <div class="flex items-center h-full">
                                 <div>
-                                    <a href="#" onclick="openEditModal('{{ resource.pk }}')" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
+                                    <a href="#" onclick="openEditModal('{{ resource.pk }}', '{{resource.reasons}}')" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
                                         <i class="fa-solid fa-receipt"></i>
                                     </a>
                                 </div>
@@ -313,17 +313,17 @@
                 <div class="px-6 py-6 lg:px-8">
                     <h3 class="mb-6 text-2xl font-medium text-gray-900">Reject Receipt</h3>
                     <p>Select reason(s) to reject the receipt</p>
-                    <form class="pt-4" id="reasonForm{{ resource.pk }}">
+                    <form class="pt-4" id="reasonForm">
                         <div class="grid grid-cols-3 gap-4">
                             {% for reason in receipt_rejection_reasons %}
                                 <div class="flex items-center">
-                                    <input type="checkbox" id="reason{{ loop.index }}_{{ reason.id }}" value="{{ reason.short_description }}" class="mr-2" onchange="checkSelected(this, '{{ resource.pk }}')">
-                                    <label for="reason{{ loop.index }}_{{ reason.id }}" class="text-gray-700">{{ reason.short_description }}</label>
+                                    <input type="checkbox" id="reason{{ loop.index }}_{{ reason.id }}" value="{{ reason.short_description }}" class="mr-2">
+                                    <label for="reason{{ loop.index }}_{{ resource.pk }}" class="text-gray-700">{{ reason.short_description }}</label>
                                 </div>
                             {% endfor %}
                         </div>
                         <div class="pt-4">
-                            <button type="button" onclick="handleButtonClick(this, 'reject', '{{ resource.pk }}')" class="bg-gray-300 rounded-lg text-black px-6 py-2 ml-2" disabled>Save</button>
+                            <button type="button" onclick="handleButtonClick(this, 'reject', '{{ resource.pk }}')" class="bg-blue-500 rounded-lg text-white px-6 py-2 ml-2" >Save</button>
                             <button type="button" onclick="closeReasonModal('{{ resource.pk }}')" class="rounded-lg border border-black text-black px-6 py-2">Cancel</button>
                         </div>
                     </form>
@@ -395,7 +395,7 @@
                             <div class="mb-4">
                                 <label for="is_approved" class="block mb-1 text-xs font-light text-gray-500">Status</label>
                                 <div class="w-full relative">
-                                    <select id="is_approved" name="is_approved" class="block appearance-none w-full border border-gray-300 px-2.5 py-2.5 pr-8 rounded leading-tight focus:ring-blue-500 focus:border-blue-500 text-sm" required onchange="toggleReasons()">
+                                    <select id="is_approved" name="is_approved" class="block appearance-none w-full border border-gray-300 px-2.5 py-2.5 pr-8 rounded leading-tight focus:ring-blue-500 focus:border-blue-500 text-sm" required >
                                         <option value="true" {% if resource.is_approved == true %} selected {% endif %}>Approved</option>
                                         <option value="false" {% if resource.is_approved == false %} selected {% endif %}>Rejected</option>
                                         <option value="" {% if resource.is_approved == null %} selected {% endif %}>Pending</option>
@@ -407,17 +407,19 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="mb-4" id="reasonsForRejection" style="display: none;">
-                                <label for="rejection_reasons" class="block mb-1 text-xs font-light text-gray-500">Reasons for rejection</label>
-                                <div class="flex flex-wrap">
-                                    {% for reason in receipt_rejection_reasons %}
-                                    <div class="mr-4 mb-2">
-                                        <input type="checkbox" id="reason{{ reason.id }}" name="rejection_reasons[]" value="{{ reason.id }}" class="mr-2">
-                                        <label for="reason{{ reason.id }}" class="text-sm text-gray-700">{{ reason.short_description }}</label>
+                            {% if resource.is_approved is not none %}
+                                <div class="mb-4" id="reasonsForRejection">
+                                    <label for="rejection_reasons" class="block mb-1 text-xs font-light text-gray-500">Reasons for rejection</label>
+                                    <div class="flex flex-wrap">
+                                        {% for reason in receipt_rejection_reasons %}
+                                            <div class="mr-4 mb-2">
+                                                <input type="checkbox" id="reason{{ reason.id }}" value="{{ reason.id }}" class="mr-2" {% if resource.reasons and reason.id in resource.reasons %} checked {% endif %}>
+                                                <label for="reason{{ reason.id }}" class="text-sm text-gray-700">{{ reason.short_description }}</label>
+                                            </div>
+                                        {% endfor %}
                                     </div>
-                                    {% endfor %}
                                 </div>
-                            </div>
+                            {% endif %}
                             <div class="mt-6">
                                 <button type="submit" class="text-white bg-blue-500 hover:bg-blue-600 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Save</button>
                                 <button type="button" onclick="closeEditModal('{{resource.pk}}')" class="text-black bg-gray-300 hover:bg-gray-400 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center ml-2">Cancel</button>
@@ -533,7 +535,7 @@
     }
     let modal = null;
 
-    function openEditModal(pk) {
+    function openEditModal(pk, reasons) {
         modal = document.getElementById('editModal' + pk)
         modal.classList.remove('hidden');
     }
@@ -569,16 +571,16 @@
 
     const status = urlParams.get('status');
 
-    function toggleReasons() {
-        var statusDropdown = document.getElementById("is_approved");
-        var reasonsDiv = document.getElementById("reasonsForRejection");
+    // function toggleReasons() {
+    //     var statusDropdown = document.getElementById("is_approved");
+    //     var reasonsDiv = document.getElementById("reasonsForRejection");
 
-        if (statusDropdown.value === "false" && status != 'pending') {
-            reasonsDiv.style.display = "block";
-        } else {
-            reasonsDiv.style.display = "none";
-        }
-    }
+    //     if (statusDropdown.value === "false" && status != 'pending') {
+    //         reasonsDiv.classList.remove('hidden');
+    //     } else {
+    //         reasonsDiv.classList.add('hidden');
+    //     }
+    // }
 
     window.onload = toggleReasons;
 
@@ -607,29 +609,6 @@
         window.location.href = url;
     }
 
-    function checkSelected(checkbox, resourceId) {
-        const saveButton = document.querySelector(`#reasonForm${resourceId} button[type='button']`);
-        const checkboxes = document.querySelectorAll(`#reasonForm${resourceId} input[type='checkbox']`);
-
-        let atLeastOneChecked = false;
-        checkboxes.forEach((checkbox) => {
-            if (checkbox.checked) {
-                atLeastOneChecked = true;
-            }
-        });
-
-        saveButton.disabled = !atLeastOneChecked;
-
-        if (atLeastOneChecked) {
-            saveButton.classList.add('bg-blue-500', 'text-white');
-            saveButton.classList.remove('bg-gray-300', 'text-black');
-        } else {
-            saveButton.classList.remove('bg-blue-500', 'text-white');
-            saveButton.classList.add('bg-gray-300', 'text-black');
-        }
-    }
-
-
     function handleButtonClick(button, action, receipt_id) {
         button.disabled = true;
         button.classList.add('bg-opacity-50')
@@ -641,13 +620,23 @@
         const checkedReasons = [];
         const checkboxes = document.querySelectorAll(`#reasonForm input[type="checkbox"]`);
 
+        let atLeastOneChecked = false;
+
         checkboxes.forEach(checkbox => {
             if (checkbox.checked) {
                 const reasonId = checkbox.id.split('_')[1];
                 checkedReasons.push(reasonId);
+                atLeastOneChecked = true;
             }
         });
 
+        if (!atLeastOneChecked) {
+            button.disabled = false;
+            button.classList.remove('bg-opacity-50');
+            button.classList.remove('cursor-not-allowed');
+            alert('Please select at least one reason.');
+            return;
+        }
         console.log('Selected Reason IDs:', checkedReasons);
         let route = 'update_approval_status';
         let url = baseUrl + route;
