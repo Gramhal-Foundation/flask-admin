@@ -345,7 +345,7 @@
                     </button>
                     <div class="px-6 py-6 lg:px-8">
                         <h3 class="mb-6 text-xl font-medium text-gray-900">Edit Receipt</h3>
-                        <form action="{{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource.pk) }}" method="POST">
+                        <form action="{{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource.pk) }}"  method="POST">
                             <div class="mb-4">
                                 <label for="receipt_id" class="block mb-1 text-xs font-light text-gray-500">Receipt Number</label>
                                 <input type="text" name="receipt_id" id="receipt_id" class="border border-gray-300 text-black text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required value="{{resource.receipt_id}}">
@@ -397,7 +397,7 @@
                                 <div class="w-full relative">
                                     <select id="is_approved" name="is_approved" class="block appearance-none w-full border border-gray-300 px-2.5 py-2.5 pr-8 rounded leading-tight focus:ring-blue-500 focus:border-blue-500 text-sm" required >
                                         <option value="true" {% if resource.is_approved == true %} selected {% endif %}>Approved</option>
-                                        <option value="false" {% if resource.is_approved == false %} selected {% endif %}>Rejected</option>
+                                        <option value="false" >Rejected</option>
                                         <option value="" {% if resource.is_approved == null %} selected {% endif %}>Pending</option>
                                     </select>
                                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
@@ -408,12 +408,12 @@
                                 </div>
                             </div>
                             {% if resource.is_approved is not none %}
-                                <div class="mb-4" id="reasonsForRejection">
+                                <div class="mb-4" id="reasonsForRejection" style="{% if resource.is_approved != 'true' %} display:none; {% else %} display:block; {% endif %}">
                                     <label for="rejection_reasons" class="block mb-1 text-xs font-light text-gray-500">Reasons for rejection</label>
                                     <div class="flex flex-wrap">
                                         {% for reason in receipt_rejection_reasons %}
                                             <div class="mr-4 mb-2">
-                                                <input type="checkbox" id="reason{{ reason.id }}" value="{{ reason.id }}" class="mr-2" {% if resource.reasons and reason.id in resource.reasons %} checked {% endif %}>
+                                                <input type="checkbox" id="reason{{ reason.id }}" name="rejection_reasons[]" value="{{ reason.id }}" class="mr-2" {% if resource.reasons and reason.id in resource.reasons %} checked {% endif %}>
                                                 <label for="reason{{ reason.id }}" class="text-sm text-gray-700">{{ reason.short_description }}</label>
                                             </div>
                                         {% endfor %}
@@ -501,6 +501,40 @@
     const mandiNameHiField = document.getElementById('mandi_name_hi');
 
 
+    const selectedReasons = "";
+
+    document.addEventListener("DOMContentLoaded", function(){
+        const forms = document.querySelectorAll('form[name="edit_model_form"]');
+
+        forms.forEach(form => {
+            form.addEventListener('submit', function(event) {
+                const selectedReasons = Array.from(form.querySelectorAll('input[name="rejection_reasons[]"]:checked'))
+                    .map(checkbox => checkbox.value);
+
+                const reasonsInput = document.createElement('input');
+                reasonsInput.type = 'hidden';
+                reasonsInput.name = 'reasons';
+                reasonsInput.value = JSON.stringify(selectedReasons);
+                form.appendChild(reasonsInput);
+            });
+        });
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        var statusDropdowns = document.querySelectorAll("#is_approved");
+
+        statusDropdowns.forEach(function(dropdown) {
+            dropdown.addEventListener("change", function() {
+                var reasonsDiv = this.closest('.fixed').querySelector('#reasonsForRejection');
+
+                if (this.value === "false") {
+                    reasonsDiv.style.display = "block";
+                } else {
+                    reasonsDiv.style.display = "none";
+                }
+            });
+        });
+    });
     // Add change event listener to the select element
     if(mandiSelectElement){
     mandiSelectElement.addEventListener('change', function() {
@@ -571,19 +605,6 @@
 
     const status = urlParams.get('status');
 
-    // function toggleReasons() {
-    //     var statusDropdown = document.getElementById("is_approved");
-    //     var reasonsDiv = document.getElementById("reasonsForRejection");
-
-    //     if (statusDropdown.value === "false" && status != 'pending') {
-    //         reasonsDiv.classList.remove('hidden');
-    //     } else {
-    //         reasonsDiv.classList.add('hidden');
-    //     }
-    // }
-
-    window.onload = toggleReasons;
-
     function displayReceipts(buttonValue, page=1, selectedMandi=null, selectedCrop=null, selectedUserId=null, selected_from_date=null, selected_to_date=null) {
         let pendingButton = document.getElementById('pendingButton');
         let rejectedReceiptButton = document.getElementById('rejectedReceiptButton');
@@ -630,14 +651,14 @@
             }
         });
 
-        if (!atLeastOneChecked) {
+        if (!atLeastOneChecked && action=='reject') {
             button.disabled = false;
             button.classList.remove('bg-opacity-50');
             button.classList.remove('cursor-not-allowed');
             alert('Please select at least one reason.');
             return;
         }
-        console.log('Selected Reason IDs:', checkedReasons);
+
         let route = 'update_approval_status';
         let url = baseUrl + route;
         let data = {

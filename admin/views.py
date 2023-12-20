@@ -66,7 +66,7 @@ from bolbhavPlus.utils.sale_receipt_controller import update_approval_status
 from db import db
 from flask import Response
 from flask import current_app as app
-from flask import flash, jsonify, redirect
+from flask import flash, redirect
 from flask import render_template as real_render_template
 from flask import request, url_for
 from flask_bcrypt import Bcrypt
@@ -817,6 +817,10 @@ def resource_edit(resource_type, resource_id):
     model = resource_class.model
     resource = model.query.get(resource_id)
 
+    selected_reasons = request.form.getlist("rejection_reasons[]")
+    if selected_reasons:
+        resource.reasons = selected_reasons
+
     if not resource:
         return redirect(
             request.referrer
@@ -898,11 +902,8 @@ def resource_edit(resource_type, resource_id):
             == func.date(resource.receipt_date),
         ).first()
         if existing_sale_receipt and existing_sale_receipt.id != resource.id:
-            return jsonify(
-                {
-                    "error": "another record already exists with same booklet, receipt and mandi. Please go back and update with correct values."
-                }
-            )
+            resource.is_approved = False
+            resource.reasons = [1]
 
     db.session.commit()
 
