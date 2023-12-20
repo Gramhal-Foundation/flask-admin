@@ -133,8 +133,6 @@ def admin_label_plural(label):
         str: The plural form of the input label.
     """
 
-    if label == "receipt_rejection_reasons":
-        label = "receipt-rejection-reason"
     p = inflect.engine()
     formatted_label = label.replace("-", " ")
     formatted_label = p.plural_noun(formatted_label)
@@ -144,8 +142,6 @@ def admin_label_plural(label):
 
 @admin.app_template_filter("admin_label_singular")
 def admin_label_singular(label):
-    if label == "receipt_rejection_reasons":
-        label = "receipt-rejection-reasons"
     formatted_label = label.replace("-", " ")
     formatted_label = string.capwords(formatted_label)
     return formatted_label
@@ -819,7 +815,7 @@ def resource_edit(resource_type, resource_id):
 
     selected_reasons = request.form.getlist("rejection_reasons[]")
     if selected_reasons:
-        resource.reasons = selected_reasons
+        resource.rejection_reason_ids = selected_reasons
 
     if not resource:
         return redirect(

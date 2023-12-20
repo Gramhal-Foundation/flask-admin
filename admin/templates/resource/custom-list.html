@@ -150,9 +150,8 @@
                             {% endfor %}
                         </div>
                         <div class="mt-6">
-                            <button type="button" onclick="openEditModal('{{ resource.pk }}', '{{ resource.reasons}}')" class="rounded-lg border border-black text-black px-6 py-2">Edit</button>
+                            <button type="button" onclick="openEditModal('{{ resource.pk }}')" class="rounded-lg border border-black text-black px-6 py-2">Edit</button>
                             <button type="button" onclick="handleButtonClick(this, 'approve', '{{ resource.pk }}')" class="bg-green-500 rounded-lg text-white px-6 py-2 ml-2">Approve</button>
-                            <!-- <button type="button" onclick="handleButtonClick(this, 'reject', '{{ resource.pk }}')" class="bg-red-500 rounded-lg text-white px-6 py-2 ml-2">Reject</button> -->
                             <button type="button" onclick="openReasonModal('{{ resource.pk }}')" class="bg-red-500 rounded-lg text-white px-6 py-2 ml-2">Reject</button>
                         </div>
                     </div>
@@ -240,7 +239,7 @@
                         <td class="px-6 py-4">
                             <div class="flex items-center h-full">
                                 <div>
-                                    <a href="#" onclick="openEditModal('{{ resource.pk }}', '{{resource.reasons}}')" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
+                                    <a href="#" onclick="openEditModal('{{ resource.pk }}')" class="font-bold py-2 pr-4 rounded text-black h-4 w-4">
                                         <i class="fa-solid fa-receipt"></i>
                                     </a>
                                 </div>
@@ -302,9 +301,9 @@
     {% endif %}
 
     {% for resource in pagination.items %}
-        <div id="{{ 'reason_model' ~ resource.pk }}" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 max-w-80 p-4 hidden overflow-x-hidden overflow-y-auto md:inset-0 max-h-full bg-gray-600 bg-opacity-60">
+        <div id="{{ 'rejection_reason_model' ~ resource.pk }}" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 max-w-80 p-4 hidden overflow-x-hidden overflow-y-auto md:inset-0 max-h-full bg-gray-600 bg-opacity-60">
             <div class="relative mx-auto bg-white rounded-lg shadow top-93 left-245" style="width: 900px;">
-                <button onclick="closeReasonModal('{{ resource.pk }}')" type="button" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center" data-modal-hide="editModal">
+                <button onclick="closeRejectionReasonModal('{{ resource.pk }}')" type="button" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center" data-modal-hide="editModal">
                     <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
                     </svg>
@@ -313,7 +312,7 @@
                 <div class="px-6 py-6 lg:px-8">
                     <h3 class="mb-6 text-2xl font-medium text-gray-900">Reject Receipt</h3>
                     <p>Select reason(s) to reject the receipt</p>
-                    <form class="pt-4" id="reasonForm">
+                    <form class="pt-4" id="rejectionReasonForm">
                         <div class="grid grid-cols-3 gap-4">
                             {% for reason in receipt_rejection_reasons %}
                                 <div class="flex items-center">
@@ -324,7 +323,7 @@
                         </div>
                         <div class="pt-4">
                             <button type="button" onclick="handleButtonClick(this, 'reject', '{{ resource.pk }}')" class="bg-blue-500 rounded-lg text-white px-6 py-2 ml-2" >Save</button>
-                            <button type="button" onclick="closeReasonModal('{{ resource.pk }}')" class="rounded-lg border border-black text-black px-6 py-2">Cancel</button>
+                            <button type="button" onclick="closeRejectionReasonModal('{{ resource.pk }}')" class="rounded-lg border border-black text-black px-6 py-2">Cancel</button>
                         </div>
                     </form>
                 </div>
@@ -397,7 +396,7 @@
                                 <div class="w-full relative">
                                     <select id="is_approved" name="is_approved" class="block appearance-none w-full border border-gray-300 px-2.5 py-2.5 pr-8 rounded leading-tight focus:ring-blue-500 focus:border-blue-500 text-sm" required >
                                         <option value="true" {% if resource.is_approved == true %} selected {% endif %}>Approved</option>
-                                        <option value="false" >Rejected</option>
+                                        <option value="false" {% if resource.is_approved == false %} selected {% endif %}>Rejected</option>
                                         <option value="" {% if resource.is_approved == null %} selected {% endif %}>Pending</option>
                                     </select>
                                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
@@ -413,7 +412,7 @@
                                     <div class="flex flex-wrap">
                                         {% for reason in receipt_rejection_reasons %}
                                             <div class="mr-4 mb-2">
-                                                <input type="checkbox" id="reason{{ reason.id }}" name="rejection_reasons[]" value="{{ reason.id }}" class="mr-2" {% if resource.reasons and reason.id in resource.reasons %} checked {% endif %}>
+                                                <input type="checkbox" id="reason{{ reason.id }}" name="rejection_reasons[]" value="{{ reason.id }}" class="mr-2" {% if resource.rejection_reason_ids and reason.id in resource.rejection_reason_ids %} checked {% endif %}>
                                                 <label for="reason{{ reason.id }}" class="text-sm text-gray-700">{{ reason.short_description }}</label>
                                             </div>
                                         {% endfor %}
@@ -569,13 +568,13 @@
     }
     let modal = null;
 
-    function openEditModal(pk, reasons) {
+    function openEditModal(pk) {
         modal = document.getElementById('editModal' + pk)
         modal.classList.remove('hidden');
     }
 
     function openReasonModal(pk) {
-        modal = document.getElementById('reason_model' + pk)
+        modal = document.getElementById('rejection_reason_model' + pk)
         modal.classList.remove('hidden');
     }
 
@@ -594,8 +593,8 @@
         modal.classList.add('hidden');
     }
 
-    function closeReasonModal(pk) {
-        modal = document.getElementById('reason_model' + pk)
+    function closeRejectionReasonModal(pk) {
+        modal = document.getElementById('rejection_reason_model' + pk)
         modal.classList.add('hidden');
     }
 
@@ -639,7 +638,7 @@
         let baseUrl = '/admin/';
 
         const checkedReasons = [];
-        const checkboxes = document.querySelectorAll(`#reasonForm input[type="checkbox"]`);
+        const checkboxes = document.querySelectorAll(`#rejectionReasonForm input[type="checkbox"]`);
 
         let atLeastOneChecked = false;
 
@@ -664,7 +663,7 @@
         let data = {
             action: action,
             receipt_id: receipt_id,
-            reasons:checkedReasons
+            rejection_reason_ids:checkedReasons
         };
 
         if(action=='edit'){
