@@ -19,7 +19,7 @@
                 {% if permissions.get(resource_type): %}
                     <form action={{ url_for('.resource_list', resource_type=resource_type) }} method="GET">
                         <div class="flex">
-                            {% if resource_type != 'receipt_rejection_reasons'  %}
+                            {% if resource_type != 'receipt-rejection-reasons'  %}
                             <div class="mr-2 flex">
                                 <input type="text" name="search" id="search" value="{{ search_params.search_query }}" placeholder="Search..." class="border border-gray-300 text-black text-sm py-2 px-4 rounded">
                             </div>
@@ -42,12 +42,12 @@
                 {% endif %}
             </div>
             <div class="flex">
-                {% if permissions.get(resource_type).get('export') and resource_type != 'faq' and resource_type != 'receipt_rejection_reasons'  %}
+                {% if permissions.get(resource_type).get('export') and resource_type != 'faq' and resource_type != 'receipt-rejection-reasons'  %}
                     <a href={{ url_for('.resource_download', resource_type=resource_type, search=search_query) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded flex items-center">
                         Download CSV
                     </a>
                 {% endif %}
-                {% if permissions.get(resource_type).get('import') and resource_type != 'faq' and resource_type != 'receipt_rejection_reasons'  %}
+                {% if permissions.get(resource_type).get('import') and resource_type != 'faq' and resource_type != 'receipt-rejection-reasons'  %}
                     <a href={{ url_for('.resource_upload', resource_type=resource_type) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded ml-2 flex items-center">
                         Bulk Upload
                     </a>
@@ -82,7 +82,7 @@
                                 <td class="px-6 py-4">
                                     {% if '.' in item %}
                                         <div>{{ resource | get_nested_value(item) }}</div>
-                                    {% elif resource_type == 'faq' and item == 'is_active' %}
+                                    {% elif resource_type == 'faq' or (resource_type == 'receipt-rejection-reasons' and item == 'is_active') %}
                                         <div class="{% if resource[item] %}text-green-500{% else %}text-red-500{% endif %}">
                                             {% if resource[item] %}
                                                 Active
