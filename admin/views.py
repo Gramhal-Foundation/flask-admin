@@ -66,7 +66,7 @@ from bolbhavPlus.utils.sale_receipt_controller import update_approval_status
 from db import db
 from flask import Response
 from flask import current_app as app
-from flask import flash, redirect
+from flask import flash, jsonify, redirect
 from flask import render_template as real_render_template
 from flask import request, url_for
 from flask_bcrypt import Bcrypt
@@ -76,7 +76,7 @@ from flask_wtf import FlaskForm
 # TODO: remove project dependency
 from models.crop import CropModel
 from models.mandi import MandiModel
-from models.salesReceipt import SaleReceiptModel
+from models.salesReceipt import ReceiptRejectionReason, SaleReceiptModel
 from models.user import UserModel
 from sqlalchemy import Text, and_, cast, func, or_
 from sqlalchemy.orm import joinedload
@@ -641,6 +641,27 @@ def resource_list(resource_type):
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
 
+    hide_search = True
+    hide_download_csv = True
+    hide_bulk_upload = True
+    hide_date = True
+    hide_delete_icon = True
+
+    if hasattr(resource_class, "hide_search"):
+        hide_search = getattr(resource_class, "hide_search")
+
+    if hasattr(resource_class, "hide_download_csv"):
+        hide_download_csv = getattr(resource_class, "hide_download_csv")
+
+    if hasattr(resource_class, "hide_bulk_upload"):
+        hide_bulk_upload = getattr(resource_class, "hide_bulk_upload")
+
+    if hasattr(resource_class, "hide_date"):
+        hide_date = getattr(resource_class, "hide_date")
+
+    if hasattr(resource_class, "hide_delete_icon"):
+        hide_delete_icon = getattr(resource_class, "hide_delete_icon")
+
     if hasattr(resource_class, "admin_sale_receipt_controller"):
         status = request.args.get("status", default="pending")
         return resource_class.admin_sale_receipt_controller(
@@ -675,6 +696,11 @@ def resource_list(resource_type):
         resource_type=resource_type,
         list_display=list_display,
         search_params=search_params,
+        hide_search=hide_search,
+        hide_download_csv=hide_download_csv,
+        hide_bulk_upload=hide_bulk_upload,
+        hide_date=hide_date,
+        hide_delete_icon=hide_delete_icon,
     )
 
 
@@ -898,8 +924,16 @@ def resource_edit(resource_type, resource_id):
             == func.date(resource.receipt_date),
         ).first()
         if existing_sale_receipt and existing_sale_receipt.id != resource.id:
-            resource.is_approved = False
-            resource.reasons = [1]
+            duplicate_reason_id = ReceiptRejectionReason.query.filter(
+                ReceiptRejectionReason.short_description
+                == "डुप्लीकेट रसीद एंट्री"
+            ).first()
+            resource.reasons = duplicate_reason_id.id
+            return jsonify(
+                {
+                    "error": "another record already exists with same booklet, receipt and mandi. Please go back and update with correct values."
+                }
+            )
 
     db.session.commit()
 
