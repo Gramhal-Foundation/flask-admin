@@ -24,7 +24,7 @@
                                 <input type="text" name="search" id="search" value="{{ search_params.search_query }}" placeholder="Search..." class="border border-gray-300 text-black text-sm py-2 px-4 rounded">
                             </div>
                             {% endif %}
-                            {% if not hide_date  %}
+                            {% if not hide_date_filter  %}
                                 <div class="flex items-center mr-2">
                                     <input type="date" name="from_date" class="border px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Select Date" value="{{ search_params.from_date }}">
                                     <label for="toperiod" class="text-gray-700 mx-2">To</label>
@@ -44,7 +44,7 @@
                 {% endif %}
             </div>
             <div class="flex">
-                {% if permissions.get(resource_type).get('export'):%}
+                {% if permissions.get(resource_type).get('export'): %}
                     <a href={{ url_for('.resource_download', resource_type=resource_type, search=search_query) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded flex items-center">
                         Download CSV
                     </a>

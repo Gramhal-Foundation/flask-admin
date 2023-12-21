@@ -641,11 +641,8 @@ def resource_list(resource_type):
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
 
-    hide_search = True
-    hide_date = True
-
     hide_search = getattr(resource_class, "hide_search", False)
-    hide_date = getattr(resource_class, "hide_date", False)
+    hide_date_filter = getattr(resource_class, "hide_date_filter", False)
 
     if hasattr(resource_class, "admin_sale_receipt_controller"):
         status = request.args.get("status", default="pending")
@@ -682,7 +679,7 @@ def resource_list(resource_type):
         list_display=list_display,
         search_params=search_params,
         hide_search=hide_search,
-        hide_date=hide_date,
+        hide_date_filter=hide_date_filter,
     )
 
 
@@ -821,8 +818,8 @@ def resource_edit(resource_type, resource_id):
     model = resource_class.model
     resource = model.query.get(resource_id)
 
-    selected_reasons = request.form.getlist("rejection_reasons[]")
-    if selected_reasons:
+    if resource_type == "mandi-receipt":
+        selected_reasons = request.form.getlist("rejection_reasons[]")
         resource.rejection_reason_ids = selected_reasons
 
     if not resource:
@@ -912,7 +909,7 @@ def resource_edit(resource_type, resource_id):
             ).first()
             if duplicate_reason is not None:
                 resource.reasons = duplicate_reason.id
-                resource.is_approved = False
+            resource.is_approved = False
 
     db.session.commit()
 
