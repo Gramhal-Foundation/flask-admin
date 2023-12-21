@@ -508,13 +508,8 @@
 
         if (approvalDropdown.value === 'false') {
             const checkboxes = document.querySelectorAll('input[name="rejection_reasons[]"]');
-            let isAtLeastOneChecked = false;
 
-            checkboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    isAtLeastOneChecked = true;
-                }
-            });
+            const isAtLeastOneChecked = Array.from(checkboxes).find(checkbox => checkbox.checked);
 
             if (!isAtLeastOneChecked) {
                 alert('Please select at least one reason for rejection.');
