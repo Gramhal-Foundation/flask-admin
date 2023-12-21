@@ -643,11 +643,9 @@ def resource_list(resource_type):
 
     hide_search = True
     hide_date = True
-    display_status = False
 
     hide_search = getattr(resource_class, "hide_search", False)
     hide_date = getattr(resource_class, "hide_date", False)
-    display_status = getattr(resource_class, "display_status", False)
 
     if hasattr(resource_class, "admin_sale_receipt_controller"):
         status = request.args.get("status", default="pending")
@@ -685,7 +683,6 @@ def resource_list(resource_type):
         search_params=search_params,
         hide_search=hide_search,
         hide_date=hide_date,
-        display_status=display_status,
     )
 
 
