@@ -409,9 +409,9 @@
                             {% if resource.is_approved is not none %}
                                 <div class="mb-4" id="reasonsForRejection" style="{% if not resource.is_approved %} display:block; {% else %} display:none; {% endif %}">
                                     <label for="rejection_reasons" class="block mb-1 text-xs font-light text-gray-500">Reasons for rejection</label>
-                                    <div class="flex flex-wrap">
+                                    <div class="grid grid-cols-2 gap-2">
                                         {% for reason in receipt_rejection_reasons %}
-                                            <div class="mr-4 mb-2">
+                                            <div class="mb-2">
                                                 <input type="checkbox" id="reason{{ reason.id }}" name="rejection_reasons[]" value="{{ reason.id }}" class="mr-2" {% if resource.rejection_reason_ids and reason.id in resource.rejection_reason_ids %} checked {% endif %}>
                                                 <label for="reason{{ reason.id }}" class="text-sm text-gray-700">{{ reason.short_description }}</label>
                                             </div>
