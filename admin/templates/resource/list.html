@@ -66,7 +66,7 @@
                                 <th scope="col" class="px-6 py-3">{{ 'Date Created' | format_label }}</th>
                             {% elif resource_type == 'faq' and item == 'updated_at' %}
                                 <th scope="col" class="px-6 py-3">{{ 'Date updated' | format_label }}</th>
-                            {% elif display_status and item == 'is_active' %}
+                            {% elif resource_type == 'faq' and item == 'is_active' %}
                                 <th scope="col" class="px-6 py-3">{{ 'status' | format_label }}</th>
                             {% else %}
                                 <th scope="col" class="px-6 py-3">{{ item | format_label }}</th>
