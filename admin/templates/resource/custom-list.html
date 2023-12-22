@@ -412,7 +412,7 @@
                                     <div class="grid grid-cols-2 gap-2">
                                         {% for reason in receipt_rejection_reasons %}
                                             <div class="mb-2">
-                                                <input type="checkbox" id="reason{{ reason.id }}" name="rejection_reasons[]" value="{{ reason.id }}" class="mr-2" {% if resource.rejection_reason_ids and reason.id in resource.rejection_reason_ids %} checked {% endif %}>
+                                                <input type="checkbox" id="reason{{ reason.id }}" name="rejection_reasons[]" value="{{ reason.id }}" class="mr-2" {% if resource.rejection_reason_ids and reason.id in resource.rejection_reason_ids %} checked {% endif %}                                                >
                                                 <label for="reason{{ reason.id }}" class="text-sm text-gray-700">{{ reason.short_description }}</label>
                                             </div>
                                         {% endfor %}
@@ -503,22 +503,24 @@
     const selectedReasons = "";
 
     function validateAndSubmit() {
-        const approvalDropdown = document.getElementById('is_approved');
-        const rejectionReasons = document.getElementById('reasonsForRejection');
+        console.log('function triggered')
+    const approvalDropdown = document.getElementById('is_approved');
+    const rejectionReasons = document.getElementById('reasonsForRejection');
+    console.log('approvalDropdown',approvalDropdown.value )
 
-        if (approvalDropdown.value === 'false') {
-            const checkboxes = document.querySelectorAll('input[name="rejection_reasons[]"]');
+    if (approvalDropdown.value == 'false') {
+        const checkboxes = document.querySelectorAll('input[name="rejection_reasons[]"]');
 
-            const isAtLeastOneChecked = Array.from(checkboxes).find(checkbox => checkbox.checked);
-
-            if (!isAtLeastOneChecked) {
-                alert('Please select at least one reason for rejection.');
-                return false;
-            }
+        const isAtLeastOneChecked = Array.from(checkboxes).find(checkbox => checkbox.checked);
+        console.log('isAtLeastOneChecked',isAtLeastOneChecked )
+        if (!isAtLeastOneChecked) {
+            alert('Please select at least one reason for rejection.');
+            return false;
         }
-
-        return true;
     }
+
+    return true;
+}
 
 
     document.addEventListener("DOMContentLoaded", function() {
