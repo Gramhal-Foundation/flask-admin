@@ -819,7 +819,10 @@ def resource_edit(resource_type, resource_id):
     resource = model.query.get(resource_id)
 
     if resource_type == "mandi-receipt":
-        selected_reasons = request.form.getlist("rejection_reasons[]")
+        selected_reasons = request.form.getlist(
+            f"rejection_reasons_{resource_id}[]"
+        )
+
         resource.rejection_reason_ids = selected_reasons
 
     if not resource:
