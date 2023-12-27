@@ -911,7 +911,9 @@ def resource_edit(resource_type, resource_id):
                 == "डुप्लीकेट रसीद एंट्री"
             ).first()
             if duplicate_reason is not None:
-                resource.reasons = duplicate_reason.id
+                if not resource.rejection_reason_ids:
+                    resource.rejection_reason_ids = []
+                resource.rejection_reason_ids.append(duplicate_reason.id)
             resource.is_approved = False
 
     db.session.commit()
