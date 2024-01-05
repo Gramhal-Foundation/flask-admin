@@ -915,6 +915,7 @@ def resource_edit(resource_type, resource_id):
                     resource.rejection_reason_ids = []
                 resource.rejection_reason_ids.append(duplicate_reason.id)
             resource.is_approved = False
+            resource.token_amount = 0
 
     db.session.commit()
 
