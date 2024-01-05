@@ -53,7 +53,7 @@ import copy
 import csv
 import io
 import string
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import boto3
 import inflect
@@ -915,6 +915,11 @@ def resource_edit(resource_type, resource_id):
                     resource.rejection_reason_ids = []
                 resource.rejection_reason_ids.append(duplicate_reason.id)
             resource.is_approved = False
+            resource.validated_on = datetime.utcnow() + timedelta(
+                hours=5, minutes=30
+            )
+            resource.validated_by = current_user.id
+            resource.token_amount = 0
 
     db.session.commit()
 
