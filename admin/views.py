@@ -897,6 +897,7 @@ def resource_edit(resource_type, resource_id):
 
     if resource_type == "mandi-receipt":
         existing_sale_receipt = SaleReceiptModel.query.filter(
+            SaleReceiptModel.id != resource.id,  # Ensure IDs do not match
             SaleReceiptModel.booklet_number == resource.booklet_number,
             SaleReceiptModel.receipt_id == resource.receipt_id,
             SaleReceiptModel.mandi_id == resource.mandi_id,
@@ -916,6 +917,7 @@ def resource_edit(resource_type, resource_id):
             resource.is_approved = False
             resource.token_amount = 0
 
+    db.session.add(resource)
     db.session.commit()
 
     # call after update hook
