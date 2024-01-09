@@ -900,7 +900,6 @@ def resource_edit(resource_type, resource_id):
             SaleReceiptModel.booklet_number == resource.booklet_number,
             SaleReceiptModel.receipt_id == resource.receipt_id,
             SaleReceiptModel.mandi_id == resource.mandi_id,
-            SaleReceiptModel.crop_id == resource.crop_id,
             SaleReceiptModel.is_approved == True,
             func.date(SaleReceiptModel.receipt_date)
             == func.date(resource.receipt_date),
