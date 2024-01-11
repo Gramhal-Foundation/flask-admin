@@ -1202,21 +1202,29 @@ def get_preprocess_data(pagination, list_display):
 
     return processed_data
 
+
 def get_editable_relations(resource_class):
     editable_relations = {}
     if hasattr(resource_class, "editable_relations_dropdown"):
         for editable_relation in resource_class.editable_relations_dropdown:
-            attribute_key = editable_relation['key']
-            related_model = editable_relation['related_model']
-            related_label = editable_relation['related_label']
-            related_key = editable_relation['related_key']
+            attribute_key = editable_relation["key"]
+            related_model = editable_relation["related_model"]
+            related_label = editable_relation["related_label"]
+            related_key = editable_relation["related_key"]
             related_data = related_model.query.order_by(related_label).all()
             editable_relations[attribute_key] = {}
-            editable_relations[attribute_key]['label'] = editable_relation['label']
-            editable_relations[attribute_key]['options'] = [
-                {'label': getattr(data, related_label), 'value': getattr(data, related_key)}
-            for data in related_data]
+            editable_relations[attribute_key]["label"] = editable_relation[
+                "label"
+            ]
+            editable_relations[attribute_key]["options"] = [
+                {
+                    "label": getattr(data, related_label),
+                    "value": getattr(data, related_key),
+                }
+                for data in related_data
+            ]
     return editable_relations
+
 
 @admin.route("/update_approval_status", methods=["POST"])
 def update_receipt_status():
