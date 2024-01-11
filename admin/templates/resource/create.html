@@ -14,7 +14,14 @@
         <div class="w-1/2 mb-4">
           <div class="flex flex-col mr-3">
             <label for={{ attribute.name }} class="uppercase text-gray-500 text-xs mb-1">{{ attribute.name | format_label }}</label>
-            {% if 'VARCHAR' in attribute.type %}
+            {% if attribute["name"] in editable_relations: %}
+              <select name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2.5 px-3 border border-gray-300 rounded">
+                <option value="">Select value</option>
+                {% for related_attribute in editable_relations[attribute["name"]] %}
+                  <option value="{{ related_attribute.value }}" {% if related_attribute.value == resource[attribute.name] %} selected="selected "{% endif %} data-related_attribute="{{related_attribute.value}}" data-value="{{resource[attribute.name]}}">{{ related_attribute.label }}</option>
+                {% endfor %}
+              </select>
+            {% elif 'VARCHAR' in attribute.type %}
               <input type="text" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border border-gray-300 rounded" />
             {% elif attribute.type == 'INTEGER' %}
               <input type="number" name="{{ attribute.name }}" id="{{ attribute.name }}" class="py-2 px-3 border border-gray-300 rounded" />
