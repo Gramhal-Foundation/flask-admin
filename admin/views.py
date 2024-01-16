@@ -848,34 +848,6 @@ def resource_edit(resource_type, resource_id):
             editable_relations=editable_relations,
         )
 
-    if (
-        hasattr(resource_class, "revisions")
-        and hasattr(resource_class, "revision_model")
-        and resource_class.revisions
-    ):
-        revision_model = resource_class.revision_model
-        revision_pk = resource_class.revision_pk
-
-        cloned_attributes_to_save = {}
-        for column, value in resource.__dict__.items():
-            if column in [
-                "_sa_instance_state",
-                "created_at",
-                "updated_at",
-                "promised_token",
-                "token_amount",
-            ]:
-                continue
-
-            if column == "id":
-                cloned_attributes_to_save[revision_pk] = value
-                continue
-
-            cloned_attributes_to_save[column] = value
-
-        cloned_resource = revision_model(**cloned_attributes_to_save)
-        db.session.add(cloned_resource)
-        db.session.commit()
 
     for attribute in editable_attributes:
         if attribute["name"] in request.form:
@@ -922,6 +894,8 @@ def resource_edit(resource_type, resource_id):
 
     db.session.add(resource)
     db.session.commit()
+
+    handle_resource_revision(resource_class=resource_class, old_resource=old_resource, new_resource=resource)
 
     # call after update hook
     if hasattr(resource_class, "after_update_callback"):
@@ -1231,3 +1205,50 @@ def update_receipt_status():
     response = update_approval_status(current_user)
 
     return response
+
+def handle_resource_revision(resource_class, old_resource, new_resource):
+    if (
+        hasattr(resource_class, "revisions")
+        and hasattr(resource_class, "revision_model")
+        and resource_class.revisions
+    ):
+        revision_model = resource_class.revision_model
+        revision_pk = resource_class.revision_pk
+
+        # check if resource has been edited then only create the revision
+        is_modified = False
+        for column, value in old_resource.__dict__.items():
+            if column in [
+                "id",
+                "_sa_instance_state",
+                "created_at",
+                "updated_at",
+            ]:
+                continue
+
+            if getattr(old_resource, column) != getattr(new_resource, column):
+                is_modified = True
+                break
+
+        if not is_modified:
+            return
+
+
+        cloned_attributes_to_save = {}
+        for column, value in old_resource.__dict__.items():
+            if column in [
+                "_sa_instance_state",
+                "created_at",
+                "updated_at",
+            ]:
+                continue
+
+            if column == "id":
+                cloned_attributes_to_save[revision_pk] = value
+                continue
+
+            cloned_attributes_to_save[column] = value
+
+        cloned_resource = revision_model(**cloned_attributes_to_save)
+        db.session.add(cloned_resource)
+        db.session.commit()
