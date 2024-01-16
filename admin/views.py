@@ -848,7 +848,6 @@ def resource_edit(resource_type, resource_id):
             editable_relations=editable_relations,
         )
 
-
     for attribute in editable_attributes:
         if attribute["name"] in request.form:
             attribute_value = request.form.get(attribute["name"])
@@ -895,7 +894,11 @@ def resource_edit(resource_type, resource_id):
     db.session.add(resource)
     db.session.commit()
 
-    handle_resource_revision(resource_class=resource_class, old_resource=old_resource, new_resource=resource)
+    handle_resource_revision(
+        resource_class=resource_class,
+        old_resource=old_resource,
+        new_resource=resource,
+    )
 
     # call after update hook
     if hasattr(resource_class, "after_update_callback"):
@@ -1206,6 +1209,7 @@ def update_receipt_status():
 
     return response
 
+
 def handle_resource_revision(resource_class, old_resource, new_resource):
     if (
         hasattr(resource_class, "revisions")
@@ -1233,7 +1237,6 @@ def handle_resource_revision(resource_class, old_resource, new_resource):
         if not is_modified:
             return
 
-
         cloned_attributes_to_save = {}
         for column, value in old_resource.__dict__.items():
             if column in [
@@ -1249,8 +1252,8 @@ def handle_resource_revision(resource_class, old_resource, new_resource):
 
             cloned_attributes_to_save[column] = value
 
-        if current_user and 'edited_by' in revision_model.__table__.columns:
-            cloned_attributes_to_save['edited_by'] = current_user.id
+        if current_user and "edited_by" in revision_model.__table__.columns:
+            cloned_attributes_to_save["edited_by"] = current_user.id
 
         cloned_resource = revision_model(**cloned_attributes_to_save)
         db.session.add(cloned_resource)
