@@ -1249,6 +1249,9 @@ def handle_resource_revision(resource_class, old_resource, new_resource):
 
             cloned_attributes_to_save[column] = value
 
+        if current_user and 'edited_by' in revision_model.__table__.columns:
+            cloned_attributes_to_save['edited_by'] = current_user.id
+
         cloned_resource = revision_model(**cloned_attributes_to_save)
         db.session.add(cloned_resource)
         db.session.commit()
