@@ -922,6 +922,7 @@ def resource_edit(resource_type, resource_id):
         SaleReceiptModel.id == resource_id
     ).first()
 
+    print("==>approve_validator_validation_receipt")
     approve_validator_validation_receipt(
         sale_receipt, resource.rejection_reason_ids
     )
