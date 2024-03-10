@@ -146,3 +146,25 @@ class UserAdmin(FlaskAdmin):
     list_display = ('name', 'phone_number')
     protected_attributes = ['last_active_date', 'token_expires_at']
 ```
+
+### Related attributes as dropdown
+There can be related models that you would prefer to select by their label or name instead of putting a finding the corresponding id or primary key value and putting it correctly in the text field. Dropdowns are handy. For example, you would prefer to select a language as a dropdown for a user instead of looking through languages table, finding the corresponding language id and putting it in the language id field when creating or editing a user. This is where, related attributes come in to save the day.
+
+Defining editable related attributes are pretty straightforward. In you class, you can put in a list/array like this:
+```py
+class UserAdmin(FlaskAdmin):
+    model = User
+    name = 'user'
+    list_display = ('name', 'phone_number')
+    editable_relations_dropdown = [
+        {
+            "key": "language_id", # the foreign key field you wish to replace with the dropdown
+            "label": "language", # the label of the field
+            "related_model": LanguageModel, # the related model
+            "related_label": "name", # the related model field that will display as label of each dropdown option
+            "related_key": "id", # the related model primary key field for each dropdown option value
+        }
+    ]
+```
+
+All the editable relations defined through this attribute will replace the corresponding foreign key field with a dropdown having options defined. This will impact both create resource page and edit resource page, where in edit resource, the existing option will come pre-selected.

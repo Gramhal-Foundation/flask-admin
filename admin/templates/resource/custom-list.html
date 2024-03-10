@@ -301,9 +301,9 @@
     {% endif %}
 
     {% for resource in pagination.items %}
-        <div id="{{ 'rejection_reason_model' ~ resource.pk }}" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 max-w-80 p-4 hidden overflow-x-hidden overflow-y-auto md:inset-0 max-h-full bg-gray-600 bg-opacity-60">
-            <div class="relative mx-auto bg-white rounded-lg shadow top-93 left-245" style="width: 900px;">
-                <button onclick="closeRejectionReasonModal('{{ resource.pk }}')" type="button" class="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center" data-modal-hide="editModal">
+        <div id="{{ 'rejection_reason_model' ~ resource.pk }}" tabindex="-1" aria-hidden="true" class="fixed top-0 left-0 right-0 z-50 flex items-center justify-center w-full h-full max-w-screen p-4 hidden overflow-x-hidden overflow-y-auto bg-gray-600 bg-opacity-60">
+            <div class="relative bg-white rounded-lg shadow max-w-3xl" style="width: 900px;">
+                <button onclick="closeRejectionReasonModal('{{ resource.pk }}')" type="button" class="absolute top-3 right-3 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center" data-modal-hide="editModal">
                     <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
                     </svg>
@@ -315,20 +315,20 @@
                     <form class="pt-4" id="rejectionReasonForm">
                         <div class="grid grid-cols-3 gap-4">
                             {% for reason in receipt_rejection_reasons %}
-                                <div class="flex items-center">
-                                    <input type="checkbox" id="reason{{ loop.index }}_{{ reason.id }}" value="{{ reason.short_description }}" class="mr-2">
-                                    <label for="reason{{ loop.index }}_{{ resource.pk }}" class="text-gray-700">{{ reason.short_description }}</label>
-                                </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="reason{{ loop.index }}_{{ reason.id }}" value="{{ reason.short_description }}" class="mr-2">
+                                <label for="reason{{ loop.index }}_{{ resource.pk }}" class="text-gray-700">{{ reason.short_description }}</label>
+                            </div>
                             {% endfor %}
                         </div>
                         <div class="pt-4">
-                            <button type="button" onclick="handleButtonClick(this, 'reject', '{{ resource.pk }}')" class="bg-blue-500 rounded-lg text-white px-6 py-2 ml-2" >Save</button>
-                            <button type="button" onclick="closeRejectionReasonModal('{{ resource.pk }}')" class="rounded-lg border border-black text-black px-6 py-2">Cancel</button>
+                            <button type="button" onclick="handleButtonClick(this, 'reject', '{{ resource.pk }}')" class="bg-blue-500 rounded-lg text-white px-6 py-2 ml-2">Save</button>
+                            <button type="button" onclick="closeRejectionReasonModal('{{ resource.pk }}')" class="rounded-lg border border-black text-black px-6 py-2 ml-2">Cancel</button>
                         </div>
                     </form>
                 </div>
             </div>
-        </div>
+            </div>
     {% endfor %}
 
     {% for resource in pagination.items %}
@@ -344,7 +344,7 @@
                     </button>
                     <div class="px-6 py-6 lg:px-8">
                         <h3 class="mb-6 text-xl font-medium text-gray-900">Edit Receipt</h3>
-                        <form onsubmit="return validateAndSubmit()" action="{{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource.pk) }}"  method="POST">
+                        <form onsubmit="return validateAndSubmit('{{ resource.pk }}')" action="{{ url_for('.resource_edit', resource_type=resource_type, resource_id=resource.pk) }}"  method="POST">
                             <div class="mb-4">
                                 <label for="receipt_id" class="block mb-1 text-xs font-light text-gray-500">Receipt Number</label>
                                 <input type="text" name="receipt_id" id="receipt_id" class="border border-gray-300 text-black text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required value="{{resource.receipt_id}}">
@@ -394,7 +394,7 @@
                             <div class="mb-4">
                                 <label for="is_approved" class="block mb-1 text-xs font-light text-gray-500">Status</label>
                                 <div class="w-full relative">
-                                    <select id="is_approved" name="is_approved" class="block appearance-none w-full border border-gray-300 px-2.5 py-2.5 pr-8 rounded leading-tight focus:ring-blue-500 focus:border-blue-500 text-sm" required >
+                                    <select id="is_approved_{{ resource.pk }}" name="is_approved" class="block appearance-none w-full border border-gray-300 px-2.5 py-2.5 pr-8 rounded leading-tight focus:ring-blue-500 focus:border-blue-500 text-sm" required >
                                         <option value="true" {% if resource.is_approved == true %} selected {% endif %}>Approved</option>
                                         <option value="false" {% if resource.is_approved == false %} selected {% endif %}>Rejected</option>
                                         <option value="" {% if resource.is_approved == null %} selected {% endif %}>Pending</option>
@@ -407,13 +407,13 @@
                                 </div>
                             </div>
                             {% if resource.is_approved is not none %}
-                                <div class="mb-4" id="reasonsForRejection" style="{% if not resource.is_approved %} display:block; {% else %} display:none; {% endif %}">
+                                <div class="mb-4" id="reasonsForRejection_{{ resource.pk }}" style="{% if resource.is_approved == false %} display:block; {% else %} display:none; {% endif %}">
                                     <label for="rejection_reasons" class="block mb-1 text-xs font-light text-gray-500">Reasons for rejection</label>
                                     <div class="grid grid-cols-2 gap-2">
                                         {% for reason in receipt_rejection_reasons %}
                                             <div class="mb-2">
-                                                <input type="checkbox" id="reason{{ reason.id }}" name="rejection_reasons[]" value="{{ reason.id }}" class="mr-2" {% if resource.rejection_reason_ids and reason.id in resource.rejection_reason_ids %} checked {% endif %}                                                >
-                                                <label for="reason{{ reason.id }}" class="text-sm text-gray-700">{{ reason.short_description }}</label>
+                                                <input type="checkbox" id="reason{{ reason.id }}_{{ resource.pk }}" name="rejection_reasons_{{ resource.pk }}[]" value="{{ reason.id }}" class="mr-2" {% if resource.rejection_reason_ids and reason.id in resource.rejection_reason_ids %} checked {% endif %}>
+                                                <label for="reason{{ reason.id }}_{{ resource.pk }}" class="text-sm text-gray-700">{{ reason.short_description }}</label>
                                             </div>
                                         {% endfor %}
                                     </div>
@@ -451,7 +451,7 @@
                     <h3 class="mb-6 text-2xl font-medium text-gray-900">Edit History</h3>
                     {% for version in resource.versions %}
                         <div class="mb-4">
-                            <div class="text-lg">Version {{loop.index}}</div>
+                            <div class="text-lg">Version {{loop.revindex}}</div>
                             <div class="text-sm text-gray-700">{{version.created_at | admin_format_datetime(format="%d/%m/%Y, %I:%M %p") }}</div>
                         </div>
                         <div class="flex flex-wrap">
@@ -502,33 +502,32 @@
 
     const selectedReasons = "";
 
-    function validateAndSubmit() {
-        console.log('function triggered')
-    const approvalDropdown = document.getElementById('is_approved');
-    const rejectionReasons = document.getElementById('reasonsForRejection');
-    console.log('approvalDropdown',approvalDropdown.value )
+    function validateAndSubmit(resource_id) {
+        const approvalDropdown = document.getElementById(`is_approved_${resource_id}`);
+        const rejectionReasons = document.getElementById(`reasonsForRejection_${resource_id}`);
 
-    if (approvalDropdown.value == 'false') {
-        const checkboxes = document.querySelectorAll('input[name="rejection_reasons[]"]');
+        if (approvalDropdown.value == 'false') {
+            const checkboxes = document.querySelectorAll(`input[name="rejection_reasons_${resource_id}[]"]:checked`);
 
-        const isAtLeastOneChecked = Array.from(checkboxes).find(checkbox => checkbox.checked);
-        console.log('isAtLeastOneChecked',isAtLeastOneChecked )
-        if (!isAtLeastOneChecked) {
-            alert('Please select at least one reason for rejection.');
-            return false;
+            const isAtLeastOneChecked = Array.from(checkboxes).find(checkbox => checkbox.checked);
+
+            if (!isAtLeastOneChecked) {
+                alert('Please select at least one reason for rejection.');
+                return false;
+            }
         }
-    }
 
-    return true;
-}
+        return true;
+    }
 
 
     document.addEventListener("DOMContentLoaded", function() {
-        var statusDropdowns = document.querySelectorAll("#is_approved");
+        var statusDropdowns = document.querySelectorAll("[id^='is_approved_']");
 
         statusDropdowns.forEach(function(dropdown) {
             dropdown.addEventListener("change", function() {
-                var reasonsDiv = this.closest('.fixed').querySelector('#reasonsForRejection');
+                var resourceId = this.id.split('_')[2];
+                var reasonsDiv = document.getElementById('reasonsForRejection_' + resourceId);
 
                 if (this.value === "false") {
                     reasonsDiv.style.display = "block";
