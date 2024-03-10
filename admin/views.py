@@ -60,7 +60,6 @@ import inflect
 import pandas as pd
 from admin_view import *  # noqa: F401, F403
 from admin_view import admin_configs
-from bolbhavPlus.utils.sale_receipt import approve_validator_validation_receipt
 from bolbhavPlus.utils.sale_receipt_controller import update_approval_status
 
 # [TODO]: dependency on main repo
@@ -84,6 +83,7 @@ from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired
+from bolbhavPlus.utils.sale_receipt import approve_validator_validation_receipt
 
 from . import admin
 
@@ -714,12 +714,13 @@ def resource_create(resource_type):
     resource_class = get_resource_class(resource_type)
     model = resource_class.model
     editable_attributes = get_editable_attributes(resource_type)
-
+    editable_relations = get_editable_relations(resource_class)
     if request.method == "GET":
         return render_template(
             "resource/create.html",
             resource_type=resource_type,
             editable_attributes=editable_attributes,
+            editable_relations=editable_relations,
         )
 
     attributes_to_save = {}
@@ -820,7 +821,10 @@ def resource_edit(resource_type, resource_id):
     resource = model.query.get(resource_id)
 
     if resource_type == "mandi-receipt":
-        selected_reasons = request.form.getlist("rejection_reasons[]")
+        selected_reasons = request.form.getlist(
+            f"rejection_reasons_{resource_id}[]"
+        )
+
         resource.rejection_reason_ids = selected_reasons
 
     if not resource:
@@ -834,6 +838,7 @@ def resource_edit(resource_type, resource_id):
         resource
     )  # make a clone before there are any updates
 
+    editable_relations = get_editable_relations(resource_class)
     if request.method == "GET":
         return render_template(
             "resource/edit.html",
@@ -841,36 +846,8 @@ def resource_edit(resource_type, resource_id):
             resource=resource,
             editable_attributes=editable_attributes,
             admin_configs=admin_configs,
+            editable_relations=editable_relations,
         )
-
-    if (
-        hasattr(resource_class, "revisions")
-        and hasattr(resource_class, "revision_model")
-        and resource_class.revisions
-    ):
-        revision_model = resource_class.revision_model
-        revision_pk = resource_class.revision_pk
-
-        cloned_attributes_to_save = {}
-        for column, value in resource.__dict__.items():
-            if column in [
-                "_sa_instance_state",
-                "created_at",
-                "updated_at",
-                "promised_token",
-                "token_amount",
-            ]:
-                continue
-
-            if column == "id":
-                cloned_attributes_to_save[revision_pk] = value
-                continue
-
-            cloned_attributes_to_save[column] = value
-
-        cloned_resource = revision_model(**cloned_attributes_to_save)
-        db.session.add(cloned_resource)
-        db.session.commit()
 
     for attribute in editable_attributes:
         if attribute["name"] in request.form:
@@ -895,10 +872,10 @@ def resource_edit(resource_type, resource_id):
 
     if resource_type == "mandi-receipt":
         existing_sale_receipt = SaleReceiptModel.query.filter(
+            SaleReceiptModel.id != resource.id,  # Ensure IDs do not match
             SaleReceiptModel.booklet_number == resource.booklet_number,
             SaleReceiptModel.receipt_id == resource.receipt_id,
             SaleReceiptModel.mandi_id == resource.mandi_id,
-            SaleReceiptModel.crop_id == resource.crop_id,
             SaleReceiptModel.is_approved == True,
             func.date(SaleReceiptModel.receipt_date)
             == func.date(resource.receipt_date),
@@ -909,10 +886,20 @@ def resource_edit(resource_type, resource_id):
                 == "डुप्लीकेट रसीद एंट्री"
             ).first()
             if duplicate_reason is not None:
-                resource.reasons = duplicate_reason.id
+                if not resource.rejection_reason_ids:
+                    resource.rejection_reason_ids = []
+                resource.rejection_reason_ids.append(duplicate_reason.id)
             resource.is_approved = False
+            resource.token_amount = 0
 
+    db.session.add(resource)
     db.session.commit()
+
+    handle_resource_revision(
+        resource_class=resource_class,
+        old_resource=old_resource,
+        new_resource=resource,
+    )
 
     # call after update hook
     if hasattr(resource_class, "after_update_callback"):
@@ -926,6 +913,7 @@ def resource_edit(resource_type, resource_id):
     approve_validator_validation_receipt(
         sale_receipt, resource.rejection_reason_ids
     )
+
     return redirect(
         request.referrer
         or url_for(".resource_list", resource_type=resource_type)
@@ -1202,8 +1190,81 @@ def get_preprocess_data(pagination, list_display):
     return processed_data
 
 
+def get_editable_relations(resource_class):
+    editable_relations = {}
+    if hasattr(resource_class, "editable_relations_dropdown"):
+        for editable_relation in resource_class.editable_relations_dropdown:
+            attribute_key = editable_relation["key"]
+            related_model = editable_relation["related_model"]
+            related_label = editable_relation["related_label"]
+            related_key = editable_relation["related_key"]
+            related_data = related_model.query.order_by(related_label).all()
+            editable_relations[attribute_key] = {}
+            editable_relations[attribute_key]["label"] = editable_relation[
+                "label"
+            ]
+            editable_relations[attribute_key]["options"] = [
+                {
+                    "label": getattr(data, related_label),
+                    "value": getattr(data, related_key),
+                }
+                for data in related_data
+            ]
+    return editable_relations
+
+
 @admin.route("/update_approval_status", methods=["POST"])
 def update_receipt_status():
     response = update_approval_status(current_user)
 
     return response
+
+
+def handle_resource_revision(resource_class, old_resource, new_resource):
+    if (
+        hasattr(resource_class, "revisions")
+        and hasattr(resource_class, "revision_model")
+        and resource_class.revisions
+    ):
+        revision_model = resource_class.revision_model
+        revision_pk = resource_class.revision_pk
+
+        # check if resource has been edited then only create the revision
+        is_modified = False
+        for column, value in old_resource.__dict__.items():
+            if column in [
+                "id",
+                "_sa_instance_state",
+                "created_at",
+                "updated_at",
+            ]:
+                continue
+
+            if getattr(old_resource, column) != getattr(new_resource, column):
+                is_modified = True
+                break
+
+        if not is_modified:
+            return
+
+        cloned_attributes_to_save = {}
+        for column, value in old_resource.__dict__.items():
+            if column in [
+                "_sa_instance_state",
+                "created_at",
+                "updated_at",
+            ]:
+                continue
+
+            if column == "id":
+                cloned_attributes_to_save[revision_pk] = value
+                continue
+
+            cloned_attributes_to_save[column] = value
+
+        if current_user and "edited_by" in revision_model.__table__.columns:
+            cloned_attributes_to_save["edited_by"] = current_user.id
+
+        cloned_resource = revision_model(**cloned_attributes_to_save)
+        db.session.add(cloned_resource)
+        db.session.commit()
