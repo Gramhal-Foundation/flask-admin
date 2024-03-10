@@ -10,15 +10,15 @@
     {% else %}
         <div class="text-3xl mb-4">Manage {{ resource_type | admin_label_plural }}</div>
         <div class="flex justify-between">
-            {% if permissions.get(resource_type).get('create'): %}
-                <a href={{ url_for('.resource_create', resource_type=resource_type) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded flex items-center">
-                    Create {{ resource_type | admin_label_singular }}
-                </a>
-            {% endif %}
             <div class="flex">
+                {% if permissions.get(resource_type).get('create'): %}
+                    <a href={{ url_for('.resource_create', resource_type=resource_type) }} class="bg-blue-500 hover:bg-blue-300 text-white font-bold py-2 px-4 rounded flex items-center">
+                        Create {{ resource_type | admin_label_singular }}
+                    </a>
+                {% endif %}
                 {% if permissions.get(resource_type): %}
                     <form action={{ url_for('.resource_list', resource_type=resource_type) }} method="GET">
-                        <div class="flex">
+                        <div class="flex ml-2">
                             {% if not hide_search  %}
                             <div class="mr-2 flex">
                                 <input type="text" name="search" id="search" value="{{ search_params.search_query }}" placeholder="Search..." class="border border-gray-300 text-black text-sm py-2 px-4 rounded">
@@ -58,8 +58,8 @@
         </div>
 
         <div class="relative overflow-x-auto my-8">
-            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+            <table class="w-full text-sm text-left text-gray-500">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                     <tr>
                         {% for item in list_display %}
                             {% if resource_type == 'faq' and item == 'created_at' %}
@@ -79,7 +79,7 @@
                 </thead>
                 <tbody>
                     {% for resource in pagination.items %}
-                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                        <tr class="bg-white border-b">
                             {% for item in list_display %}
                                 <td class="px-6 py-4">
                                     {% if '.' in item %}
