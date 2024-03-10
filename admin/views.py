@@ -60,6 +60,7 @@ import inflect
 import pandas as pd
 from admin_view import *  # noqa: F401, F403
 from admin_view import admin_configs
+from bolbhavPlus.utils.sale_receipt import approve_validator_validation_receipt
 from bolbhavPlus.utils.sale_receipt_controller import update_approval_status
 
 # [TODO]: dependency on main repo
@@ -83,7 +84,6 @@ from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired
-from bolbhavPlus.utils.sale_receipt import approve_validator_validation_receipt
 
 from . import admin
 
