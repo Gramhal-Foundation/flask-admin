@@ -77,11 +77,7 @@ from flask_wtf import FlaskForm
 # TODO: remove project dependency
 from models.crop import CropModel
 from models.mandi import MandiModel
-from models.salesReceipt import (
-    ReceiptRejectionReason,
-    SaleReceiptModel,
-    SaleReceiptValidationQueue,
-)
+from models.salesReceipt import ReceiptRejectionReason, SaleReceiptModel
 from models.user import UserModel
 from sqlalchemy import Text, and_, cast, func, or_
 from sqlalchemy.orm import joinedload
