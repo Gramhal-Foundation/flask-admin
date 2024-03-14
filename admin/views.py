@@ -60,7 +60,7 @@ import inflect
 import pandas as pd
 from admin_view import *  # noqa: F401, F403
 from admin_view import admin_configs
-from bolbhavPlus.utils.sale_receipt import approve_validator_validation_receipt
+from bolbhavPlus.utils.sale_receipt import process_team_member_validation
 from bolbhavPlus.utils.sale_receipt_controller import update_approval_status
 
 # [TODO]: dependency on main repo
@@ -84,6 +84,9 @@ from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired
+from models.salesReceipt import (
+    SaleReceiptValidationQueue,
+)
 
 from . import admin
 
@@ -909,8 +912,7 @@ def resource_edit(resource_type, resource_id):
         SaleReceiptModel.id == resource_id
     ).first()
 
-    print("==>approve_validator_validation_receipt")
-    approve_validator_validation_receipt(
+    process_team_member_validation(
         sale_receipt, resource.rejection_reason_ids
     )
 
