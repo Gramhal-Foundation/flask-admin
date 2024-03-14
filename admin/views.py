@@ -77,16 +77,17 @@ from flask_wtf import FlaskForm
 # TODO: remove project dependency
 from models.crop import CropModel
 from models.mandi import MandiModel
-from models.salesReceipt import ReceiptRejectionReason, SaleReceiptModel
+from models.salesReceipt import (
+    ReceiptRejectionReason,
+    SaleReceiptModel,
+    SaleReceiptValidationQueue,
+)
 from models.user import UserModel
 from sqlalchemy import Text, and_, cast, func, or_
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired
-from models.salesReceipt import (
-    SaleReceiptValidationQueue,
-)
 
 from . import admin
 
@@ -912,9 +913,7 @@ def resource_edit(resource_type, resource_id):
         SaleReceiptModel.id == resource_id
     ).first()
 
-    process_team_member_validation(
-        sale_receipt, resource.rejection_reason_ids
-    )
+    process_team_member_validation(sale_receipt, resource.rejection_reason_ids)
 
     return redirect(
         request.referrer
