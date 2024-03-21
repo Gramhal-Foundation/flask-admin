@@ -444,29 +444,6 @@ def index():
         )
     return redirect(default_route)
 
-
-@admin.route("/crowd-sourcing-validation")
-@login_required
-def crowd_sourcing_validation():
-    """
-    Displays the admin dashboard.
-
-    This route handler function renders the 'dashboard.html' template,
-    which displays the admin dashboard. The user must be
-    logged in to access this route.
-
-    Returns:
-        str: The rendered dashboard template.
-    """
-    
-    user_queue_count = SaleReceiptValidationQueue.query.filter(
-        SaleReceiptValidationQueue.current_validation_queue == "user"
-    ).count()
-    team_member_queue_count = SaleReceiptValidationQueue.query.filter(
-        SaleReceiptValidationQueue.current_validation_queue == "team member"
-    ).count()
-    return render_template("crowdsource-validation.html", user_queue_count=user_queue_count, team_member_queue_count = team_member_queue_count)
-
 @admin.route("/dashboard")
 @login_required
 def dashboard():
@@ -934,7 +911,9 @@ def resource_edit(resource_type, resource_id):
     if resource.is_approved == True:
         action = "approve"
 
-    process_team_member_validation(sale_receipt, resource.rejection_reason_ids, action)
+    process_team_member_validation(
+        sale_receipt, resource.rejection_reason_ids, action
+    )
 
     return redirect(
         request.referrer
