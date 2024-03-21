@@ -444,6 +444,7 @@ def index():
         )
     return redirect(default_route)
 
+
 @admin.route("/dashboard")
 @login_required
 def dashboard():
