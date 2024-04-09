@@ -892,6 +892,17 @@ def resource_edit(resource_type, resource_id):
             resource.is_approved = False
             resource.token_amount = 0
 
+        sale_receipt = SaleReceiptModel.query.filter(
+            SaleReceiptModel.id == resource_id
+        ).first()
+        action = ""
+        if resource.is_approved == True:
+            action = "approve"
+
+        process_team_member_validation(
+            sale_receipt, resource.rejection_reason_ids, action
+        )
+
     db.session.add(resource)
     db.session.commit()
 
@@ -904,17 +915,6 @@ def resource_edit(resource_type, resource_id):
     # call after update hook
     if hasattr(resource_class, "after_update_callback"):
         resource_class.after_update_callback(resource, old_resource)
-
-    sale_receipt = SaleReceiptModel.query.filter(
-        SaleReceiptModel.id == resource_id
-    ).first()
-    action = ""
-    if resource.is_approved == True:
-        action = "approve"
-
-    process_team_member_validation(
-        sale_receipt, resource.rejection_reason_ids, action
-    )
 
     return redirect(
         request.referrer
