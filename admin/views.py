@@ -497,6 +497,13 @@ def login():
         if user and bcrypt.check_password_hash(user.password, password):
             login_user(user)
             default_route = url_for(".dashboard")
+            if user.roles == 'data_extractor_intern':
+                default_route = url_for(
+                    ".resource_list",
+                    resource_type='extract-data',
+                )
+                return redirect(default_route)
+
             if "default-route-resource" in admin_configs:
                 default_route = url_for(
                     ".resource_list",
@@ -651,6 +658,11 @@ def resource_list(resource_type):
             resource_type, status
         )
 
+    if hasattr(resource_class, "sale_receipt_data_extract_controller"):
+        # status = request.args.get("status", default="pending")
+        return resource_class.sale_receipt_data_extract_controller(
+            resource_type, current_user
+        )
     per_page = 20
     page = request.args.get("page", default=1, type=int)
     search_query = request.args.get("search", default="")

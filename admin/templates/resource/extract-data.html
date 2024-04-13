@@ -1,0 +1,176 @@
+{% extends 'app.html' %}
+
+{% block title %}
+    {{ resource_type | admin_label_plural }}
+{% endblock %}
+
+{% block content %}
+
+{% if not permissions.get(resource_type).get('read'): %}
+    <h1>You do not have permission to view this link. Please reach out to support if you need any help.</h1>
+{% else %}
+<div class="mx-4">
+    <h1 class="text-blue-900 font-mukta font-semibold text-lg leading-normal">ADD MOBILE NUMBER AND TRADER'S NAME</h1>
+    <div style="margin-bottom: 20px;"></div>
+    {% for resource in pagination.items %}
+        <div class="flex">
+            <div class="flex-1">
+                <div class="flex flex-wrap">
+                    <div class="flex items-center mb-4">
+                        <h1>mandi: {{resource['mandi_name_hi']}}  crop: {{resource['crop_name_hi']}} date: {{ resource['receipt_date'] | admin_format_datetime(format="%d/%m/%Y") }} receipt_number: {{resource['receipt_id']}} </h1>
+                    </div>
+                    <form id="inputForm_{{ resource.pk }}">
+                        <div class="grid gap-6 mb-6 mt-4 grid-cols-2">
+                            <div class="flex items-center">
+                                Printed Receipt?
+                            </div>
+                            <div class="flex items-center ml-20">
+                                <input id="receipt_yes_{{ resource.pk }}" type="radio" value="Yes" name="receipt_{{ resource.pk }}" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                                <label for="receipt_yes_{{ resource.pk }}" class="ml-1 text-sm font-medium text-gray-900 dark:text-gray-300">Yes</label>
+                                <input id="receipt_no_{{ resource.pk }}" type="radio" value="No" name="receipt_{{ resource.pk }}" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 ml-4">
+                                <label for="receipt_no_{{ resource.pk }}" class="ml-1 text-sm font-medium text-gray-900 dark:text-gray-300">No</label>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <label for="owner_mobile_number_{{ resource.pk }}" class="text-sm font-medium text-gray-900 dark:text-gray-300">Receipt Owner Mobile Number</label>
+                            <label for="owner_mobile_number_not_available_{{ resource.pk }}" class="ml-auto text-sm font-medium text-gray-900 dark:text-gray-300">Not Available</label>
+                            <input id="owner_mobile_number_not_available_checkbox_{{ resource.pk }}" type="checkbox" value="" class="w-4 h-4 ml-1 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" onchange="toggleMobileNumberInput(this.checked, '{{ resource.pk }}')">
+                        </div>
+                        <div class="flex items-center mt-4">
+                            <input type="text" id="owner_mobile_number_{{ resource.pk }}" name="owner_mobile_number_{{ resource.pk }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Enter Receipt Owner Mobile Number (10 digits)" required pattern="\d{10}" >
+                        </div>
+                        <div class="flex items-center mt-4">
+                            <label for="trader_code_{{ resource.pk }}" class="text-sm font-medium text-gray-900 dark:text-gray-300">Trader Code</label>
+                            <label for="trader_code_not_available_{{ resource.pk }}" class="ml-auto text-sm font-medium text-gray-900 dark:text-gray-300">Not Available</label>
+                            <input id="trader_code_not_available_checkbox_{{ resource.pk }}" type="checkbox" value="" class="w-4 h-4 ml-1 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" onchange="toggleTraderCodeInput(this.checked, '{{ resource.pk }}')">
+                        </div>
+                        <div class="flex items-center mt-4">
+                            <input type="text" id="trader_code_{{ resource.pk }}" name="trader_code_{{ resource.pk }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Enter Trader Code (numeric only)" required pattern="\d+">
+                        </div>
+                        <div class="items-center mt-4">
+                            <label for="trader_name_{{ resource.pk }}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Trader Name</label>
+                            <input type="text" id="trader_name_{{ resource.pk }}" name="trader_name_{{ resource.pk }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Enter Trader Name" required />
+                        </div>
+                        <div class="flex justify-center mt-4">
+                            <button type="button" onclick="handleButtonClick('{{ resource.pk }}')" class="bg-green-500 rounded-lg text-white px-6 py-2 ml-2">Submit</button>
+                        </div>
+                    </form>               
+                </div>
+            </div>
+            <div class="flex-1" style="height: 740px; width: 779px;">
+                <img src="{{resource['receipt_image_url']}}" alt="Receipt Image" style="height: 740px; width: 779px; margin-top: -80px;" />
+            </div>            
+        </div>
+    {% endfor %}
+</div>
+
+{% endif %}
+
+<script>
+function toggleMobileNumberInput(checked, resourcePk) {
+    var mobileNumberInput = document.getElementById('owner_mobile_number_' + resourcePk);
+    var mobileNumberError = document.getElementById('owner_mobile_number_error_' + resourcePk);
+    
+    if (checked) {
+        mobileNumberInput.disabled = true;
+        mobileNumberInput.classList.add('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
+        mobileNumberError.classList.add('hidden');
+    } else {
+        mobileNumberInput.disabled = false;
+        mobileNumberInput.classList.remove('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
+        mobileNumberError.classList.remove('hidden');
+    }
+}
+
+function toggleTraderCodeInput(checked, resourcePk) {
+    var traderCodeInput = document.getElementById('trader_code_' + resourcePk);
+    var traderCodeError = document.getElementById('trader_code_error_' + resourcePk);
+    var traderNameInput = document.getElementById('trader_name_' + resourcePk);
+    
+    if (checked) {
+        traderCodeInput.disabled = true;
+        traderCodeInput.classList.add('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
+        traderNameInput.disabled = true;
+        traderNameInput.classList.add('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
+        traderCodeError.classList.add('hidden');
+    } else {
+        traderCodeInput.disabled = false;
+        traderCodeInput.classList.remove('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
+        traderNameInput.disabled = false;
+        traderNameInput.classList.remove('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
+        traderCodeError.classList.remove('hidden');
+    }
+}
+
+
+
+    function handleButtonClick(resourcePk) {
+        // Get form element
+        var form = document.getElementById('inputForm_' + resourcePk);
+
+        // Get inputs within the form
+        var inputs = form.getElementsByTagName('input');
+        var checkboxes = form.querySelectorAll('input[type="checkbox"]');
+        var selectedRadio = form.querySelector('input[type="radio"]:checked');
+        var receiptPrinted = selectedRadio ? selectedRadio.value : '';
+
+        // Get textarea within the form
+        var textareas = form.getElementsByTagName('textarea');
+
+        // Create an object to store the form data
+        var formData = {};
+
+        // Set validation flags
+        var isValid = true;
+
+        // Iterate over input elements and add their values to formData
+        for (var i = 0; i < inputs.length; i++) {
+            var input = inputs[i];
+            if (input.type !== "radio" && input.type !== "checkbox") {
+                formData[input.name] = input.value;
+            }
+        }
+
+        // Check validation for owner_mobile_number
+        var ownerMobileNumberInput = document.getElementById('owner_mobile_number_' + resourcePk);
+        var ownerMobileNumberError = document.getElementById('owner_mobile_number_error_' + resourcePk);
+        if (!/^\d{10}$/.test(ownerMobileNumberInput.value)) {
+            ownerMobileNumberError.classList.remove('hidden');
+            isValid = false;
+        } else {
+            ownerMobileNumberError.classList.add('hidden');
+        }
+
+        // Check validation for trader_code
+        var traderCodeInput = document.getElementById('trader_code_' + resourcePk);
+        var traderCodeError = document.getElementById('trader_code_error_' + resourcePk);
+        if (!/^\d+$/.test(traderCodeInput.value)) {
+            traderCodeError.classList.remove('hidden');
+            isValid = false;
+        } else {
+            traderCodeError.classList.add('hidden');
+        }
+
+        // If validation passed, proceed to submit
+        if (isValid) {
+            // Iterate over textarea elements and add their values to formData
+            for (var i = 0; i < textareas.length; i++) {
+                var textarea = textareas[i];
+                formData[textarea.name] = textarea.value;
+            }
+
+            // Iterate over checkboxes and add their state to formData
+            for (var i = 0; i < checkboxes.length; i++) {
+                var checkbox = checkboxes[i];
+                formData[checkbox.id] = checkbox.checked;
+            }
+
+            // Add the receipt printed value to formData
+            formData['receipt_printed'] = receiptPrinted;
+
+            // Log the formData object to the console
+            console.log(formData);
+        }
+    }
+</script>
+{% endblock %}
