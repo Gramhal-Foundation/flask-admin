@@ -67,24 +67,40 @@
 {% endif %}
 
 <script>
-function toggleMobileNumberInput(checked, resourcePk) {
-    var mobileNumberInput = document.getElementById('owner_mobile_number_' + resourcePk);
-    var mobileNumberError = document.getElementById('owner_mobile_number_error_' + resourcePk);
+    var traders = [
+        {% for trader in traders %}
+            {
+                id: '{{ trader.id }}',
+                name: '{{ trader.name }}',
+                code: '{{ trader.code }}',
+                mandi_id:'{{trader.mandi_id}}'
+
+            },
+        {% endfor %}
+    ];
+
     
-    if (checked) {
-        mobileNumberInput.disabled = true;
-        mobileNumberInput.classList.add('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
-        mobileNumberError.classList.add('hidden');
-    } else {
-        mobileNumberInput.disabled = false;
-        mobileNumberInput.classList.remove('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
-        mobileNumberError.classList.remove('hidden');
+    // Now you can use the traders data in your JavaScript code
+    console.log(traders);
+    function toggleMobileNumberInput(checked, resourcePk) {
+        console.log(traders)
+        var mobileNumberInput = document.getElementById('owner_mobile_number_' + resourcePk);
+        // var mobileNumberError = document.getElementById('owner_mobile_number_error_' + resourcePk);
+        
+        if (checked) {
+            mobileNumberInput.disabled = true;
+            mobileNumberInput.classList.add('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
+            // mobileNumberError.classList.add('hidden');
+        } else {
+            mobileNumberInput.disabled = false;
+            mobileNumberInput.classList.remove('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
+            // mobileNumberError.classList.remove('hidden');
+        }
     }
-}
 
 function toggleTraderCodeInput(checked, resourcePk) {
     var traderCodeInput = document.getElementById('trader_code_' + resourcePk);
-    var traderCodeError = document.getElementById('trader_code_error_' + resourcePk);
+    // var traderCodeError = document.getElementById('trader_code_error_' + resourcePk);
     var traderNameInput = document.getElementById('trader_name_' + resourcePk);
     
     if (checked) {
@@ -92,38 +108,32 @@ function toggleTraderCodeInput(checked, resourcePk) {
         traderCodeInput.classList.add('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
         traderNameInput.disabled = true;
         traderNameInput.classList.add('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
-        traderCodeError.classList.add('hidden');
+        // traderCodeError.classList.add('hidden');
     } else {
         traderCodeInput.disabled = false;
         traderCodeInput.classList.remove('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
         traderNameInput.disabled = false;
         traderNameInput.classList.remove('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
-        traderCodeError.classList.remove('hidden');
+        // traderCodeError.classList.remove('hidden');
     }
 }
 
 
 
     function handleButtonClick(resourcePk) {
-        // Get form element
         var form = document.getElementById('inputForm_' + resourcePk);
 
-        // Get inputs within the form
         var inputs = form.getElementsByTagName('input');
         var checkboxes = form.querySelectorAll('input[type="checkbox"]');
         var selectedRadio = form.querySelector('input[type="radio"]:checked');
         var receiptPrinted = selectedRadio ? selectedRadio.value : '';
 
-        // Get textarea within the form
         var textareas = form.getElementsByTagName('textarea');
 
-        // Create an object to store the form data
         var formData = {};
 
-        // Set validation flags
         var isValid = true;
 
-        // Iterate over input elements and add their values to formData
         for (var i = 0; i < inputs.length; i++) {
             var input = inputs[i];
             if (input.type !== "radio" && input.type !== "checkbox") {
@@ -131,45 +141,57 @@ function toggleTraderCodeInput(checked, resourcePk) {
             }
         }
 
-        // Check validation for owner_mobile_number
         var ownerMobileNumberInput = document.getElementById('owner_mobile_number_' + resourcePk);
-        var ownerMobileNumberError = document.getElementById('owner_mobile_number_error_' + resourcePk);
-        if (!/^\d{10}$/.test(ownerMobileNumberInput.value)) {
-            ownerMobileNumberError.classList.remove('hidden');
-            isValid = false;
-        } else {
-            ownerMobileNumberError.classList.add('hidden');
-        }
+        var ownerMobileNumberCheckbox = document.getElementById('owner_mobile_number_not_available_checkbox_' + resourcePk);
 
-        // Check validation for trader_code
         var traderCodeInput = document.getElementById('trader_code_' + resourcePk);
-        var traderCodeError = document.getElementById('trader_code_error_' + resourcePk);
-        if (!/^\d+$/.test(traderCodeInput.value)) {
-            traderCodeError.classList.remove('hidden');
-            isValid = false;
-        } else {
-            traderCodeError.classList.add('hidden');
-        }
+        var traderCodeCheckbox = document.getElementById('trader_code_not_available_checkbox_' + resourcePk);
 
-        // If validation passed, proceed to submit
         if (isValid) {
-            // Iterate over textarea elements and add their values to formData
             for (var i = 0; i < textareas.length; i++) {
                 var textarea = textareas[i];
                 formData[textarea.name] = textarea.value;
             }
 
-            // Iterate over checkboxes and add their state to formData
             for (var i = 0; i < checkboxes.length; i++) {
                 var checkbox = checkboxes[i];
                 formData[checkbox.id] = checkbox.checked;
             }
 
-            // Add the receipt printed value to formData
             formData['receipt_printed'] = receiptPrinted;
 
-            // Log the formData object to the console
+            if (!/^\d{10}$/.test(ownerMobileNumberInput.value) && !ownerMobileNumberCheckbox.checked && !ownerMobileNumberInput.disabled) {
+                alert('please enter valid number');
+            }
+
+            if (!/^\d+$/.test(traderCodeInput.value) && !traderCodeCheckbox.checked && !traderCodeInput.disabled) {
+                alert('please enter valid trader code');
+            }
+
             console.log(formData);
+
+            let baseUrl = '/admin/';
+            let route = 'update_receipt_data';
+            let url = baseUrl + route;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                } else if (data.error) {
+                    alert(data.error);
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error);
+            });
         }
     }
 </script>
