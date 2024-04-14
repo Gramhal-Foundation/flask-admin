@@ -52,7 +52,7 @@
                             <input type="text" id="trader_name_{{ resource.pk }}" name="trader_name_{{ resource.pk }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Enter Trader Name" required />
                         </div>
                         <div class="flex justify-center mt-4">
-                            <button type="button" onclick="handleButtonClick('{{ resource.pk }}')" class="bg-green-500 rounded-lg text-white px-6 py-2 ml-2">Submit</button>
+                            <button type="button" onclick="handleButtonClick(this,'{{ resource.pk }}')" class="bg-green-500 rounded-lg text-white px-6 py-2 ml-2">Submit</button>
                         </div>
                     </form>               
                 </div>
@@ -120,81 +120,92 @@ function toggleTraderCodeInput(checked, resourcePk) {
 
 
 
-    function handleButtonClick(resourcePk) {
-        var form = document.getElementById('inputForm_' + resourcePk);
+function handleButtonClick(button, resourcePk) {
+    var form = document.getElementById('inputForm_' + resourcePk);
+    button.disabled = true;
+    button.classList.add('bg-opacity-50')
+    button.classList.add('cursor-not-allowed')
+    var inputs = form.getElementsByTagName('input');
+    var checkboxes = form.querySelectorAll('input[type="checkbox"]');
+    var selectedRadio = form.querySelector('input[type="radio"]:checked');
+    var receiptPrinted = selectedRadio ? selectedRadio.value : '';
 
-        var inputs = form.getElementsByTagName('input');
-        var checkboxes = form.querySelectorAll('input[type="checkbox"]');
-        var selectedRadio = form.querySelector('input[type="radio"]:checked');
-        var receiptPrinted = selectedRadio ? selectedRadio.value : '';
+    var textareas = form.getElementsByTagName('textarea');
 
-        var textareas = form.getElementsByTagName('textarea');
+    var formData = {};
 
-        var formData = {};
+    var isValid = true;
 
-        var isValid = true;
-
-        for (var i = 0; i < inputs.length; i++) {
-            var input = inputs[i];
-            if (input.type !== "radio" && input.type !== "checkbox") {
-                formData[input.name] = input.value;
-            }
-        }
-
-        var ownerMobileNumberInput = document.getElementById('owner_mobile_number_' + resourcePk);
-        var ownerMobileNumberCheckbox = document.getElementById('owner_mobile_number_not_available_checkbox_' + resourcePk);
-
-        var traderCodeInput = document.getElementById('trader_code_' + resourcePk);
-        var traderCodeCheckbox = document.getElementById('trader_code_not_available_checkbox_' + resourcePk);
-
-        if (isValid) {
-            for (var i = 0; i < textareas.length; i++) {
-                var textarea = textareas[i];
-                formData[textarea.name] = textarea.value;
-            }
-
-            for (var i = 0; i < checkboxes.length; i++) {
-                var checkbox = checkboxes[i];
-                formData[checkbox.id] = checkbox.checked;
-            }
-
-            formData['receipt_printed'] = receiptPrinted;
-            formData['sale_receipt_id'] = resourcePk;
-
-            if (!/^\d{10}$/.test(ownerMobileNumberInput.value) && !ownerMobileNumberCheckbox.checked && !ownerMobileNumberInput.disabled) {
-                alert('please enter valid number');
-            }
-
-            if (!/^\d+$/.test(traderCodeInput.value) && !traderCodeCheckbox.checked && !traderCodeInput.disabled) {
-                alert('please enter valid trader code');
-            }
-
-            console.log(formData);
-
-            let baseUrl = '/admin/';
-            let route = 'update_receipt_data';
-            let url = baseUrl + route;
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                } else if (data.error) {
-                    alert(data.error);
-                    window.location.reload();
-                }
-            })
-            .catch(error => {
-                alert('Error: ' + error);
-            });
+    for (var i = 0; i < inputs.length; i++) {
+        var input = inputs[i];
+        if (input.type !== "radio" && input.type !== "checkbox") {
+            // Extract the key name without resourcePk
+            var key = input.name.replace('_' + resourcePk, '');
+            formData[key] = input.value;
         }
     }
+
+    // Process checkboxes
+    for (var i = 0; i < checkboxes.length; i++) {
+        var checkbox = checkboxes[i];
+        // Extract the key name without resourcePk
+        var key = checkbox.id.replace('_' + resourcePk, '');
+        formData[key] = checkbox.checked;
+    }
+
+    // Process textareas
+    for (var i = 0; i < textareas.length; i++) {
+        var textarea = textareas[i];
+        formData[textarea.name] = textarea.value;
+    }
+
+    // Add receipt_printed and sale_receipt_id
+    formData['receipt_printed'] = receiptPrinted;
+    formData['sale_receipt_id'] = resourcePk;
+
+    // Validate and process the form data...
+    var ownerMobileNumberInput = document.getElementById('owner_mobile_number_' + resourcePk);
+    var ownerMobileNumberCheckbox = document.getElementById('owner_mobile_number_not_available_checkbox_' + resourcePk);
+
+    var traderCodeInput = document.getElementById('trader_code_' + resourcePk);
+    var traderCodeCheckbox = document.getElementById('trader_code_not_available_checkbox_' + resourcePk);
+
+    if (!/^\d{10}$/.test(ownerMobileNumberInput.value) && !ownerMobileNumberCheckbox.checked && !ownerMobileNumberInput.disabled) {
+        alert('please enter valid number');
+    }
+
+    if (!/^\d+$/.test(traderCodeInput.value) && !traderCodeCheckbox.checked && !traderCodeInput.disabled) {
+        alert('please enter valid trader code');
+    }
+
+    console.log(formData);
+
+    let baseUrl = '/admin/';
+    let route = 'update_receipt_data';
+    let url = baseUrl + route;
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Handle success
+            window.location.reload();
+        } else if (data.error) {
+            alert(data.error);
+            window.location.reload();
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error);
+    });
+}
+
 
     function handleTraderCodeInput(traderCode, resourcePk) {
     var traderNameInput = document.getElementById('trader_name_' + resourcePk);
