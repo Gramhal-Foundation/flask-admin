@@ -177,7 +177,7 @@ function handleButtonClick(button, resourcePk) {
         return;
     }
 
-    if (traderCodeInput.value !== null && !traderNameInput.value) {
+    if (traderCodeInput.value !== null && !traderNameInput.value && !traderCodeCheckbox.checked) {
             alert('Please enter the trader name.');
             button.disabled = false;
             button.classList.remove('bg-opacity-50');
