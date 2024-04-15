@@ -61,7 +61,10 @@ import pandas as pd
 from admin_view import *  # noqa: F401, F403
 from admin_view import admin_configs
 from bolbhavPlus.utils.sale_receipt import process_team_member_validation
-from bolbhavPlus.utils.sale_receipt_controller import update_approval_status
+from bolbhavPlus.utils.sale_receipt_controller import (
+    update_approval_status,
+    update_extracted_receipt_data,
+)
 
 # [TODO]: dependency on main repo
 from db import db
@@ -497,6 +500,13 @@ def login():
         if user and bcrypt.check_password_hash(user.password, password):
             login_user(user)
             default_route = url_for(".dashboard")
+            if user.roles == "data_extractor_intern":
+                default_route = url_for(
+                    ".resource_list",
+                    resource_type="extract-data",
+                )
+                return redirect(default_route)
+
             if "default-route-resource" in admin_configs:
                 default_route = url_for(
                     ".resource_list",
@@ -651,6 +661,10 @@ def resource_list(resource_type):
             resource_type, status
         )
 
+    if hasattr(resource_class, "sale_receipt_data_extract_controller"):
+        return resource_class.sale_receipt_data_extract_controller(
+            resource_type, current_user
+        )
     per_page = 20
     page = request.args.get("page", default=1, type=int)
     search_query = request.args.get("search", default="")
@@ -1218,6 +1232,14 @@ def get_editable_relations(resource_class):
 @admin.route("/update_approval_status", methods=["POST"])
 def update_receipt_status():
     response = update_approval_status(current_user)
+
+    return response
+
+
+@admin.route("/update-receipt-data", methods=["POST"])
+def update_receipt_data():
+    form_data = request.json
+    response = update_extracted_receipt_data(form_data)
 
     return response
 
