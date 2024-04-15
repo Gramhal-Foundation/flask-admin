@@ -1236,7 +1236,7 @@ def update_receipt_status():
     return response
 
 
-@admin.route("/update_receipt_data", methods=["POST"])
+@admin.route("/update-receipt-data", methods=["POST"])
 def update_receipt_data():
     form_data = request.json
     response = update_extracted_receipt_data(form_data)
