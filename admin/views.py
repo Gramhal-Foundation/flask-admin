@@ -662,7 +662,6 @@ def resource_list(resource_type):
         )
 
     if hasattr(resource_class, "sale_receipt_data_extract_controller"):
-        # status = request.args.get("status", default="pending")
         return resource_class.sale_receipt_data_extract_controller(
             resource_type, current_user
         )
