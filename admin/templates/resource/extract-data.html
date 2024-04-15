@@ -12,56 +12,78 @@
 <div class="mx-4">
     <h1 class="text-blue-900 font-mukta font-semibold text-lg leading-normal">ADD MOBILE NUMBER AND TRADER'S NAME</h1>
     <div style="margin-bottom: 20px;"></div>
-    {% for resource in pagination.items %}
-        <div class="flex">
-            <div class="flex-1">
-                <div class="flex flex-wrap">
-                    <div class="flex items-center mb-4">
-                        <h1>mandi: {{resource['mandi_name_hi']}}  crop: {{resource['crop_name_hi']}} date: {{ resource['receipt_date'] | admin_format_datetime(format="%d/%m/%Y") }} receipt_number: {{resource['receipt_id']}} </h1>
-                    </div>
-                    <form id="inputForm_{{ resource.pk }}">
-                        <div class="grid gap-6 mb-6 mt-4 grid-cols-2">
+    {% if pagination.items %}
+        {% for resource in pagination.items %}
+            <div class="flex">
+                <div class="flex-1">
+                    <div class="flex flex-wrap">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <div class="flex items-center mb-4">
+                                    <h1>Mandi: {{ resource['mandi_name_hi'] }}</h1>
+                                </div>
+                                <div class="flex items-center mb-4">
+                                    <h1>Crop: {{ resource['crop_name_hi'] }}</h1>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex items-center mb-4">
+                                    <h1>Date: {{ resource['receipt_date'] | admin_format_datetime(format="%d/%m/%Y") }}</h1>
+                                </div>
+                                <div class="flex items-center mb-4">
+                                    <h1>Receipt Number: {{ resource['receipt_id'] }}</h1>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form id="inputForm_{{ resource.pk }}">
+                            <div class="grid gap-6 mb-6 mt-4 grid-cols-2">
+                                <div class="flex items-center">
+                                    Printed Receipt?
+                                </div>
+                                <div class="flex items-center ml-20">
+                                    <input id="receipt_yes_{{ resource.pk }}" type="radio" value="Yes" name="receipt_{{ resource.pk }}" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                                    <label for="receipt_yes_{{ resource.pk }}" class="ml-1 text-sm font-medium text-gray-900 dark:text-gray-300">Yes</label>
+                                    <input id="receipt_no_{{ resource.pk }}" type="radio" value="No" name="receipt_{{ resource.pk }}" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 ml-4">
+                                    <label for="receipt_no_{{ resource.pk }}" class="ml-1 text-sm font-medium text-gray-900 dark:text-gray-300">No</label>
+                                </div>
+                            </div>
                             <div class="flex items-center">
-                                Printed Receipt?
+                                <label for="owner_mobile_number_{{ resource.pk }}" class="text-sm font-medium text-gray-900 dark:text-gray-300">Receipt Owner Mobile Number</label>
+                                <label for="owner_mobile_number_not_available_{{ resource.pk }}" class="ml-auto text-sm font-medium text-gray-900 dark:text-gray-300">Not Available</label>
+                                <input id="owner_mobile_number_not_available_checkbox_{{ resource.pk }}" type="checkbox" value="" class="w-4 h-4 ml-1 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" onchange="onChangeMobileNumberInput(this.checked, '{{ resource.pk }}')">
                             </div>
-                            <div class="flex items-center ml-20">
-                                <input id="receipt_yes_{{ resource.pk }}" type="radio" value="Yes" name="receipt_{{ resource.pk }}" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                                <label for="receipt_yes_{{ resource.pk }}" class="ml-1 text-sm font-medium text-gray-900 dark:text-gray-300">Yes</label>
-                                <input id="receipt_no_{{ resource.pk }}" type="radio" value="No" name="receipt_{{ resource.pk }}" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 ml-4">
-                                <label for="receipt_no_{{ resource.pk }}" class="ml-1 text-sm font-medium text-gray-900 dark:text-gray-300">No</label>
+                            <div class="flex items-center mt-1">
+                                <input type="text" id="owner_mobile_number_{{ resource.pk }}" name="owner_mobile_number_{{ resource.pk }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Enter Receipt Owner Mobile Number (10 digits)" required pattern="\d{10}" >
                             </div>
-                        </div>
-                        <div class="flex items-center">
-                            <label for="owner_mobile_number_{{ resource.pk }}" class="text-sm font-medium text-gray-900 dark:text-gray-300">Receipt Owner Mobile Number</label>
-                            <label for="owner_mobile_number_not_available_{{ resource.pk }}" class="ml-auto text-sm font-medium text-gray-900 dark:text-gray-300">Not Available</label>
-                            <input id="owner_mobile_number_not_available_checkbox_{{ resource.pk }}" type="checkbox" value="" class="w-4 h-4 ml-1 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" onchange="onChangeMobileNumberInput(this.checked, '{{ resource.pk }}')">
-                        </div>
-                        <div class="flex items-center mt-4">
-                            <input type="text" id="owner_mobile_number_{{ resource.pk }}" name="owner_mobile_number_{{ resource.pk }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Enter Receipt Owner Mobile Number (10 digits)" required pattern="\d{10}" >
-                        </div>
-                        <div class="flex items-center mt-4">
-                            <label for="trader_code_{{ resource.pk }}" class="text-sm font-medium text-gray-900 dark:text-gray-300">Trader Code</label>
-                            <label for="trader_code_not_available_{{ resource.pk }}" class="ml-auto text-sm font-medium text-gray-900 dark:text-gray-300">Not Available</label>
-                            <input id="trader_code_not_available_checkbox_{{ resource.pk }}" type="checkbox" value="" class="w-4 h-4 ml-1 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" onchange="onChangeTraderCodeInput(this.checked, '{{ resource.pk }}')">
-                        </div>
-                        <div class="flex items-center mt-4">
-                            <input type="text" id="trader_code_{{ resource.pk }}" name="trader_code_{{ resource.pk }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Enter Trader Code (numeric only)" required pattern="\d+" oninput="handleTraderCodeInput(this.value, '{{ resource.pk }}')">
-                        </div>
-                        <div class="items-center mt-4">
-                            <label for="trader_name_{{ resource.pk }}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Trader Name</label>
-                            <input type="text" id="trader_name_{{ resource.pk }}" name="trader_name_{{ resource.pk }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Enter Trader Name" required />
-                        </div>
-                        <div class="flex justify-center mt-4">
-                            <button type="button" onclick="handleButtonClick(this,'{{ resource.pk }}')" class="bg-green-500 rounded-lg text-white px-6 py-2 ml-2">Submit</button>
-                        </div>
-                    </form>
+                            <div class="flex items-center mt-4">
+                                <label for="trader_code_{{ resource.pk }}" class="text-sm font-medium text-gray-900 dark:text-gray-300">Trader Code</label>
+                                <label for="trader_code_not_available_{{ resource.pk }}" class="ml-auto text-sm font-medium text-gray-900 dark:text-gray-300">Not Available</label>
+                                <input id="trader_code_not_available_checkbox_{{ resource.pk }}" type="checkbox" value="" class="w-4 h-4 ml-1 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" onchange="onChangeTraderCodeInput(this.checked, '{{ resource.pk }}')">
+                            </div>
+                            <div class="flex items-center mt-1">
+                                <input type="text" id="trader_code_{{ resource.pk }}" name="trader_code_{{ resource.pk }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Enter Trader Code (numeric only)" required pattern="\d+" oninput="handleTraderCodeInput(this.value, '{{ resource.pk }}', '{{resource.mandi_id}}')">
+                            </div>
+                            <div class="items-center mt-4">
+                                <label for="trader_name_{{ resource.pk }}" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Trader Name</label>
+                                <input type="text" id="trader_name_{{ resource.pk }}" name="trader_name_{{ resource.pk }}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Enter Trader Name" required />
+                            </div>
+                            <div class="flex justify-center mt-4">
+                                <button type="button" onclick="handleButtonClick(this,'{{ resource.pk }}')" class="bg-green-500 rounded-lg text-white px-6 py-2 ml-2">Submit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="flex-1" style="height: 740px; width: 779px;">
+                    <img src="{{resource['receipt_image_url']}}" alt="Receipt Image" style="height: 740px; width: 779px; margin-top: -80px;" />
                 </div>
             </div>
-            <div class="flex-1" style="height: 740px; width: 779px;">
-                <img src="{{resource['receipt_image_url']}}" alt="Receipt Image" style="height: 740px; width: 779px; margin-top: -80px;" />
-            </div>
+        {% endfor %}
+    {% else %}
+        <div class="flex justify-center">
+            <p>No data available</p>
         </div>
-    {% endfor %}
+    {% endif %}
 </div>
 
 {% endif %}
@@ -85,6 +107,7 @@
         if (checked) {
             mobileNumberInput.disabled = true;
             mobileNumberInput.classList.add('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
+            mobileNumberInput.value = '';
         } else {
             mobileNumberInput.disabled = false;
             mobileNumberInput.classList.remove('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
@@ -100,6 +123,8 @@ function onChangeTraderCodeInput(checked, resourcePk) {
         traderCodeInput.classList.add('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
         traderNameInput.disabled = true;
         traderNameInput.classList.add('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
+        traderNameInput.value = '';
+        traderCodeInput.value = '';
     } else {
         traderCodeInput.disabled = false;
         traderCodeInput.classList.remove('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
@@ -122,7 +147,9 @@ function handleButtonClick(button, resourcePk) {
 
     if (receiptPrinted == ''){
         alert('please selected receipt type');
-        window.location.reload();
+        button.disabled = false;
+        button.classList.remove('bg-opacity-50');
+        button.classList.remove('cursor-not-allowed');
         return;
     }
 
@@ -161,7 +188,7 @@ function handleButtonClick(button, resourcePk) {
     var traderNameInput = document.getElementById('trader_name_' + resourcePk);
     var traderCodeCheckbox = document.getElementById('trader_code_not_available_checkbox_' + resourcePk);
 
-    if (!/^\d{10}$/.test(ownerMobileNumberInput.value) && !ownerMobileNumberCheckbox.checked && !ownerMobileNumberInput.disabled) {
+    if (!/^\d{10}$/.test(ownerMobileNumberInput.value) && !ownerMobileNumberCheckbox.checked && !ownerMobileNumberInput.disabled && receiptPrinted == 'Yes' ) {
         alert('Please enter a valid mobile number.');
         button.disabled = false;
         button.classList.remove('bg-opacity-50');
@@ -169,7 +196,7 @@ function handleButtonClick(button, resourcePk) {
         return;
     }
 
-    if (!/^\d+$/.test(traderCodeInput.value) && !traderCodeCheckbox.checked && !traderCodeInput.disabled) {
+    if (!/^\d+$/.test(traderCodeInput.value) && !traderCodeCheckbox.checked && !traderCodeInput.disabled && receiptPrinted == 'Yes') {
         alert('Please enter a valid trader code.');
         button.disabled = false;
         button.classList.remove('bg-opacity-50');
@@ -177,7 +204,7 @@ function handleButtonClick(button, resourcePk) {
         return;
     }
 
-    if (traderCodeInput.value !== null && !traderNameInput.value && !traderCodeCheckbox.checked) {
+    if (traderCodeInput.value !== null && !traderNameInput.value && !traderCodeCheckbox.checked && receiptPrinted == 'Yes') {
             alert('Please enter the trader name.');
             button.disabled = false;
             button.classList.remove('bg-opacity-50');
@@ -214,15 +241,20 @@ function handleButtonClick(button, resourcePk) {
 }
 
 
-function handleTraderCodeInput(traderCode, resourcePk) {
+function handleTraderCodeInput(traderCode, resourcePk, mandi_id) {
     var traderNameInput = document.getElementById('trader_name_' + resourcePk);
-    var foundTrader = traders.find(trader => trader.code === traderCode);
+    var foundTrader = traders.find(trader => trader.code === traderCode && trader.mandi_id === mandi_id);
 
     if (foundTrader) {
         traderNameInput.value = foundTrader.name;
+        traderNameInput.disabled = true;
+        traderNameInput.classList.add('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
     } else {
         traderNameInput.value = '';
+        traderNameInput.disabled = false;
+        traderNameInput.classList.remove('bg-gray-200', 'opacity-50', 'cursor-not-allowed');
     }
 }
+
 </script>
 {% endblock %}
