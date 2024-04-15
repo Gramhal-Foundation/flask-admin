@@ -113,8 +113,8 @@ function onChangeTraderCodeInput(checked, resourcePk) {
 function handleButtonClick(button, resourcePk) {
     var form = document.getElementById('inputForm_' + resourcePk);
     button.disabled = true;
-    button.classList.add('bg-opacity-50')
-    button.classList.add('cursor-not-allowed')
+    button.classList.add('bg-opacity-50');
+    button.classList.add('cursor-not-allowed');
     var inputs = form.getElementsByTagName('input');
     var checkboxes = form.querySelectorAll('input[type="checkbox"]');
     var selectedRadio = form.querySelector('input[type="radio"]:checked');
@@ -158,20 +158,32 @@ function handleButtonClick(button, resourcePk) {
     var ownerMobileNumberCheckbox = document.getElementById('owner_mobile_number_not_available_checkbox_' + resourcePk);
 
     var traderCodeInput = document.getElementById('trader_code_' + resourcePk);
+    var traderNameInput = document.getElementById('trader_name_' + resourcePk);
     var traderCodeCheckbox = document.getElementById('trader_code_not_available_checkbox_' + resourcePk);
 
     if (!/^\d{10}$/.test(ownerMobileNumberInput.value) && !ownerMobileNumberCheckbox.checked && !ownerMobileNumberInput.disabled) {
         alert('Please enter a valid mobile number.');
-        window.location.reload();
+        button.disabled = false;
+        button.classList.remove('bg-opacity-50');
+        button.classList.remove('cursor-not-allowed');
         return;
     }
 
     if (!/^\d+$/.test(traderCodeInput.value) && !traderCodeCheckbox.checked && !traderCodeInput.disabled) {
         alert('Please enter a valid trader code.');
-        window.location.reload();
+        button.disabled = false;
+        button.classList.remove('bg-opacity-50');
+        button.classList.remove('cursor-not-allowed');
         return;
     }
 
+    if (traderCodeInput.value !== null && !traderNameInput.value) {
+            alert('Please enter the trader name.');
+            button.disabled = false;
+            button.classList.remove('bg-opacity-50');
+            button.classList.remove('cursor-not-allowed');
+            return;
+    }
     let baseUrl = '/admin/';
     let route = 'update-receipt-data';
     let url = baseUrl + route;
