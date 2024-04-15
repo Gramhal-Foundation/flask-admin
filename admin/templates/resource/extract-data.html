@@ -145,6 +145,13 @@ function handleButtonClick(button, resourcePk) {
     var selectedRadio = form.querySelector('input[type="radio"]:checked');
     var receiptPrinted = selectedRadio ? selectedRadio.value : '';
 
+    var ownerMobileNumberInput = document.getElementById('owner_mobile_number_' + resourcePk);
+    var ownerMobileNumberCheckbox = document.getElementById('owner_mobile_number_not_available_checkbox_' + resourcePk);
+
+    var traderCodeInput = document.getElementById('trader_code_' + resourcePk);
+    var traderNameInput = document.getElementById('trader_name_' + resourcePk);
+    var traderCodeCheckbox = document.getElementById('trader_code_not_available_checkbox_' + resourcePk);
+
     if (receiptPrinted == ''){
         alert('please selected receipt type');
         button.disabled = false;
@@ -181,12 +188,6 @@ function handleButtonClick(button, resourcePk) {
     formData['receipt_printed'] = receiptPrinted;
     formData['sale_receipt_id'] = resourcePk;
 
-    var ownerMobileNumberInput = document.getElementById('owner_mobile_number_' + resourcePk);
-    var ownerMobileNumberCheckbox = document.getElementById('owner_mobile_number_not_available_checkbox_' + resourcePk);
-
-    var traderCodeInput = document.getElementById('trader_code_' + resourcePk);
-    var traderNameInput = document.getElementById('trader_name_' + resourcePk);
-    var traderCodeCheckbox = document.getElementById('trader_code_not_available_checkbox_' + resourcePk);
 
     if (!/^\d{10}$/.test(ownerMobileNumberInput.value) && !ownerMobileNumberCheckbox.checked && !ownerMobileNumberInput.disabled && receiptPrinted == 'Yes' ) {
         alert('Please enter a valid mobile number.');
@@ -204,12 +205,14 @@ function handleButtonClick(button, resourcePk) {
         return;
     }
 
-    if (traderCodeInput.value !== null && !traderNameInput.value && !traderCodeCheckbox.checked && receiptPrinted == 'Yes') {
-            alert('Please enter the trader name.');
-            button.disabled = false;
-            button.classList.remove('bg-opacity-50');
-            button.classList.remove('cursor-not-allowed');
-            return;
+    var regex = /^[a-zA-Z\s]*$/;
+
+    if (traderCodeInput.value !== null && !regex.test(traderNameInput.value) && !traderCodeCheckbox.checked && receiptPrinted == 'Yes') {
+        alert('Please enter a valid trader name without special characters or numbers.');
+        button.disabled = false;
+        button.classList.remove('bg-opacity-50');
+        button.classList.remove('cursor-not-allowed');
+        return;
     }
     let baseUrl = '/admin/';
     let route = 'update-receipt-data';
