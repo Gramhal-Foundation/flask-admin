@@ -61,11 +61,14 @@ import pandas as pd
 from admin_view import *  # noqa: F401, F403
 from admin_view import admin_configs
 from bolbhavPlus.utils.sale_receipt import process_team_member_validation
-from bolbhavPlus.utils.sale_receipt_controller import update_approval_status, update_extracted_receipt_data
+from bolbhavPlus.utils.sale_receipt_controller import (
+    update_approval_status,
+    update_extracted_receipt_data,
+)
 
 # [TODO]: dependency on main repo
 from db import db
-from flask import Response, jsonify
+from flask import Response
 from flask import current_app as app
 from flask import flash, redirect
 from flask import render_template as real_render_template
@@ -497,10 +500,10 @@ def login():
         if user and bcrypt.check_password_hash(user.password, password):
             login_user(user)
             default_route = url_for(".dashboard")
-            if user.roles == 'data_extractor_intern':
+            if user.roles == "data_extractor_intern":
                 default_route = url_for(
                     ".resource_list",
-                    resource_type='extract-data',
+                    resource_type="extract-data",
                 )
                 return redirect(default_route)
 
@@ -1236,19 +1239,11 @@ def update_receipt_status():
 
 @admin.route("/update_receipt_data", methods=["POST"])
 def update_receipt_data():
-    # Access the form data sent in the POST request
     form_data = request.json
-
-    # # Print the received form data
-    # print("Received Form Data:", form_data)
-    # for key, value in form_data.items():
-    #     print(f"{key}: {value}")
-
-    # # You can also access specific form fields using request.form.get('field_name')
-
-    # # Return a response
     response = update_extracted_receipt_data(form_data)
+
     return response
+
 
 def handle_resource_revision(resource_class, old_resource, new_resource):
     if (
