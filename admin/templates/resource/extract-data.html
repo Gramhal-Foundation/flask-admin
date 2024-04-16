@@ -162,7 +162,7 @@ function handleButtonClick(button, resourcePk) {
 
     if (receiptPrinted == 'No') {
         if (!ownerMobileNumberCheckbox.checked && !ownerMobileNumberInput.disabled && !/^\d{10}$/.test(ownerMobileNumberInput.value) && ownerMobileNumberInput.value) {
-            alert('Please enter a valid mobile number check.');
+            alert('Please enter a valid mobile number.');
             button.disabled = false;
             button.classList.remove('bg-opacity-50');
             button.classList.remove('cursor-not-allowed');
@@ -170,7 +170,7 @@ function handleButtonClick(button, resourcePk) {
         }
 
         if (!traderCodeCheckbox.checked && !traderCodeInput.disabled && !/^\d+$/.test(traderCodeInput.value) && traderCodeInput.value ) {
-            alert('Please enter a valid trader code check.');
+            alert('Please enter a valid trader code.');
             button.disabled = false;
             button.classList.remove('bg-opacity-50');
             button.classList.remove('cursor-not-allowed');
