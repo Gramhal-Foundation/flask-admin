@@ -251,6 +251,14 @@ function handleButtonClick(button, resourcePk) {
         button.classList.remove('cursor-not-allowed');
         return;
     }
+
+    if (traderCodeInput.value && !traderNameInput.value){
+            alert('Please enter a valid trader name and without numbers.');
+            button.disabled = false;
+            button.classList.remove('bg-opacity-50');
+            button.classList.remove('cursor-not-allowed');
+            return;
+    }
     let baseUrl = '/admin/';
     let route = 'update-receipt-data';
     let url = baseUrl + route;
