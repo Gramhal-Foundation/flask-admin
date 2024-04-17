@@ -179,16 +179,17 @@ function handleButtonClick(button, resourcePk) {
 
         var regex = /^[a-zA-Z\s]*$/;
 
-        if (traderCodeInput.value !== null && !regex.test(traderNameInput.value) && !traderCodeCheckbox.checked && traderNameInput.value ) {
-                alert('Please enter a valid trader name without special characters or numbers.');
+        if (traderCodeInput.value !== null && !traderCodeCheckbox.checked && traderNameInput.value && /\d/.test(traderNameInput.value)) {
+                alert('Please enter a valid trader name and without numbers.');
                 button.disabled = false;
                 button.classList.remove('bg-opacity-50');
                 button.classList.remove('cursor-not-allowed');
                 return;
         }
+        // add code to check traderNameInput not contains numbers
 
         if (traderCodeInput.value && !traderNameInput.value){
-            alert('Please enter a valid trader name without special characters or numbers.');
+            alert('Please enter a valid trader name and without numbers.');
             button.disabled = false;
             button.classList.remove('bg-opacity-50');
             button.classList.remove('cursor-not-allowed');
@@ -206,7 +207,7 @@ function handleButtonClick(button, resourcePk) {
         var input = inputs[i];
         if (input.type !== "radio" && input.type !== "checkbox") {
             var key = input.name.replace('_' + resourcePk, '');
-            formData[key] = input.value;
+            formData[key] = input.value.toUpperCase();
         }
     }
 
@@ -218,7 +219,7 @@ function handleButtonClick(button, resourcePk) {
 
     for (var i = 0; i < textareas.length; i++) {
         var textarea = textareas[i];
-        formData[textarea.name] = textarea.value;
+        formData[textarea.name] = textarea.value.toUpperCase();
     }
 
     formData['receipt_printed'] = receiptPrinted;
@@ -243,8 +244,8 @@ function handleButtonClick(button, resourcePk) {
 
     var regex = /^[a-zA-Z\s]*$/;
 
-    if (traderCodeInput.value !== null && !regex.test(traderNameInput.value) && !traderCodeCheckbox.checked && receiptPrinted == 'Yes') {
-        alert('Please enter a valid trader name without special characters or numbers.');
+    if (traderCodeInput.value !== null && !traderCodeCheckbox.checked && receiptPrinted == 'Yes' && /\d/.test(traderNameInput.value)) {
+        alert('Please enter a valid trader name and without numbers.');
         button.disabled = false;
         button.classList.remove('bg-opacity-50');
         button.classList.remove('cursor-not-allowed');
