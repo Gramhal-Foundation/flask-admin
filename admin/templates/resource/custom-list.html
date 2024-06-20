@@ -392,6 +392,10 @@
                                 <input type="text" name="quantity" id="quantity" class="border border-gray-300 text-black text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="name@company.com" required value="{{resource.quantity}}">
                             </div>
                             <div class="mb-4">
+                                <label for="receipt_date" class="block mb-1 text-xs font-light text-gray-500">Receipt Date</label>
+                                <input type="date" name="receipt_date" id="receipt_date" class="border border-gray-300 text-black text-sm rounded focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required value="{{ resource.receipt_date.strftime('%Y-%m-%d') }}">
+                            </div>
+                            <div class="mb-4">
                                 <label for="is_approved" class="block mb-1 text-xs font-light text-gray-500">Status</label>
                                 <div class="w-full relative">
                                     <select id="is_approved_{{ resource.pk }}" name="is_approved" class="block appearance-none w-full border border-gray-300 px-2.5 py-2.5 pr-8 rounded leading-tight focus:ring-blue-500 focus:border-blue-500 text-sm" required >
